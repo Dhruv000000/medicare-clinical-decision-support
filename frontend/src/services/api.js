@@ -27,7 +27,9 @@ export function clearTokens() {
   localStorage.removeItem("manus-runtime-user-info");
 }
 
-const baseURL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api/v1/";
+const baseURL =
+  import.meta.env.VITE_API_URL ||
+  "https://medicare-clinical-decision-support.onrender.com/api/v1/";
 
 const api = axios.create({
   baseURL,
