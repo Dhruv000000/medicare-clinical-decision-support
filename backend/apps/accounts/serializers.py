@@ -34,11 +34,23 @@ class UserSerializer(serializers.ModelSerializer):
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, min_length=8)
-    role = serializers.ChoiceField(choices=User.Roles.choices, default=User.Roles.PATIENT)
+    confirm_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    username = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    first_name = serializers.CharField(required=False, allow_blank=True, default="")
+    last_name = serializers.CharField(required=False, allow_blank=True, default="")
+    role = serializers.CharField(required=False, default=User.Roles.PATIENT)
 
     class Meta:
         model = User
-        fields = ["email", "password", "first_name", "last_name", "role"]
+        fields = [
+            "email",
+            "password",
+            "confirm_password",
+            "username",
+            "first_name",
+            "last_name",
+            "role",
+        ]
 
     def validate_email(self, value):
         email = value.lower().strip()
@@ -46,12 +58,32 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("A user with this email already exists.")
         return email
 
+    def validate_role(self, value):
+        if not value:
+            return User.Roles.PATIENT
+        val = str(value).lower().strip()
+        valid_roles = [c[0] for c in User.Roles.choices]
+        if val not in valid_roles:
+            raise serializers.ValidationError(
+                f"Invalid role '{value}'. Must be one of: {', '.join(valid_roles)}."
+            )
+        return val
+
+    def validate(self, attrs):
+        password = attrs.get("password")
+        confirm_password = attrs.get("confirm_password")
+        if confirm_password and password != confirm_password:
+            raise serializers.ValidationError({"confirm_password": "Passwords do not match."})
+        return attrs
+
     def validate_password(self, value):
         validate_password(value)
         return value
 
     def create(self, validated_data):
         password = validated_data.pop("password")
+        validated_data.pop("confirm_password", None)
+        validated_data.pop("username", None)
         user = User.objects.create_user(password=password, **validated_data)
         return user
 

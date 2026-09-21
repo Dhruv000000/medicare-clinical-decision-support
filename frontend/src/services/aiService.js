@@ -9,7 +9,9 @@ export const aiService = {
   async parseSymptoms(input) {
     const payload =
       typeof input === "string" ? { text: input } : { symptoms: input };
-    const response = await api.post("/predictions/symptoms/", payload);
+    const response = await api.post("/predictions/symptoms/", payload, {
+      timeout: 90000,
+    });
     return response.data;
   },
 
@@ -18,7 +20,9 @@ export const aiService = {
    * payload: { symptoms: [...], patient_id?: number }
    */
   async predictDisease(data) {
-    const response = await api.post("/predictions/disease/", data);
+    const response = await api.post("/predictions/disease/", data, {
+      timeout: 90000,
+    });
     return response.data;
   },
 
@@ -43,7 +47,9 @@ export const aiService = {
    * payload: { prompt: "...", conversation_id?: number, patient_id?: number }
    */
   async sendChatMessage(data) {
-    const response = await api.post("/assistant/chat/", data);
+    const response = await api.post("/assistant/chat/", data, {
+      timeout: 90000,
+    });
     return response.data;
   },
 

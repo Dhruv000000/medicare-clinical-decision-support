@@ -14,6 +14,8 @@ def register_user(validated_data, request=None):
     with transaction.atomic():
         role = validated_data.get("role", User.Roles.PATIENT)
         password = validated_data.pop("password")
+        validated_data.pop("confirm_password", None)
+        validated_data.pop("username", None)
         user = User.objects.create_user(password=password, **validated_data)
 
         # Create corresponding profile

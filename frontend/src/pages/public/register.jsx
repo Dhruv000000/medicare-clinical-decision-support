@@ -111,34 +111,32 @@ function Register() {
       const regResult = await register({
         email: formData.email,
         password: formData.password,
+        confirm_password: formData.confirmPassword,
         first_name: formData.firstName,
         last_name: formData.lastName,
+        username: formData.email ? formData.email.split("@")[0] : "",
         role: role.toLowerCase(),
       });
 
       if (!regResult.success) {
-        const nextErrors = { general: regResult.error || "Unable to create your account." };
-        if (regResult.fieldErrors) {
-          if (regResult.fieldErrors.email) {
-            nextErrors.email = Array.isArray(regResult.fieldErrors.email)
-              ? regResult.fieldErrors.email.join(" ")
-              : String(regResult.fieldErrors.email);
-          }
-          if (regResult.fieldErrors.password) {
-            nextErrors.password = Array.isArray(regResult.fieldErrors.password)
-              ? regResult.fieldErrors.password.join(" ")
-              : String(regResult.fieldErrors.password);
-          }
-          if (regResult.fieldErrors.first_name) {
-            nextErrors.firstName = Array.isArray(regResult.fieldErrors.first_name)
-              ? regResult.fieldErrors.first_name.join(" ")
-              : String(regResult.fieldErrors.first_name);
-          }
-          if (regResult.fieldErrors.last_name) {
-            nextErrors.lastName = Array.isArray(regResult.fieldErrors.last_name)
-              ? regResult.fieldErrors.last_name.join(" ")
-              : String(regResult.fieldErrors.last_name);
-          }
+        const nextErrors = {
+          general: regResult.error || "Unable to create your account.",
+        };
+        if (regResult.fieldErrors && typeof regResult.fieldErrors === "object") {
+          Object.entries(regResult.fieldErrors).forEach(([key, val]) => {
+            const msg = Array.isArray(val) ? val.join(" ") : String(val);
+            if (key === "email") nextErrors.email = msg;
+            else if (key === "password") nextErrors.password = msg;
+            else if (key === "confirm_password" || key === "confirmPassword")
+              nextErrors.confirmPassword = msg;
+            else if (key === "first_name" || key === "firstName")
+              nextErrors.firstName = msg;
+            else if (key === "last_name" || key === "lastName")
+              nextErrors.lastName = msg;
+            else if (key === "role") nextErrors.role = msg;
+            else if (key === "non_field_errors" || key === "detail")
+              nextErrors.general = msg;
+          });
         }
         setErrors(nextErrors);
         return;
@@ -190,7 +188,7 @@ function Register() {
   `;
 
   return (
-    <div className="h-screen overflow-hidden bg-gradient-to-br from-[#effcf8] via-white to-[#f2fcf9] text-[#073d32] dark:from-[#0B1210] dark:via-[#0F1916] dark:to-[#10201B] dark:text-white">
+    <div className="min-h-screen overflow-y-auto bg-gradient-to-br from-[#effcf8] via-white to-[#f2fcf9] text-[#073d32] dark:from-[#0B1210] dark:via-[#0F1916] dark:to-[#10201B] dark:text-white">
       {/* HEADER */}
       <header className="h-[72px] border-b border-[#e4ebe8] bg-white dark:border-white/10 dark:bg-[#0B1210]">
         <div className="mx-auto flex h-full items-center justify-between px-8 lg:px-12">
@@ -222,7 +220,7 @@ function Register() {
       </header>
 
       {/* PAGE */}
-      <main className="flex h-[calc(100vh-72px)] items-center justify-center px-6">
+      <main className="flex min-h-[calc(100vh-72px)] items-center justify-center px-6 py-8">
         {/* CARD */}
         <div className="w-full max-w-[850px] rounded-[28px] border border-[#dfe8e4] bg-white px-9 py-6 shadow-[0_20px_60px_rgba(20,70,60,0.10)] dark:border-white/10 dark:bg-[#121C19] dark:shadow-black/30">
           {/* TOP */}

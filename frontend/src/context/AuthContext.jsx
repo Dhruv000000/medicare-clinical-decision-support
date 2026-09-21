@@ -110,18 +110,44 @@ export function AuthProvider({ children }) {
   }, []);
 
   const register = useCallback(
-    async ({ email, password, first_name, last_name, role = "patient" }) => {
+    async ({
+      email,
+      password,
+      confirm_password,
+      confirmPassword,
+      first_name,
+      firstName,
+      last_name,
+      lastName,
+      role = "patient",
+      username,
+    }) => {
       setLoading(true);
       setError(null);
 
       try {
-        const response = await api.post("/auth/register/", {
-          email: email.trim().toLowerCase(),
-          password,
-          first_name: first_name?.trim() || "",
-          last_name: last_name?.trim() || "",
-          role: (role || "patient").toLowerCase(),
-        });
+        const cleanEmail = (email || "").trim().toLowerCase();
+        const fName = (first_name || firstName || "").trim();
+        const lName = (last_name || lastName || "").trim();
+        const cleanRole = (role || "patient").toLowerCase();
+        const cleanUsername = (
+          username ||
+          (cleanEmail ? cleanEmail.split("@")[0] : "")
+        ).trim();
+        const cleanPassword = password || "";
+        const cleanConfirm = confirm_password || confirmPassword || cleanPassword;
+
+        const payload = {
+          email: cleanEmail,
+          username: cleanUsername,
+          first_name: fName,
+          last_name: lName,
+          role: cleanRole,
+          password: cleanPassword,
+          confirm_password: cleanConfirm,
+        };
+
+        const response = await api.post("/auth/register/", payload);
 
         return {
           success: true,
@@ -136,7 +162,7 @@ export function AuthProvider({ children }) {
         if (errorData) {
           if (typeof errorData === "string") {
             errorMsg = errorData;
-          } else if (errorData.error) {
+          } else if (errorData.error && typeof errorData.error === "object") {
             const { message, details } = errorData.error;
             if (details && typeof details === "object" && Object.keys(details).length > 0) {
               fieldErrors = details;
@@ -144,7 +170,7 @@ export function AuthProvider({ children }) {
                 const valText = Array.isArray(v) ? v.join(" ") : String(v);
                 return `${k !== "non_field_errors" && k !== "detail" ? `${k}: ` : ""}${valText}`;
               });
-              errorMsg = fieldMsgs.join(" ");
+              errorMsg = fieldMsgs.join(" | ");
             } else if (message) {
               errorMsg = message;
             }
@@ -157,7 +183,7 @@ export function AuthProvider({ children }) {
               return `${k !== "non_field_errors" && k !== "detail" ? `${k}: ` : ""}${valText}`;
             });
             if (fieldMsgs.length > 0) {
-              errorMsg = fieldMsgs.join(" ");
+              errorMsg = fieldMsgs.join(" | ");
             }
           }
         } else if (err.message) {
