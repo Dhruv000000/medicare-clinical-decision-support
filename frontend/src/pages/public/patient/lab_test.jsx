@@ -10,14 +10,17 @@ import {
   ExternalLink,
   FileText,
   Loader2,
+  Moon,
   Plus,
   Search,
   Sparkles,
+  Sun,
   X,
   XCircle,
 } from "lucide-react";
 import Sidebar from "./sidebar";
 import { useAuth } from "../../../_core/hooks/useAuth";
+import { useTheme } from "../ThemeContext";
 import patientService from "../../../services/patientService";
 
 const defaultStatusStyles = {
@@ -43,7 +46,9 @@ const defaultStatusStyles = {
   },
 };
 
-export default function ReportsLabTests({ darkMode = true }) {
+export default function ReportsLabTests({ darkMode: propDarkMode }) {
+  const { isDark, toggleTheme } = useTheme();
+  const darkMode = propDarkMode !== undefined ? propDarkMode : isDark;
   const { user } = useAuth();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -97,9 +102,10 @@ export default function ReportsLabTests({ darkMode = true }) {
   const filteredReports = reports.filter((r) => {
     const titleMatch = (r.title || "").toLowerCase().includes(searchQuery.toLowerCase());
     if (!titleMatch) return false;
+    const isAnalyzed = (r.results && r.results.length > 0) || !!r.analysis_summary;
     if (filterType === "all") return true;
-    if (filterType === "analyzed") return r.results && r.results.length > 0;
-    if (filterType === "pending") return !r.results || r.results.length === 0;
+    if (filterType === "analyzed") return isAnalyzed;
+    if (filterType === "pending") return !isAnalyzed;
     return true;
   });
 
@@ -110,10 +116,11 @@ export default function ReportsLabTests({ darkMode = true }) {
   let pendingCount = 0;
 
   reports.forEach((r) => {
-    if (!r.results || r.results.length === 0) {
+    const isAnalyzed = (r.results && r.results.length > 0) || !!r.analysis_summary;
+    if (!isAnalyzed) {
       pendingCount += 1;
     } else {
-      const hasAbnormal = r.results.some(
+      const hasAbnormal = (r.results || []).some(
         (m) => m.flag && m.flag.toUpperCase() !== "NORMAL"
       );
       if (hasAbnormal) {
@@ -191,6 +198,21 @@ export default function ReportsLabTests({ darkMode = true }) {
               <Activity size={20} />
               <span className="absolute right-[8px] top-[9px] h-[6px] w-[6px] rounded-full bg-emerald-400" />
             </div>
+
+            {/* Theme Toggle */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+              aria-label="Toggle theme"
+              className={`flex h-[42px] w-[42px] items-center justify-center rounded-xl border transition ${
+                darkMode
+                  ? "border-slate-700 bg-[#0d1918] text-amber-300 hover:bg-slate-800"
+                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 shadow-sm"
+              }`}
+            >
+              {darkMode ? <Sun size={19} /> : <Moon size={19} />}
+            </button>
 
             {/* User */}
             <div className="flex items-center gap-2">
@@ -274,23 +296,35 @@ export default function ReportsLabTests({ darkMode = true }) {
             }`}
           >
             {/* Table Action Bar */}
-            <div className="flex h-[68px] shrink-0 items-center justify-between border-b border-slate-800 px-5">
+            <div
+              className={`flex h-[68px] shrink-0 items-center justify-between border-b px-5 ${
+                darkMode ? "border-slate-800" : "border-slate-200"
+              }`}
+            >
               <div>
-                <h2 className="text-[17px] font-bold">Lab Reports & Diagnostics</h2>
-                <p className="mt-0.5 text-[10px] text-slate-400">
+                <h2 className={`text-[17px] font-bold ${darkMode ? "text-white" : "text-slate-900"}`}>
+                  Lab Reports & Diagnostics
+                </h2>
+                <p className={`mt-0.5 text-[10px] ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
                   Uploaded diagnostic documents, parsed clinical metrics, and automated risk analysis
                 </p>
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1 rounded-lg border border-slate-700 bg-[#0a1514] p-1 text-[11px]">
+                <div
+                  className={`flex items-center gap-1 rounded-lg border p-1 text-[11px] ${
+                    darkMode ? "border-slate-700 bg-[#0a1514]" : "border-slate-200 bg-slate-50"
+                  }`}
+                >
                   <button
                     type="button"
                     onClick={() => setFilterType("all")}
                     className={`rounded-md px-2.5 py-1 font-medium transition ${
                       filterType === "all"
                         ? "bg-emerald-500 text-white"
-                        : "text-slate-400 hover:text-white"
+                        : darkMode
+                        ? "text-slate-400 hover:text-white"
+                        : "text-slate-600 hover:text-slate-900"
                     }`}
                   >
                     All ({totalReports})
@@ -301,7 +335,9 @@ export default function ReportsLabTests({ darkMode = true }) {
                     className={`rounded-md px-2.5 py-1 font-medium transition ${
                       filterType === "analyzed"
                         ? "bg-emerald-500 text-white"
-                        : "text-slate-400 hover:text-white"
+                        : darkMode
+                        ? "text-slate-400 hover:text-white"
+                        : "text-slate-600 hover:text-slate-900"
                     }`}
                   >
                     Analyzed ({normalCount + abnormalCount})
@@ -312,7 +348,9 @@ export default function ReportsLabTests({ darkMode = true }) {
                     className={`rounded-md px-2.5 py-1 font-medium transition ${
                       filterType === "pending"
                         ? "bg-emerald-500 text-white"
-                        : "text-slate-400 hover:text-white"
+                        : darkMode
+                        ? "text-slate-400 hover:text-white"
+                        : "text-slate-600 hover:text-slate-900"
                     }`}
                   >
                     Pending ({pendingCount})
@@ -322,7 +360,11 @@ export default function ReportsLabTests({ darkMode = true }) {
                 <button
                   type="button"
                   onClick={() => setShowUploadModal(true)}
-                  className="flex h-[36px] items-center gap-2 rounded-lg border border-emerald-500/60 bg-emerald-500/10 px-4 text-[11px] font-semibold text-emerald-400 transition hover:bg-emerald-500/20"
+                  className={`flex h-[36px] items-center gap-2 rounded-lg border px-4 text-[11px] font-semibold transition ${
+                    darkMode
+                      ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+                      : "border-emerald-600/30 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                  }`}
                 >
                   <CloudUpload size={15} />
                   Upload Report
@@ -369,23 +411,24 @@ export default function ReportsLabTests({ darkMode = true }) {
                 </div>
               ) : (
                 filteredReports.map((report) => {
+                  const isAnalyzed = (report.results && report.results.length > 0) || !!report.analysis_summary;
                   const hasResults = report.results && report.results.length > 0;
                   const abnormalMetrics = (report.results || []).filter(
                     (m) => m.flag && m.flag.toUpperCase() !== "NORMAL"
                   );
                   const isAbnormal = abnormalMetrics.length > 0;
 
-                  const statusBadgeClass = !hasResults
+                  const statusBadgeClass = !isAnalyzed
                     ? "bg-slate-500/10 text-slate-400 border border-slate-500/20"
                     : isAbnormal
                     ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
                     : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
 
-                  const statusLabel = !hasResults
+                  const statusLabel = !isAnalyzed
                     ? "Pending"
                     : isAbnormal
                     ? `${abnormalMetrics.length} Abnormal`
-                    : "Normal";
+                    : (hasResults ? "Normal" : "Analyzed");
 
                   const dateStr = report.uploaded_at
                     ? new Date(report.uploaded_at).toLocaleDateString("en-US", {
@@ -403,10 +446,10 @@ export default function ReportsLabTests({ darkMode = true }) {
                       }`}
                     >
                       <div className="flex items-center gap-2 min-w-0 pr-3">
-                        <FileText size={16} className="shrink-0 text-emerald-400" />
+                        <FileText size={16} className="shrink-0 text-emerald-500" />
                         <div className="min-w-0 truncate">
-                          <p className="truncate font-semibold">{report.title}</p>
-                          <p className="truncate text-[9px] text-slate-500">
+                          <p className={`truncate font-semibold ${darkMode ? "text-white" : "text-slate-900"}`}>{report.title}</p>
+                          <p className={`truncate text-[9px] ${darkMode ? "text-slate-500" : "text-slate-400"}`}>
                             {report.file_type || "Diagnostic Document"}
                           </p>
                         </div>
@@ -418,25 +461,33 @@ export default function ReportsLabTests({ darkMode = true }) {
                             {report.results.slice(0, 2).map((r, idx) => (
                               <span
                                 key={idx}
-                                className="rounded bg-slate-800 px-1.5 py-0.5 text-[9px] text-slate-300"
+                                className={`rounded px-1.5 py-0.5 text-[9px] ${
+                                  darkMode
+                                    ? "bg-slate-800 text-slate-300"
+                                    : "bg-slate-100 text-slate-700 border border-slate-200"
+                                }`}
                               >
                                 {r.test_name}: {r.value} {r.unit}
                               </span>
                             ))}
                             {report.results.length > 2 && (
-                              <span className="text-[9px] text-slate-500">
+                              <span className={`text-[9px] ${darkMode ? "text-slate-500" : "text-slate-400"}`}>
                                 +{report.results.length - 2} more
                               </span>
                             )}
                           </div>
+                        ) : isAnalyzed ? (
+                          <span className={`text-[10px] ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
+                            Document parsed
+                          </span>
                         ) : (
-                          <span className="text-[10px] text-slate-500 italic">
+                          <span className={`text-[10px] italic ${darkMode ? "text-slate-500" : "text-slate-400"}`}>
                             Not analyzed yet
                           </span>
                         )}
                       </div>
 
-                      <div className="min-w-0 truncate pr-3 text-[10px] text-slate-400">
+                      <div className={`min-w-0 truncate pr-3 text-[10px] ${darkMode ? "text-slate-400" : "text-slate-600"}`}>
                         {report.analysis_summary || report.extracted_text
                           ? (report.analysis_summary || report.extracted_text).slice(0, 50) + "..."
                           : "Raw report uploaded."}
@@ -450,7 +501,7 @@ export default function ReportsLabTests({ darkMode = true }) {
                         </span>
                       </div>
 
-                      <div className="text-[10px] text-slate-400">{dateStr}</div>
+                      <div className={`text-[10px] ${darkMode ? "text-slate-400" : "text-slate-500"}`}>{dateStr}</div>
 
                       <div className="flex items-center justify-end gap-2">
                         {report.file_url && (
@@ -458,7 +509,11 @@ export default function ReportsLabTests({ darkMode = true }) {
                             href={report.file_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex h-[28px] items-center gap-1 rounded-md border border-slate-700 px-2 text-[10px] text-slate-400 transition hover:bg-slate-800 hover:text-white"
+                            className={`flex h-[28px] items-center gap-1 rounded-md border px-2 text-[10px] transition ${
+                              darkMode
+                                ? "border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-white"
+                                : "border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                            }`}
                             title="View File"
                           >
                             <ExternalLink size={12} />
@@ -470,7 +525,11 @@ export default function ReportsLabTests({ darkMode = true }) {
                           type="button"
                           disabled={analyzingId === report.id}
                           onClick={() => handleAnalyze(report.id)}
-                          className="flex h-[28px] items-center gap-1.5 rounded-md border border-emerald-500/50 bg-emerald-500/10 px-2.5 text-[10px] font-medium text-emerald-400 transition hover:bg-emerald-500/20 disabled:opacity-50"
+                          className={`flex h-[28px] items-center gap-1.5 rounded-md border px-2.5 text-[10px] font-medium transition disabled:opacity-50 ${
+                            darkMode
+                              ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+                              : "border-emerald-600/30 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                          }`}
                         >
                           {analyzingId === report.id ? (
                             <>
@@ -480,7 +539,7 @@ export default function ReportsLabTests({ darkMode = true }) {
                           ) : (
                             <>
                               <Sparkles size={12} />
-                              {hasResults ? "Re-Analyze" : "Analyze"}
+                              {isAnalyzed ? "Re-Analyze" : "Analyze"}
                             </>
                           )}
                         </button>
@@ -606,7 +665,9 @@ function UploadReportModal({ darkMode, onClose, onSuccess }) {
           darkMode ? "border-slate-700 bg-[#0c1817]" : "border-slate-200 bg-white"
         }`}
       >
-        <div className="flex items-start justify-between border-b border-slate-800 p-5">
+        <div className={`flex items-start justify-between border-b p-5 ${
+          darkMode ? "border-slate-800" : "border-slate-100"
+        }`}>
           <div>
             <h3
               className={`text-[17px] font-bold ${
@@ -615,14 +676,16 @@ function UploadReportModal({ darkMode, onClose, onSuccess }) {
             >
               Upload Lab Report
             </h3>
-            <p className="mt-1 text-[11px] text-slate-400">
+            <p className={`mt-1 text-[11px] ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
               Attach diagnostic reports to unlock automated metric extraction
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white"
+            className={`rounded-lg p-1 transition ${
+              darkMode ? "text-slate-400 hover:bg-slate-800 hover:text-white" : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+            }`}
           >
             <X size={18} />
           </button>
@@ -630,14 +693,14 @@ function UploadReportModal({ darkMode, onClose, onSuccess }) {
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {error && (
-            <div className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 p-2.5 text-[11px] text-red-400">
+            <div className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 p-2.5 text-[11px] text-red-500">
               <AlertCircle size={15} />
               <span>{error}</span>
             </div>
           )}
 
           <div>
-            <label className="block text-[11px] font-medium text-slate-300">
+            <label className={`block text-[11px] font-medium ${darkMode ? "text-slate-300" : "text-slate-700"}`}>
               Report Title *
             </label>
             <input
@@ -654,7 +717,7 @@ function UploadReportModal({ darkMode, onClose, onSuccess }) {
           </div>
 
           <div>
-            <label className="block text-[11px] font-medium text-slate-300">
+            <label className={`block text-[11px] font-medium ${darkMode ? "text-slate-300" : "text-slate-700"}`}>
               Select Document File *
             </label>
             <div
@@ -664,7 +727,7 @@ function UploadReportModal({ darkMode, onClose, onSuccess }) {
                   : "border-slate-300 bg-slate-50"
               }`}
             >
-              <CloudUpload size={28} className="text-emerald-400 mb-1" />
+              <CloudUpload size={28} className="text-emerald-500 mb-1" />
               <input
                 type="file"
                 id="file-upload"
@@ -674,11 +737,11 @@ function UploadReportModal({ darkMode, onClose, onSuccess }) {
               />
               <label
                 htmlFor="file-upload"
-                className="cursor-pointer text-[12px] font-semibold text-emerald-400 hover:underline"
+                className="cursor-pointer text-[12px] font-semibold text-emerald-500 hover:underline"
               >
                 {file ? file.name : "Click to select report file"}
               </label>
-              <p className="mt-1 text-[10px] text-slate-500">
+              <p className={`mt-1 text-[10px] ${darkMode ? "text-slate-500" : "text-slate-400"}`}>
                 Supports PDF, TXT, PNG, JPG (up to 10MB)
               </p>
             </div>
@@ -688,7 +751,9 @@ function UploadReportModal({ darkMode, onClose, onSuccess }) {
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-slate-700 px-4 py-2 text-[11px] font-semibold text-slate-400 hover:bg-slate-800"
+              className={`rounded-lg border px-4 py-2 text-[11px] font-semibold transition ${
+                darkMode ? "border-slate-700 text-slate-400 hover:bg-slate-800" : "border-slate-200 text-slate-600 hover:bg-slate-100"
+              }`}
             >
               Cancel
             </button>
@@ -728,9 +793,13 @@ function AnalysisResultModal({ darkMode, result, onClose }) {
           darkMode ? "border-slate-700 bg-[#0c1817]" : "border-slate-200 bg-white"
         }`}
       >
-        <div className="flex items-start justify-between border-b border-slate-800 p-5 shrink-0">
+        <div className={`flex items-start justify-between border-b p-5 shrink-0 ${
+          darkMode ? "border-slate-800" : "border-slate-100"
+        }`}>
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400">
+            <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${
+              darkMode ? "bg-emerald-500/10 text-emerald-400" : "bg-emerald-50 text-emerald-600"
+            }`}>
               <Sparkles size={18} />
             </div>
             <div>
@@ -741,7 +810,7 @@ function AnalysisResultModal({ darkMode, result, onClose }) {
               >
                 AI Clinical Report Analysis
               </h3>
-              <p className="text-[11px] text-slate-400">
+              <p className={`text-[11px] ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
                 Automated regex & heuristic diagnostic biomarker extraction
               </p>
             </div>
@@ -750,7 +819,9 @@ function AnalysisResultModal({ darkMode, result, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
+            className={`rounded-lg p-1.5 transition ${
+              darkMode ? "text-slate-400 hover:bg-slate-800 hover:text-white" : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+            }`}
           >
             <X size={18} />
           </button>
@@ -759,35 +830,49 @@ function AnalysisResultModal({ darkMode, result, onClose }) {
         <div className="p-6 overflow-y-auto space-y-4">
           {/* Summary Alert */}
           <div className="grid grid-cols-3 gap-3">
-            <div className="rounded-xl border border-slate-800 bg-[#0a1514] p-3 text-center">
-              <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
+            <div className={`rounded-xl border p-3 text-center ${
+              darkMode ? "border-slate-800 bg-[#0a1514]" : "border-slate-200 bg-slate-50"
+            }`}>
+              <span className={`text-[10px] uppercase tracking-wider font-semibold ${
+                darkMode ? "text-slate-400" : "text-slate-500"
+              }`}>
                 Metrics Extracted
               </span>
-              <p className="text-[20px] font-bold text-white mt-0.5">
+              <p className={`text-[20px] font-bold mt-0.5 ${
+                darkMode ? "text-white" : "text-slate-900"
+              }`}>
                 {result.total_metrics_extracted || metrics.length}
               </p>
             </div>
 
-            <div className="rounded-xl border border-slate-800 bg-[#0a1514] p-3 text-center">
-              <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
+            <div className={`rounded-xl border p-3 text-center ${
+              darkMode ? "border-slate-800 bg-[#0a1514]" : "border-slate-200 bg-slate-50"
+            }`}>
+              <span className={`text-[10px] uppercase tracking-wider font-semibold ${
+                darkMode ? "text-slate-400" : "text-slate-500"
+              }`}>
                 Abnormal Findings
               </span>
               <p
                 className={`text-[20px] font-bold mt-0.5 ${
-                  abnormalCount > 0 ? "text-amber-400" : "text-emerald-400"
+                  abnormalCount > 0 ? "text-amber-500" : "text-emerald-500"
                 }`}
               >
                 {abnormalCount}
               </p>
             </div>
 
-            <div className="rounded-xl border border-slate-800 bg-[#0a1514] p-3 text-center">
-              <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
+            <div className={`rounded-xl border p-3 text-center ${
+              darkMode ? "border-slate-800 bg-[#0a1514]" : "border-slate-200 bg-slate-50"
+            }`}>
+              <span className={`text-[10px] uppercase tracking-wider font-semibold ${
+                darkMode ? "text-slate-400" : "text-slate-500"
+              }`}>
                 Critical Alerts
               </span>
               <p
                 className={`text-[20px] font-bold mt-0.5 ${
-                  criticalCount > 0 ? "text-red-400" : "text-slate-300"
+                  criticalCount > 0 ? "text-red-500" : darkMode ? "text-slate-300" : "text-slate-600"
                 }`}
               >
                 {criticalCount}
@@ -797,11 +882,17 @@ function AnalysisResultModal({ darkMode, result, onClose }) {
 
           {/* Clinical Summary */}
           {result.summary && (
-            <div className="rounded-xl border border-slate-800 bg-[#0a1514] p-3.5">
-              <h4 className="text-[11px] font-semibold text-slate-300 uppercase tracking-wide mb-1">
+            <div className={`rounded-xl border p-3.5 ${
+              darkMode ? "border-slate-800 bg-[#0a1514]" : "border-slate-200 bg-slate-50"
+            }`}>
+              <h4 className={`text-[11px] font-semibold uppercase tracking-wide mb-1 ${
+                darkMode ? "text-slate-300" : "text-slate-700"
+              }`}>
                 Diagnostic Summary
               </h4>
-              <p className="text-[12px] text-slate-300 leading-relaxed">
+              <p className={`text-[12px] leading-relaxed ${
+                darkMode ? "text-slate-300" : "text-slate-600"
+              }`}>
                 {result.summary}
               </p>
             </div>
@@ -809,16 +900,24 @@ function AnalysisResultModal({ darkMode, result, onClose }) {
 
           {/* Extracted Metrics Table */}
           <div>
-            <h4 className="text-[12px] font-bold text-white mb-2">
+            <h4 className={`text-[12px] font-bold mb-2 ${
+              darkMode ? "text-white" : "text-slate-900"
+            }`}>
               Identified Quantitative Biomarkers
             </h4>
             {metrics.length === 0 ? (
-              <div className="rounded-xl border border-slate-800 bg-[#0a1514] p-6 text-center text-[12px] text-slate-500">
+              <div className={`rounded-xl border p-6 text-center text-[12px] ${
+                darkMode ? "border-slate-800 bg-[#0a1514] text-slate-500" : "border-slate-200 bg-slate-50 text-slate-500"
+              }`}>
                 No standard quantitative metrics could be parsed from this document.
               </div>
             ) : (
-              <div className="rounded-xl border border-slate-800 bg-[#0a1514] overflow-hidden">
-                <div className="grid grid-cols-[1.3fr_1fr_1.2fr_.8fr] px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-800">
+              <div className={`rounded-xl border overflow-hidden ${
+                darkMode ? "border-slate-800 bg-[#0a1514]" : "border-slate-200 bg-white"
+              }`}>
+                <div className={`grid grid-cols-[1.3fr_1fr_1.2fr_.8fr] px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wider border-b ${
+                  darkMode ? "text-slate-400 border-slate-800 bg-[#081211]" : "text-slate-500 border-slate-200 bg-slate-50"
+                }`}>
                   <span>Biomarker / Test</span>
                   <span>Extracted Value</span>
                   <span>Reference Range</span>
@@ -838,15 +937,17 @@ function AnalysisResultModal({ darkMode, result, onClose }) {
                   return (
                     <div
                       key={idx}
-                      className="grid grid-cols-[1.3fr_1fr_1.2fr_.8fr] items-center px-4 py-3 text-[11px] border-t border-slate-800/60"
+                      className={`grid grid-cols-[1.3fr_1fr_1.2fr_.8fr] items-center px-4 py-3 text-[11px] border-t ${
+                        darkMode ? "border-slate-800/60" : "border-slate-100"
+                      }`}
                     >
-                      <span className="font-semibold text-white">
+                      <span className={`font-semibold ${darkMode ? "text-white" : "text-slate-900"}`}>
                         {m.test_name}
                       </span>
-                      <span className="text-slate-200">
+                      <span className={darkMode ? "text-slate-200" : "text-slate-700"}>
                         {m.value} {m.unit}
                       </span>
-                      <span className="text-slate-400">
+                      <span className={darkMode ? "text-slate-400" : "text-slate-500"}>
                         {m.reference_range || "N/A"}
                       </span>
                       <div className="text-right">
@@ -864,19 +965,21 @@ function AnalysisResultModal({ darkMode, result, onClose }) {
           </div>
 
           {/* Regulatory Disclaimer */}
-          <div className="flex items-start gap-2.5 rounded-xl border border-amber-500/20 bg-amber-500/10 p-3.5 text-[11px] text-amber-300/90">
-            <AlertTriangle size={16} className="shrink-0 text-amber-400 mt-0.5" />
+          <div className="flex items-start gap-2.5 rounded-xl border border-amber-500/20 bg-amber-500/10 p-3.5 text-[11px] text-amber-500">
+            <AlertTriangle size={16} className="shrink-0 text-amber-500 mt-0.5" />
             <span>
               <strong>Regulatory Notice:</strong> AI-assisted diagnostic biomarker extraction. Results are generated via algorithmic text parsing and must be independently validated by a licensed physician before clinical decision-making.
             </span>
           </div>
         </div>
 
-        <div className="border-t border-slate-800 p-4 flex justify-end shrink-0">
+        <div className={`border-t p-4 flex justify-end shrink-0 ${
+          darkMode ? "border-slate-800" : "border-slate-100"
+        }`}>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg bg-emerald-500 px-5 py-2 text-[12px] font-semibold text-white hover:bg-emerald-600"
+            className="rounded-lg bg-emerald-500 px-5 py-2 text-[12px] font-semibold text-white hover:bg-emerald-600 transition"
           >
             Close Results
           </button>

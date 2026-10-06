@@ -24,6 +24,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "../../../_core/hooks/useAuth";
+import { useTheme } from "../ThemeContext";
 import patientService from "../../../services/patientService";
 
 const ROUTES = {
@@ -135,44 +136,6 @@ const tabs = [
 
 const records = [];
 
-function useDarkMode() {
-  const [darkMode, setDarkMode] = useState(() => {
-    if (typeof window === "undefined") return false;
-
-    const saved = localStorage.getItem("medicare-theme");
-
-    if (saved === "dark") return true;
-    if (saved === "light") return false;
-
-    return (
-      window.matchMedia?.(
-        "(prefers-color-scheme: dark)"
-      ).matches ?? false
-    );
-  });
-
-  useEffect(() => {
-    localStorage.setItem(
-      "medicare-theme",
-      darkMode ? "dark" : "light"
-    );
-
-    document.documentElement.classList.toggle(
-      "dark",
-      darkMode
-    );
-
-    document.documentElement.style.colorScheme =
-      darkMode ? "dark" : "light";
-
-    document.body.style.background = darkMode
-      ? "#0b1413"
-      : "#f8faf9";
-  }, [darkMode]);
-
-  return [darkMode, setDarkMode];
-}
-
 function isActivePath(pathname, route) {
   return (
     pathname.replace(/\/$/, "") ===
@@ -182,7 +145,7 @@ function isActivePath(pathname, route) {
 
 function Header({
   darkMode,
-  setDarkMode,
+  toggleTheme,
 }) {
   const { user } = useAuth();
   const displayName =
@@ -249,9 +212,7 @@ function Header({
         {/* Theme */}
         <button
           type="button"
-          onClick={() =>
-            setDarkMode((value) => !value)
-          }
+          onClick={toggleTheme}
           className={`flex h-11 w-11 items-center justify-center rounded-xl border transition ${
             darkMode
               ? "border-slate-700 bg-slate-900 text-yellow-300 hover:bg-slate-800"
@@ -668,8 +629,7 @@ function RecordPreview({
 }
 
 export default function MedicalRecords() {
-  const [darkMode, setDarkMode] =
-    useDarkMode();
+  const { isDark: darkMode, toggleTheme } = useTheme();
 
   const [activeTab, setActiveTab] =
     useState("All");
@@ -862,7 +822,7 @@ export default function MedicalRecords() {
           {/* Header */}
           <Header
             darkMode={darkMode}
-            setDarkMode={setDarkMode}
+            toggleTheme={toggleTheme}
           />
 
           {/*

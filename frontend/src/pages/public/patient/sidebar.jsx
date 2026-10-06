@@ -1,6 +1,6 @@
 import React from "react";
-
 import { Link, useLocation } from "react-router-dom";
+import { useTheme } from "../ThemeContext";
 
 import {
   Activity,
@@ -124,8 +124,10 @@ function isActivePath(pathname, route) {
   );
 }
 
-export default function Sidebar({ darkMode = true, onLogout }) {
+export default function Sidebar({ darkMode: propDarkMode, onLogout }) {
   const location = useLocation();
+  const themeContext = useTheme();
+  const darkMode = propDarkMode !== undefined ? propDarkMode : (themeContext?.isDark ?? true);
 
   return (
     <aside

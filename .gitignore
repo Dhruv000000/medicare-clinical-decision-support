@@ -54,3 +54,5 @@ data/processed/
 .idea/
 .DS_Store
 Thumbs.db
+.agent/
+

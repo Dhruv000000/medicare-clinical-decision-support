@@ -265,3 +265,30 @@ class TestMedicalReportParser:
         assert data["patient_id"] == self.patient_b.id
         assert data["abnormal_flags_count"] >= 2
         assert LabResult.objects.filter(report=report, test_name="Serum Creatinine", flag="high").exists()
+
+    def test_parse_and_save_report_with_null_bytes(self):
+        text_with_null = "Fasting Glucose: 115\x00 mg/dL.\x00 HbA1c: 6.0%.\x00"
+        report = LabReport.objects.create(
+            patient=self.patient_a,
+            title="Blood Test with Null Bytes",
+        )
+
+        self.client.force_authenticate(user=self.patient_a)
+        res = self.client.post(
+            f"/api/v1/medical-records/{report.id}/analyze/",
+            data={"text": text_with_null},
+            format="json",
+        )
+
+        assert res.status_code == status.HTTP_200_OK
+        data = res.json()
+        assert "\x00" not in data["extracted_text"]
+        assert "\x00" not in data["summary"]
+        report.refresh_from_db()
+        assert "\x00" not in report.extracted_text
+        assert "\x00" not in report.analysis_summary
+        assert LabResult.objects.filter(report=report).count() >= 2
+        for result in LabResult.objects.filter(report=report):
+            assert "\x00" not in result.test_name
+            assert "\x00" not in result.value
+            assert "\x00" not in result.unit

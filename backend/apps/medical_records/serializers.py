@@ -25,10 +25,21 @@ class LabReportSerializer(serializers.ModelSerializer):
             "file_url",
             "file_type",
             "file_size",
+            "extracted_text",
+            "analysis_summary",
             "results",
             "uploaded_at",
         ]
-        read_only_fields = ["id", "patient", "file_size", "file_type", "results", "uploaded_at"]
+        read_only_fields = [
+            "id",
+            "patient",
+            "file_size",
+            "file_type",
+            "extracted_text",
+            "analysis_summary",
+            "results",
+            "uploaded_at",
+        ]
 
     def get_file_url(self, obj):
         if obj.file:

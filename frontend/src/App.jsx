@@ -178,6 +178,11 @@ function App() {
           />
 
           <Route
+            path="/patient/lab-tests"
+            element={<Navigate to="/patient/reports-lab-tests" replace />}
+          />
+
+          <Route
             path="/patient/medications"
             element={
               <ProtectedRoute allowedRoles={["patient"]}>

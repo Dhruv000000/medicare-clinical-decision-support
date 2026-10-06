@@ -78,7 +78,7 @@ const navSections = [
       },
 
       {
-        label: "Medications",
+        label: "Appointments",
         icon: Pill,
         route: ROUTES.medications,
       },
@@ -141,8 +141,7 @@ export default function Sidebar() {
 
         border-r
 
-        ${
-          "border-[var(--border)] bg-[var(--surface)]"
+        ${"border-[var(--border)] bg-[var(--surface)]"
         }
       `}
     >
@@ -187,8 +186,7 @@ export default function Sidebar() {
               font-bold
               tracking-[-0.8px]
 
-              ${
-                "text-[var(--text)]"
+              ${"text-[var(--text)]"
               }
             `}
           >
@@ -211,49 +209,48 @@ export default function Sidebar() {
         <nav>
           <div className="space-y-4">
 
-          {navSections.map((section) => (
+            {navSections.map((section) => (
 
-            <div key={section.title}>
+              <div key={section.title}>
 
-              {/* Section title */}
+                {/* Section title */}
 
-              <div
-                className={`
+                <div
+                  className={`
                   px-5
                   pb-3
                   text-[12px]
                   font-medium
                   tracking-[0.12em]
 
-                  ${
-                    "text-[var(--muted)]"
-                  }
+                  ${"text-[var(--muted)]"
+                    }
                 `}
-              >
-                {section.title}
-              </div>
+                >
+                  {section.title}
+                </div>
 
 
-              {/* Section items */}
+                {/* Section items */}
 
-              <div className="space-y-1">
+                <div className="space-y-1">
 
-                {section.items.map((item) => {
+                  {section.items.map((item) => {
 
-                  const Icon = item.icon;
+                    const Icon = item.icon;
 
-                  const active =
-                    isActivePath(
-                      location.pathname,
-                      item.route,
-                      location.search
-                    );
+                    const active =
+                      isActivePath(
+                        location.pathname,
+                        item.route,
+                        location.search
+                      );
 
-                  return (
-                    <Link
-                      key={item.label}
-                      to={item.route}
-                      className={`
+                    return (
+                      <Link
+                        key={item.label}
+                        to={item.route}
+                        className={`
                         relative
 
                         flex
@@ -270,19 +267,18 @@ export default function Sidebar() {
                         transition-all
                         duration-150
 
-                        ${
-                          active
+                        ${active
                             ? "bg-[var(--accent-surface)] font-medium text-[var(--text)]"
                             : "text-[var(--text-secondary)] hover:bg-[var(--card-hover)]"
-                        }
+                          }
                       `}
-                    >
+                      >
 
-                      {/* Active indicator */}
+                        {/* Active indicator */}
 
-                      {active && (
-                        <span
-                          className="
+                        {active && (
+                          <span
+                            className="
                             absolute
                             left-0
                             top-1/2
@@ -296,37 +292,37 @@ export default function Sidebar() {
 
                             bg-emerald-400
                           "
+                          />
+                        )}
+
+
+                        {/* Icon */}
+
+                        <Icon
+                          size={18}
+                          strokeWidth={1.8}
+                          className={
+                            active
+                              ? "text-[var(--accent)]"
+                              : "text-[var(--muted)]"
+                          }
                         />
-                      )}
 
 
-                      {/* Icon */}
+                        {/* Label */}
 
-                      <Icon
-                        size={18}
-                        strokeWidth={1.8}
-                        className={
-                          active
-                            ? "text-[var(--accent)]"
-                            : "text-[var(--muted)]"
-                        }
-                      />
+                        <span className="truncate">
+                          {item.label}
+                        </span>
 
+                      </Link>
+                    );
+                  })}
 
-                      {/* Label */}
-
-                      <span className="truncate">
-                        {item.label}
-                      </span>
-
-                    </Link>
-                  );
-                })}
+                </div>
 
               </div>
-
-            </div>
-          ))}
+            ))}
 
           </div>
         </nav>
@@ -335,8 +331,8 @@ export default function Sidebar() {
             BOTTOM AREA
         ===================================================== */}
 
-      <div
-        className={`
+        <div
+          className={`
           shrink-0
 
           border-t
@@ -345,19 +341,18 @@ export default function Sidebar() {
           pb-0
           pt-4
 
-          ${
-            "border-[var(--border)]"
-          }
+          ${"border-[var(--border)]"
+            }
         `}
-      >
+        >
 
-        {/* ===================================================
+          {/* ===================================================
             SETTINGS
         =================================================== */}
 
-        <Link
-          to={ROUTES.settings}
-          className={`
+          <Link
+            to={ROUTES.settings}
+            className={`
             relative
 
             flex
@@ -373,27 +368,26 @@ export default function Sidebar() {
 
             transition
 
-            ${
-              isActivePath(
-                location.pathname,
-                ROUTES.settings,
-                location.search
-              )
+            ${isActivePath(
+              location.pathname,
+              ROUTES.settings,
+              location.search
+            )
                 ? "bg-[var(--accent-surface)] font-medium text-[var(--text)]"
                 : "text-[var(--text-secondary)] hover:bg-[var(--card-hover)]"
-            }
+              }
           `}
-        >
+          >
 
-          {/* Active indicator */}
+            {/* Active indicator */}
 
-          {isActivePath(
-            location.pathname,
-            ROUTES.settings,
-            location.search
-          ) && (
-            <span
-              className="
+            {isActivePath(
+              location.pathname,
+              ROUTES.settings,
+              location.search
+            ) && (
+                <span
+                  className="
                 absolute
                 left-0
                 top-1/2
@@ -407,29 +401,29 @@ export default function Sidebar() {
 
                 bg-emerald-400
               "
+                />
+              )}
+
+
+            <Settings
+              size={18}
+              strokeWidth={1.8}
             />
-          )}
+
+            <span>
+              Settings
+            </span>
+
+          </Link>
 
 
-          <Settings
-            size={18}
-            strokeWidth={1.8}
-          />
-
-          <span>
-            Settings
-          </span>
-
-        </Link>
-
-
-        {/* ===================================================
+          {/* ===================================================
             LOGOUT
         =================================================== */}
 
-        <Link
-          to={ROUTES.logout}
-          className={`
+          <Link
+            to={ROUTES.logout}
+            className={`
             mt-1
 
             flex
@@ -445,32 +439,31 @@ export default function Sidebar() {
 
             transition
 
-            ${
-              "text-[var(--text-secondary)] hover:bg-[var(--card-hover)]"
-            }
+            ${"text-[var(--text-secondary)] hover:bg-[var(--card-hover)]"
+              }
           `}
-        >
+          >
 
-          <LogIn
-            size={18}
-            strokeWidth={1.8}
-          />
+            <LogIn
+              size={18}
+              strokeWidth={1.8}
+            />
 
-          <span>
-            Logout
-          </span>
+            <span>
+              Logout
+            </span>
 
-        </Link>
+          </Link>
 
-      </div>
+        </div>
 
 
-      {/* =====================================================
+        {/* =====================================================
           DOCTOR PROFILE
       ===================================================== */}
 
-      <div
-        className={`
+        <div
+          className={`
           mt-3
 
           shrink-0
@@ -480,18 +473,17 @@ export default function Sidebar() {
           px-4
           py-5
 
-          ${
-            "border-[var(--border)]"
-          }
+          ${"border-[var(--border)]"
+            }
         `}
-      >
+        >
 
-        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
 
-          {/* Avatar */}
+            {/* Avatar */}
 
-          <div
-            className="
+            <div
+              className="
               flex
               h-[42px]
               w-[42px]
@@ -504,52 +496,50 @@ export default function Sidebar() {
               bg-[var(--accent-soft)]
               text-[var(--accent)]
             "
-          >
-            <UsersRound
-              size={19}
-              strokeWidth={1.7}
-            />
-          </div>
+            >
+              <UsersRound
+                size={19}
+                strokeWidth={1.7}
+              />
+            </div>
 
 
-          {/* Doctor information */}
+            {/* Doctor information */}
 
-          <div className="min-w-0">
+            <div className="min-w-0">
 
-            <div
-              className={`
+              <div
+                className={`
                 truncate
 
                 text-[15px]
                 font-semibold
 
-                ${
-                  "text-[var(--text)]"
-                }
+                ${"text-[var(--text)]"
+                  }
               `}
-            >
-              Dr. Olivia
-            </div>
+              >
+                Dr. Olivia
+              </div>
 
 
-            <div
-              className={`
+              <div
+                className={`
                 mt-1
                 text-[13px]
 
-                ${
-                  "text-[var(--muted)]"
-                }
+                ${"text-[var(--muted)]"
+                  }
               `}
-            >
-              Physician
+              >
+                Physician
+              </div>
+
             </div>
 
           </div>
 
         </div>
-
-      </div>
 
       </div>
 

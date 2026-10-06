@@ -235,22 +235,29 @@ class MedicalRecordAnalyzeView(APIView):
         file_type = lab_report.file_type if lab_report else ""
         analysis = parse_report_content(content, title=title, file_type=file_type)
 
+        # Sanitize strings to ensure PostgreSQL compatibility (cannot contain 0x00 bytes)
+        clean_extracted_text = (analysis.get("extracted_text") or "").replace("\x00", "")
+        clean_summary = (analysis.get("summary") or "").replace("\x00", "")
+
         # Update lab report fields and create LabResults if it's a LabReport
         if lab_report:
-            lab_report.extracted_text = analysis["extracted_text"]
-            lab_report.analysis_summary = analysis["summary"]
+            lab_report.extracted_text = clean_extracted_text
+            lab_report.analysis_summary = clean_summary
             lab_report.save(update_fields=["extracted_text", "analysis_summary"])
 
             # Sync extracted metrics to LabResult models
-            for metric in analysis["metrics"]:
+            for metric in analysis.get("metrics", []):
+                test_name = str(metric.get("test_name", "")).replace("\x00", "")
+                if not test_name:
+                    continue
                 LabResult.objects.update_or_create(
                     report=lab_report,
-                    test_name=metric["test_name"],
+                    test_name=test_name,
                     defaults={
-                        "value": metric["value"],
-                        "unit": metric["unit"],
-                        "reference_range": metric["reference_range"],
-                        "flag": metric["flag"],
+                        "value": str(metric.get("value", "")).replace("\x00", ""),
+                        "unit": str(metric.get("unit", "")).replace("\x00", ""),
+                        "reference_range": str(metric.get("reference_range", "")).replace("\x00", ""),
+                        "flag": str(metric.get("flag", "normal")).replace("\x00", ""),
                     },
                 )
 

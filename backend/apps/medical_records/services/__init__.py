@@ -20,7 +20,7 @@ def save_lab_report(patient_user, uploaded_file, title="", request=None):
 
     report = LabReport(
         patient=patient_user,
-        title=title if title else Path(uploaded_file.name).stem,
+        title=(title if title else Path(uploaded_file.name).stem).replace("\x00", "").strip(),
         file_type=ext.lstrip("."),
         file_size=uploaded_file.size,
     )
