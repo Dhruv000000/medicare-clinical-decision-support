@@ -549,7 +549,7 @@ export default function Settings() {
       >
         <PatientSidebar darkMode={darkMode} />
 
-        <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <main className="ml-[255px] flex min-w-0 flex-1 flex-col overflow-hidden">
           <Header darkMode={darkMode} setDarkMode={setDarkMode} />
 
           <div className="min-h-0 flex-1 overflow-y-auto px-8 py-5">

@@ -133,9 +133,9 @@ export default function Sidebar() {
 
         flex
         h-screen
-        w-[217px]
-        min-w-[217px]
-        max-w-[217px]
+        w-[237px]
+        min-w-[237px]
+        max-w-[237px]
         flex-col
         overflow-hidden
 

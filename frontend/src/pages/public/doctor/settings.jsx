@@ -17,13 +17,13 @@ export default function Settings({ embedded = false }) {
 
   return (
     <div
-      className="min-h-dvh medicare-doctor-shell bg-[var(--bg)] text-[var(--text)]"
+      className="min-h-screen bg-[var(--bg)] text-[var(--text)]"
       style={{ colorScheme: isDark ? "dark" : "light" }}
     >
       {!embedded && <Sidebar />}
 
-      <main className={embedded ? "min-h-dvh w-full" : "ml-[217px] min-h-dvh w-[calc(100%-217px)] flex-none"}>
-        <header className="flex min-h-[72px] items-center justify-between gap-4 border-b border-[var(--border)] px-5 sm:px-7 lg:px-8">
+      <main className={embedded ? "min-h-screen w-full" : "ml-[255px] min-h-screen w-[calc(100%-255px)] min-w-0 flex-none"}>
+        <header className="flex min-h-[72px] items-center justify-between gap-4 border-b border-[var(--border)] bg-[var(--bg)] px-5 sm:px-7 lg:px-8">
           <div>
             <h1 className="text-[26px] font-bold tracking-tight sm:text-[30px]">Settings</h1>
             <p className="mt-1 text-xs text-[var(--muted)]">Manage your doctor account and dashboard preferences.</p>
@@ -39,8 +39,8 @@ export default function Settings({ embedded = false }) {
           </button>
         </header>
 
-        <section className="px-5 py-5 sm:px-7 lg:px-8">
-          <div className="grid max-w-5xl gap-4 lg:grid-cols-[1.15fr_.85fr]">
+        <section className="min-h-[calc(100vh-72px)] px-5 py-5 sm:px-7 lg:px-8">
+          <div className="mx-auto grid max-w-6xl gap-4 lg:grid-cols-[1.15fr_.85fr]">
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 sm:p-6">
               <div className="mb-6 flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
@@ -99,7 +99,7 @@ export default function Settings({ embedded = false }) {
             </div>
           </div>
 
-          <div className="mt-4 flex max-w-5xl items-center justify-between gap-4 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4">
+          <div className="mt-4 mx-auto flex max-w-6xl items-center justify-between gap-4 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4">
             <p className="text-sm text-[var(--muted)]">Your settings are local to this dashboard until backend persistence is connected.</p>
             <button type="button" onClick={saveSettings} className="flex shrink-0 items-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-[#06231d] transition hover:brightness-105">
               {saved ? <Check size={17} /> : <Save size={17} />}
