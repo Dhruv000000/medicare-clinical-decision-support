@@ -322,7 +322,7 @@ export default function DoctorDashboard() {
   ];
 
   if (new URLSearchParams(location.search).get("view") === "settings") {
-    return <Settings embedded />;
+    return <Settings />;
   }
 
   return (

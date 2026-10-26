@@ -360,6 +360,16 @@ function App() {
             }
           />
 
+          {/* Doctor Settings */}
+          <Route
+            path="/doctor/settings"
+            element={
+              <ProtectedRoute allowedRoles={["doctor"]}>
+                <Settings />
+              </ProtectedRoute>
+            }
+          />
+
           {/* Patients */}
           <Route
             path="/doctor/patients"
