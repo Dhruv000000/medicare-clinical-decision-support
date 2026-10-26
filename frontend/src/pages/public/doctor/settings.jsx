@@ -1,14 +1,31 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/doctor/settings.jsx
+// PURPOSE: Physician preferences and dashboard display configuration console.
+// VIVA EXPLANATION: This interface provides doctors with controls over notification delivery, theme appearance (light/dark modes), compact table spacing, and provider identity preferences.
+// ==============================================================================
+
 import React from "react";
 import { Bell, Check, Globe2, Monitor, Moon, Save, Sun, UserRound } from "lucide-react";
 import Sidebar from "./sidebar";
 import { useTheme } from "../ThemeContext";
+import { useAuth } from "../../../_core/hooks/useAuth";
 
+// --- Settings ---
+// What it does: Primary physician preferences page rendering profile details and interactive toggles.
+// Why it's structured this way: Supports both standalone full-page view and embedded modal view via embedded prop.
+// Parameters & Returns: Props: embedded (boolean). Returns doctor settings view JSX.
+// ------------------------------------------------------------------------------
 export default function Settings({ embedded = false }) {
   const { isDark, toggleTheme } = useTheme();
+  const { user } = useAuth();
   const [saved, setSaved] = React.useState(false);
   const [notifications, setNotifications] = React.useState(true);
   const [emailAlerts, setEmailAlerts] = React.useState(true);
   const [compactMode, setCompactMode] = React.useState(false);
+
+  const fullName = user?.full_name || (user?.first_name ? `Dr. ${user.first_name} ${user.last_name || ""}`.trim() : "Dr. Physician");
+  const userRole = user?.role === "doctor" ? "Physician" : user?.role ? String(user.role).charAt(0).toUpperCase() + String(user.role).slice(1) : "Physician";
+  const userEmail = user?.email || "doctor@medicare.local";
 
   const saveSettings = () => {
     setSaved(true);
@@ -55,15 +72,15 @@ export default function Settings({ embedded = false }) {
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="text-sm">
                   <span className="mb-2 block text-[var(--muted)]">Full name</span>
-                  <input defaultValue="Dr. Olivia" className="w-full rounded-xl border border-[var(--border-soft)] bg-[var(--card-soft)] px-4 py-3 outline-none transition focus:border-[var(--accent)]" />
+                  <input defaultValue={fullName} key={`name-${user?.id || 'doc'}`} className="w-full rounded-xl border border-[var(--border-soft)] bg-[var(--card-soft)] px-4 py-3 outline-none transition focus:border-[var(--accent)]" />
                 </label>
                 <label className="text-sm">
                   <span className="mb-2 block text-[var(--muted)]">Role</span>
-                  <input defaultValue="Physician" className="w-full rounded-xl border border-[var(--border-soft)] bg-[var(--card-soft)] px-4 py-3 outline-none transition focus:border-[var(--accent)]" />
+                  <input defaultValue={userRole} key={`role-${user?.id || 'doc'}`} className="w-full rounded-xl border border-[var(--border-soft)] bg-[var(--card-soft)] px-4 py-3 outline-none transition focus:border-[var(--accent)]" />
                 </label>
                 <label className="text-sm sm:col-span-2">
                   <span className="mb-2 block text-[var(--muted)]">Email</span>
-                  <input defaultValue="olivia@medicare.local" type="email" className="w-full rounded-xl border border-[var(--border-soft)] bg-[var(--card-soft)] px-4 py-3 outline-none transition focus:border-[var(--accent)]" />
+                  <input defaultValue={userEmail} key={`email-${user?.id || 'doc'}`} type="email" className="w-full rounded-xl border border-[var(--border-soft)] bg-[var(--card-soft)] px-4 py-3 outline-none transition focus:border-[var(--accent)]" />
                 </label>
               </div>
             </div>
@@ -112,6 +129,11 @@ export default function Settings({ embedded = false }) {
   );
 }
 
+// --- SettingToggle ---
+// What it does: Reusable interactive toggle switch component with title and descriptive sublabel.
+// Why it's structured this way: Encapsulates toggle transition animation and accessible button triggering for clinical settings.
+// Parameters & Returns: Props: label (string), description (string), enabled (boolean), onChange (func). Returns toggle button JSX.
+// ------------------------------------------------------------------------------
 function SettingToggle({ label, description, enabled, onChange }) {
   return (
     <button

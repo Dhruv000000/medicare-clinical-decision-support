@@ -16,6 +16,7 @@ from apps.medical_records.services.report_parser import (
     classify_hemoglobin,
     classify_platelets,
     classify_wbc,
+    classify_egfr,
 )
 
 
@@ -292,3 +293,280 @@ class TestMedicalReportParser:
             assert "\x00" not in result.test_name
             assert "\x00" not in result.value
             assert "\x00" not in result.unit
+
+    def test_egfr_classification(self):
+        assert classify_egfr(90)[0] == "normal"
+        assert classify_egfr(65)[0] == "normal"
+        assert classify_egfr(60, operator=">=")[0] == "normal"
+        assert classify_egfr(60, operator=">")[0] == "normal"
+        assert classify_egfr(52)[0] == "elevated"  # Stage 3a CKD
+        assert classify_egfr(38)[0] == "low"       # Stage 3b CKD
+        assert classify_egfr(22)[0] == "critical"  # Stage 4 CKD
+        assert classify_egfr(10)[0] == "critical"  # Stage 5 CKD
+
+    def test_biomarker_resilience_newlines_and_tabs(self):
+        """
+        Verifies parser resilience to flexible line breaks, tabs, colons,
+        and spaces across standard biomarkers (HbA1c, Glucose, eGFR, Creatinine,
+        Total Cholesterol, Triglycerides, Hemoglobin).
+        """
+        text_with_breaks = """
+        CLINICAL DIAGNOSTIC REPORT:
+        HbA1c
+        6.5
+        %
+
+        Hemoglobin A1c\t6.8%
+        A1C: 7.2%
+
+        Glucose
+        110
+        mg/dL
+
+        eGFR
+        58
+        mL/min/1.73m2
+
+        Creatinine
+        1.2
+        mg/dL
+
+        Total Cholesterol
+        215
+        mg/dL
+
+        Triglycerides
+        175
+        mg/dL
+        """
+        analysis = parse_report_content(text_with_breaks, title="Resilience Test")
+        assert analysis["total_metrics_extracted"] >= 6
+        metrics_by_name = {m["test_name"]: m for m in analysis["metrics"]}
+
+        assert "HbA1c" in metrics_by_name
+        assert "Fasting Blood Glucose" in metrics_by_name
+        assert "eGFR" in metrics_by_name
+        assert metrics_by_name["eGFR"]["value"] == "58"
+        assert metrics_by_name["eGFR"]["flag"] == "elevated"
+        assert "Serum Creatinine" in metrics_by_name
+        assert metrics_by_name["Serum Creatinine"]["value"] == "1.2"
+        assert "Total Cholesterol" in metrics_by_name
+        assert "Triglycerides" in metrics_by_name
+
+        # Verify fallback logs contain matching history
+        assert "fallback_log" in analysis
+        assert len(analysis["fallback_log"]) > 0
+        log_text = " ".join(analysis["fallback_log"])
+        assert "HbA1c" in log_text
+        assert "eGFR" in log_text
+
+    def test_biomarker_resilience_table_cells_and_sequential_columns(self):
+        """
+        Verifies parser resilience to sequential table cells with intermediate rows
+        (e.g., '(Quantitative)', 'Result:', leader dots, pipes, and column layouts).
+        """
+        table_cells_text = """
+        OUTPATIENT RESULTS:
+        HbA1c
+        (Quantitative)
+        6.2 %
+
+        Fasting Glucose | 108 | mg/dL
+        Total Cholesterol ........ 225 mg/dL
+        Serum Creatinine - 1.1 mg/dL
+        eGFR: >60 mL/min/1.73m2
+        Triglycerides: High 190 mg/dL
+        """
+        analysis = parse_report_content(table_cells_text, title="Table Cells Test")
+        assert analysis["total_metrics_extracted"] >= 5
+        metrics_by_name = {m["test_name"]: m for m in analysis["metrics"]}
+
+        assert metrics_by_name["HbA1c"]["value"] == "6.2"
+        assert metrics_by_name["Fasting Blood Glucose"]["value"] == "108"
+        assert metrics_by_name["Total Cholesterol"]["value"] == "225"
+        assert metrics_by_name["Serum Creatinine"]["value"] == "1.1"
+        assert ">60" in metrics_by_name["eGFR"]["value"]
+
+        # Test pure sequential column table layout
+        columnar_text = """
+        TEST NAME
+        HbA1c
+        Fasting Glucose
+        Creatinine
+        eGFR
+        Total Cholesterol
+        Triglycerides
+
+        RESULTS
+        6.6 %
+        112 mg/dL
+        1.3 mg/dL
+        55 mL/min/1.73m2
+        230 mg/dL
+        185 mg/dL
+        """
+        col_analysis = parse_report_content(columnar_text, title="Column Dump Test")
+        assert col_analysis["total_metrics_extracted"] >= 4
+        col_names = [m["test_name"] for m in col_analysis["metrics"]]
+        assert "HbA1c" in col_names or "Fasting Blood Glucose" in col_names
+
+    def test_parse_standard_text_pdf_with_pypdf(self):
+        """
+        Verifies that a valid text-based PDF byte stream is processed via pypdf
+        and extracts quantitative clinical metrics without returning 0 metrics.
+        """
+        import io
+        from pypdf import PdfWriter
+
+        writer = PdfWriter()
+        # Add a page with clinical text streams
+        page = writer.add_blank_page(width=612, height=792)
+        
+        # Valid PDF with page content stream
+        pdf_source = b"""%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 200 >>
+stream
+BT
+/F1 12 Tf
+72 712 Td
+(CLINICAL LABORATORY REPORT) Tj
+0 -20 Td
+(HbA1c: 6.4%) Tj
+0 -20 Td
+(Fasting Glucose: 115 mg/dL) Tj
+0 -20 Td
+(eGFR: 58 mL/min/1.73m2) Tj
+0 -20 Td
+(Serum Creatinine: 1.1 mg/dL) Tj
+0 -20 Td
+(Total Cholesterol: 218 mg/dL) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000234 00000 n 
+0000000487 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+565
+%%EOF"""
+
+        analysis = parse_report_content(pdf_source, title="Standard PDF Upload", file_type="pdf")
+        assert analysis["total_metrics_extracted"] >= 4
+        assert len(analysis["metrics"]) >= 4
+        metric_names = [m["test_name"] for m in analysis["metrics"]]
+        assert "HbA1c" in metric_names
+        assert "Fasting Blood Glucose" in metric_names
+        assert "eGFR" in metric_names
+        assert "Serum Creatinine" in metric_names
+
+        # Fallback log verification
+        assert "fallback_log" in analysis
+        assert len(analysis["fallback_log"]) > 0
+        assert any("pypdf" in entry for entry in analysis["fallback_log"])
+
+    def test_analyze_endpoint_returns_fallback_log(self):
+        """
+        Verifies that POST /api/v1/records/<id>/analyze/ returns both the extracted
+        metrics array and fallback_log in the response payload.
+        """
+        report = LabReport.objects.create(
+            patient=self.patient_a,
+            title="Comprehensive Metabolic Panel",
+            extracted_text="HbA1c: 6.7%. Fasting Glucose: 128 mg/dL. eGFR: 55 mL/min/1.73m2. Total Cholesterol: 220 mg/dL.",
+        )
+
+        self.client.force_authenticate(user=self.patient_a)
+        res = self.client.post(f"/api/v1/records/{report.id}/analyze/", format="json")
+
+        assert res.status_code == status.HTTP_200_OK
+        data = res.json()
+        assert "metrics" in data
+        assert data["total_metrics_extracted"] >= 3
+        assert "fallback_log" in data
+        assert isinstance(data["fallback_log"], list)
+        assert len(data["fallback_log"]) > 0
+        assert "extraction_logs" in data
+        assert any("[Pattern Match]" in entry for entry in data["fallback_log"])
+
+    def test_structured_clinical_interpretation_and_next_steps(self):
+        """
+        Verifies that parse_report_content and analyze endpoint produce domain-specific
+        structured impressions and actionable next steps matching clinical guidelines.
+        """
+        report_text = (
+            "Fasting Blood Glucose: 168 mg/dL\n"
+            "HbA1c: 8.4%\n"
+            "Total Cholesterol: 242 mg/dL\n"
+            "Triglycerides: 218 mg/dL\n"
+            "HDL Cholesterol: 34 mg/dL\n"
+            "Serum Creatinine: 1.38 mg/dL\n"
+            "Platelet Count: 284000 cells/mcL\n"
+        )
+        report = LabReport.objects.create(
+            patient=self.patient_a,
+            title="Comprehensive Metabolic & Lipid Panel",
+            extracted_text=report_text,
+        )
+
+        self.client.force_authenticate(user=self.patient_a)
+        res = self.client.post(f"/api/v1/records/{report.id}/analyze/", format="json")
+
+        assert res.status_code == status.HTTP_200_OK
+        data = res.json()
+        assert "clinical_impression" in data
+        assert "recommended_next_steps" in data
+
+        impressions = data["clinical_impression"]
+        domains = {item["domain"]: item for item in impressions}
+
+        # 1. Glycemic Control
+        assert "Glycemic Control" in domains
+        assert domains["Glycemic Control"]["status"] in ("abnormal", "critical")
+        assert "Poorly controlled hyperglycemia" in domains["Glycemic Control"]["interpretation"]
+        assert "168" in domains["Glycemic Control"]["interpretation"]
+        assert "8.4" in domains["Glycemic Control"]["interpretation"]
+
+        # 2. Lipid Profile
+        assert "Lipid Profile" in domains
+        assert domains["Lipid Profile"]["status"] in ("abnormal", "critical")
+        assert "Mixed dyslipidemia" in domains["Lipid Profile"]["interpretation"]
+        assert "Total Cholesterol (242 mg/dL)" in domains["Lipid Profile"]["interpretation"]
+        assert "Triglycerides (218 mg/dL)" in domains["Lipid Profile"]["interpretation"]
+        assert "HDL (34 mg/dL)" in domains["Lipid Profile"]["interpretation"]
+
+        # 3. Renal Function
+        assert "Renal Function" in domains
+        assert domains["Renal Function"]["status"] in ("abnormal", "critical")
+        assert "Serum Creatinine is mildly elevated (1.38 mg/dL)" in domains["Renal Function"]["interpretation"]
+
+        # 4. Hematology
+        assert "Hematology" in domains
+        assert domains["Hematology"]["status"] == "normal"
+        assert "Platelet count (284,000 cells/mcL) is within normal reference limits" in domains["Hematology"]["interpretation"]
+
+        # 5. Recommended Next Steps
+        steps = data["recommended_next_steps"]
+        assert any("endocrinologist" in s and "lipid therapy" in s for s in steps)
+        assert any("Re-test fasting glucose and renal panel" in s for s in steps)
+        assert any("Discuss lifestyle, dietary, and physical activity modifications" in s for s in steps)
+

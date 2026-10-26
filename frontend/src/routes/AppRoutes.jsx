@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/routes/AppRoutes.jsx
+// PURPOSE: Declarative client-side route manifest using React Router DOM.
+// VIVA EXPLANATION: Configures client-side routing for public pages and nested patient portal paths. Maps URLs to views such as AI disease prediction, symptom analysis, lab test parser, and drug interactions within the DashboardLayout container.
+// ==============================================================================
+
 import { Routes, Route } from "react-router-dom";
 
 import Landing from "../pages/public/Landing";
@@ -20,6 +26,12 @@ import MedicineSearch from "../pages/patient/medicine_search";
 import DrugInteractions from "../pages/patient/drug_interactions";
 import Settings from "../pages/patient/settings";
 
+
+// --- AppRoutes ---
+// What it does: Renders declarative route branches for landing, login, and nested patient routes.
+// Why it's structured this way: Uses nested routes inside /patient so child views share common navigation and layout.
+// Parameters & Returns: Props (none) -> React Router Routes element hierarchy.
+// ------------------------------------------------------------------------------
 function AppRoutes() {
   return (
     <Routes>
@@ -62,4 +74,4 @@ function AppRoutes() {
   );
 }
 
-export default AppRoutes;
+export default AppRoutes;

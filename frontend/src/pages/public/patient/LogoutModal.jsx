@@ -1,12 +1,25 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/patient/LogoutModal.jsx
+// PURPOSE: Accessible modal confirmation dialog for terminating authenticated user sessions.
+// VIVA EXPLANATION: Implements the user logout confirmation modal. Traps keyboard escape keys, supports backdrop clicks, and prompts the patient before terminating their session and flushing JWT authentication tokens.
+// ==============================================================================
+
 import React, { useEffect } from "react";
 import { LogOut, X, ShieldAlert } from "lucide-react";
 
+
+// --- LogoutModal ---
+// What it does: Renders an accessible modal dialog confirming session sign-out intent.
+// Why it's structured this way: Prevents accidental logouts while ensuring ARIA dialog compliance and keyboard accessibility.
+// Parameters & Returns: { open, darkMode, onClose, onConfirm } -> Modal dialog JSX element or null if closed.
+// ------------------------------------------------------------------------------
 export default function LogoutModal({
   open,
   darkMode,
   onClose,
   onConfirm,
 }) {
+
   useEffect(() => {
     if (!open) return;
 

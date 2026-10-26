@@ -1,3 +1,9 @@
+# ==============================================================================
+# FILE: backend/apps/patients/urls.py
+# PURPOSE: URL routing configuration for the patient self-service portal.
+# VIVA EXPLANATION: Directs patient requests under /api/v1/patient/ to their appropriate endpoints, including demographic profile, dashboard, appointments, electronic medical records, lab upload, medications, and prediction history.
+# ==============================================================================
+
 from django.urls import path
 from .views import ProfileView, DashboardView
 from apps.appointments.views import AppointmentListCreateView, AppointmentDetailView

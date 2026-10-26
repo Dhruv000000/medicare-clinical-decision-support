@@ -1,3 +1,9 @@
+# ==============================================================================
+# FILE: backend/apps/accounts/services.py
+# PURPOSE: Business logic service for atomic user registration, profile creation, and token blacklisting.
+# VIVA EXPLANATION: Encapsulates database transactions for user registration, ensuring that PatientProfile or DoctorProfile is atomically created alongside the User, and records regulatory audit logs.
+# ==============================================================================
+
 from django.db import transaction
 from rest_framework_simplejwt.tokens import RefreshToken
 from apps.audit_logs.services import log_audit_event
@@ -5,6 +11,11 @@ from apps.audit_logs.models import AuditLog
 from .models import User
 
 
+# --- register_user ---
+# What it does: Atomically creates a User record, instantiates the corresponding profile (PatientProfile/DoctorProfile), emits audit log, and generates JWT tokens.
+# Why it's structured this way: Uses 'with transaction.atomic()' to guarantee database consistency—if profile creation fails, the user is not left in an orphaned state.
+# Parameters & Returns: Takes validated_data dictionary and optional request; returns dictionary with User object and token strings.
+# ------------------------------------------------------------------------------
 def register_user(validated_data, request=None):
     """
     Registers a new user inside an atomic transaction,
@@ -49,6 +60,11 @@ def register_user(validated_data, request=None):
         }
 
 
+# --- blacklist_refresh_token ---
+# What it does: Adds the specified SimpleJWT refresh token to the database blacklist and records an audit log event.
+# Why it's structured this way: Ensures that logged-out tokens cannot be reused to forge new access tokens.
+# Parameters & Returns: Takes refresh_token_str, user, and request; returns None.
+# ------------------------------------------------------------------------------
 def blacklist_refresh_token(refresh_token_str, user=None, request=None):
     """
     Blacklists the provided refresh token and records an audit log event.
@@ -60,7 +76,7 @@ def blacklist_refresh_token(refresh_token_str, user=None, request=None):
         user=user,
         action=AuditLog.Actions.USER_LOGOUT,
         resource_type="User",
-        resource_id=user.id if user else "",
+        resource_id=user.id if user else None,
         request=request,
-        metadata={"detail": "Refresh token successfully blacklisted"},
+        metadata={"action": "logout"},
     )

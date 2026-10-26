@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/doctor/reports.jsx
+// PURPOSE: Diagnostic lab and pathology reports review console for physicians.
+// VIVA EXPLANATION: This screen aggregates laboratory test reports across all assigned patients. It highlights abnormal diagnostic values, assigns clinical urgency tiers (High, Medium, Normal), and enables doctors to download original attachments or inspect extracted clinical findings.
+// ==============================================================================
+
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Search,
@@ -22,6 +28,11 @@ import { useTheme } from "../ThemeContext";
 import { useAuth } from "../../../_core/hooks/useAuth";
 import doctorService from "../../../services/doctorService";
 
+// --- StatusBadge ---
+// What it does: Renders status tags reflecting review state (Reviewed, Needs Review, Pending).
+// Why it's structured this way: Uses distinct color semantics to immediately flag unreviewed reports requiring clinical oversight.
+// Parameters & Returns: Props: status (string). Returns styled JSX badge.
+// ------------------------------------------------------------------------------
 function StatusBadge({ status }) {
   const styles = {
     Reviewed: "bg-emerald-500/10 text-emerald-500",
@@ -49,6 +60,11 @@ function StatusBadge({ status }) {
   );
 }
 
+// --- PriorityBadge ---
+// What it does: Displays clinical urgency level (Normal, Medium, High).
+// Why it's structured this way: Flags abnormal pathology thresholds to accelerate critical lab intervention.
+// Parameters & Returns: Props: priority (string). Returns styled JSX span.
+// ------------------------------------------------------------------------------
 function PriorityBadge({ priority }) {
   const styles = {
     Normal: "bg-[var(--card-soft)] text-[var(--muted)]",
@@ -67,6 +83,11 @@ function PriorityBadge({ priority }) {
   );
 }
 
+// --- Reports ---
+// What it does: Primary diagnostic reports console displaying aggregated lab results and modal inspection views.
+// Why it's structured this way: Iterates across authorized patients to retrieve and normalize medical record lab reports, providing real-time filtering and modal views.
+// Parameters & Returns: None. Returns diagnostic reports dashboard JSX.
+// ------------------------------------------------------------------------------
 export default function Reports() {
   const { isDark, toggleTheme } = useTheme();
   const { user } = useAuth();

@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/doctor/clinicalnotes.jsx
+// PURPOSE: Doctor Clinical Notes interface for reviewing historical patient observations and recording signed diagnostic assessments.
+// VIVA EXPLANATION: This view handles electronic health record (EHR) progress notes. Doctors can review previous longitudinal notes written for their authorized patient roster, search and filter entries, and author new notes with clinical categories and diagnostic findings.
+// ==============================================================================
+
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Search,
@@ -25,6 +31,11 @@ import { useTheme } from "../ThemeContext";
 import { useAuth } from "../../../_core/hooks/useAuth";
 import doctorService from "../../../services/doctorService";
 
+// --- StatusBadge ---
+// What it does: Renders a visual tag distinguishing signed progress notes from preliminary drafts.
+// Why it's structured this way: Clearly communicates the legal and verification status of clinical documentation.
+// Parameters & Returns: Props: status (string). Returns styled JSX span badge.
+// ------------------------------------------------------------------------------
 function StatusBadge({ status }) {
   if (status === "Signed") {
     return (
@@ -43,6 +54,11 @@ function StatusBadge({ status }) {
   );
 }
 
+// --- ClinicalNotes ---
+// What it does: Master clinical observation documentation console managing patient notes lists and note creation dialogs.
+// Why it's structured this way: Fetches patient rosters and aggregated EHR notes, supporting live filtering, full inspection modal, and note creation.
+// Parameters & Returns: None. Returns clinical progress note dashboard JSX.
+// ------------------------------------------------------------------------------
 export default function ClinicalNotes() {
   const { isDark, toggleTheme } = useTheme();
   const { user } = useAuth();

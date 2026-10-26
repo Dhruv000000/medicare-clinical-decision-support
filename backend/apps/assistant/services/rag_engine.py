@@ -1,9 +1,11 @@
 import logging
-from typing import Optional, Dict, Any, List
+import re
+from typing import Optional, Dict, Any, List, Union
 from django.utils import timezone
 from apps.assistant.models import ChatConversation, ChatMessage
 from .pubmed_service import pubmed_service
 from .llm_provider import get_llm_provider
+from .triage_service import triage_service, detect_emergency as triage_detect_emergency
 
 logger = logging.getLogger(__name__)
 
@@ -13,40 +15,324 @@ MANDATORY_REGULATORY_DISCLAIMER = (
     "diagnosis, or personalized prescription by a licensed healthcare provider."
 )
 
+EMERGENCY_REGULATORY_DISCLAIMER = (
+    "EMERGENCY PROTOCOL: This assistant is not equipped to handle life-threatening emergencies. "
+    "Please seek in-person emergency medical care immediately."
+)
 
+EMERGENCY_ALERT_INSTRUCTION = (
+    "🚨 RED-FLAG EMERGENCY MEDICAL ALERT: IMMEDIATE ACTION REQUIRED\n\n"
+    "Your description indicates symptoms that may signify a life-threatening medical emergency "
+    "(such as acute cardiovascular distress, acute respiratory failure, stroke, severe hemorrhage, or loss of consciousness).\n\n"
+    "IMMEDIATE ACTION REQUIRED:\n"
+    "• Call Emergency Medical Services immediately:\n"
+    "  - United States / Canada: 911\n"
+    "  - India: 108 / 112 / 102\n"
+    "  - United Kingdom: 999 / 112\n"
+    "  - European Union: 112\n"
+    "  - Or dial your local regional emergency dispatch number immediately.\n"
+    "• Proceed to the nearest hospital Emergency Department immediately.\n"
+    "• Do NOT drive yourself—have emergency responders or someone transport you.\n"
+    "• If experiencing chest pain or acute shortness of breath, remain seated upright in a comfortable position, "
+    "stay calm, and loosen restrictive clothing while awaiting paramedics.\n\n"
+    "Do NOT rely on an AI assistant or delay seeking immediate in-person emergency medical care."
+)
+
+STROKE_EMERGENCY_INSTRUCTION = (
+    "🚨 RED-FLAG EMERGENCY MEDICAL ALERT: SUSPECTED ACUTE STROKE\n\n"
+    "Your description indicates symptoms consistent with an acute stroke (such as sudden facial droop, "
+    "one-sided weakness, or slurred speech). Brain cells die rapidly without oxygen; every minute counts.\n\n"
+    "CRITICAL IMMEDIATE ACTION REQUIRED:\n"
+    "1. CALL EMERGENCY SERVICES IMMEDIATELY:\n"
+    "   - United States / Canada: 911\n"
+    "   - India: 108 / 112 / 102\n"
+    "   - United Kingdom: 999 / 112\n"
+    "   - European Union: 112\n"
+    "   - Or dial your local regional emergency dispatch number immediately.\n"
+    "2. RECORD EXACT TIME OF ONSET: Check the clock and note down exactly when symptoms began or when "
+    "the person was last known well. This precise time window determines eligibility for critical clot-dissolving "
+    "medication (tPA within 3–4.5 hours) or endovascular thrombectomy.\n"
+    "3. DO NOT WAIT OR HESITATE: Do NOT wait for symptoms to resolve or try to 'sleep it off'.\n"
+    "4. DO NOT DRIVE YOURSELF: Do NOT attempt to drive to the hospital—paramedics can begin neurological assessment and pre-alert the stroke center en route.\n"
+    "5. PATIENT SAFETY: Keep the person resting comfortably with head slightly elevated. Do NOT administer food, fluids, or medications like aspirin until evaluated by emergency clinicians.\n\n"
+    "Do NOT rely on an AI assistant or delay seeking immediate in-person emergency medical care."
+)
+
+CARDIAC_EMERGENCY_INSTRUCTION = (
+    "🚨 RED-FLAG EMERGENCY MEDICAL ALERT: SUSPECTED ACUTE CARDIAC EVENT / CHEST DISTRESS\n\n"
+    "Your description indicates symptoms that may signify acute cardiovascular distress "
+    "(such as severe or persistent chest pressure, shortness of breath, radiating discomfort, or sweating).\n\n"
+    "CRITICAL IMMEDIATE ACTION REQUIRED:\n"
+    "1. CALL EMERGENCY SERVICES IMMEDIATELY:\n"
+    "   - United States / Canada: 911\n"
+    "   - India: 108 / 112 / 102\n"
+    "   - United Kingdom: 999 / 112\n"
+    "   - European Union: 112\n"
+    "   - Or dial your local regional emergency dispatch number immediately.\n"
+    "2. REST SEATED: Remain seated upright in a comfortable position, stay calm, and loosen restrictive clothing while awaiting paramedics.\n"
+    "3. DO NOT DRIVE YOURSELF: Have emergency medical responders transport you so cardiac monitoring and stabilization can begin immediately.\n"
+    "4. ASPIRIN PROTOCOL: If advised by emergency dispatchers and not allergic or contraindicated, chew an adult aspirin while awaiting paramedics.\n\n"
+    "Do NOT rely on an AI assistant or delay seeking immediate in-person emergency medical care."
+)
+
+
+
+# --- RAGAssistantEngine ---
+# What it does: Orchestrates literature retrieval, patient context aggregation, LLM prompting, and message history persistence.
+# Why it's structured this way: Separates domain conversational orchestration from external LLM API vendors (Gemini/HuggingFace/mock).
+# Parameters & Returns: Service engine with chat_and_synthesize and context builder methods.
+# ------------------------------------------------------------------------------
 class RAGAssistantEngine:
     """
-    Retrieval-Augmented Generation (RAG) engine for clinical decision support.
-    Synthesizes evidence-based clinical explanations grounded in PubMed literature
-    and patient clinical records using pluggable LLM architecture.
+    Orchestrates the PubMed literature retrieval and clinical context synthesis pipeline.
+    Features:
+    - Red-Flag emergency symptom detection and triage protocol.
+    - Intent classification (APP_NAVIGATION vs LAB_EXPLANATION vs MEDICAL_QUESTION).
+    - Intelligent, dynamic PubMed clinical query extraction without stale context bleeding.
+    - Patient electronic health record (EHR) & quantitative biomarker context injection.
     """
 
     def _normalize_query(self, query: str) -> str:
-        """Normalizes clinical query by trimming whitespace and punctuation noise."""
+        """
+        Normalizes patient query by removing extraneous whitespace and control characters.
+        """
         clean = " ".join(query.strip().split())
         return clean
 
-    def _build_patient_context(self, patient_user) -> str:
-        """Assembles localized patient context (medications, records) if available."""
+    def detect_emergency(self, prompt: str) -> Optional[Dict[str, Any]]:
+        """
+        Detects urgent red-flag clinical symptoms requiring immediate emergency triage.
+        Delegates to EmergencyTriageService which enforces:
+        1. Negation-aware keyword checking within a 3-word window.
+        2. Differentiation of mild reflux/heartburn from acute ischemic cardiac distress.
+        3. Requirement of active high-acuity features for cardiac emergency alerts.
+        """
+        return triage_service.detect_emergency(prompt)
+
+    def classify_intent(self, prompt: str) -> str:
+        """
+        Classifies user prompt before querying external tools:
+        - APP_NAVIGATION: Questions about booking appointments, seeing doctors, uploading records, or using the app.
+        - LAB_EXPLANATION: Inquiries about lab results, blood work, or biomarker values.
+        - MEDICAL_QUESTION: Genuine medical, pharmacological, or physiological questions.
+        """
+        p = prompt.strip().lower()
+
+        # 1. APP_NAVIGATION check
+        nav_triggers = [
+            "book appointment", "apply for appointment", "schedule appointment", "make appointment",
+            "from where i can apply", "how can i apply", "where can i apply", "where do i apply",
+            "where to book", "how to book", "where can i book", "how do i book",
+            "see doctor", "find doctor", "consult doctor", "where to see a doctor", "how to see a doctor",
+            "upload record", "upload lab", "upload report", "upload document", "upload pdf", "upload file",
+            "where to upload", "how to upload", "where can i upload", "how do i upload",
+            "where to see my", "where can i see my", "where to find", "where can i find",
+            "how to use this app", "how does this app work", "how do i navigate", "how to navigate",
+            "in this app", "left sidebar", "navigation sidebar", "settings page", "profile page",
+        ]
+        if any(t in p for t in nav_triggers):
+            return "APP_NAVIGATION"
+
+        if re.search(r"\b(where|how)\s+(can|do|to|should)\s+(i\s+)?(apply|book|schedule|make|find|see|upload|view|download|access)\b", p):
+            return "APP_NAVIGATION"
+
+        # 2. LAB_EXPLANATION check (strictly personal lab inquiries)
+        lab_triggers = [
+            "explain my labs", "explain my lab", "review my labs", "review my lab",
+            "review my blood work", "explain my blood work", "check my blood work",
+            "interpret my blood work", "analyze my labs", "my lab result", "my lab results",
+            "my latest lab", "my test result", "my test results", "my report", "my blood test",
+            "explain my result", "explain my results", "explain my report", "interpret my labs",
+            "interpret my lab", "what do my results mean", "what do my test results mean",
+            "my biomarkers", "my blood work", "my panel", "my fasting glucose", "my hba1c",
+            "my creatinine", "my cholesterol", "my triglycerides", "my platelets",
+            "explain my latest", "review my results", "check my results", "check my labs",
+        ]
+        if any(t in p for t in lab_triggers):
+            return "LAB_EXPLANATION"
+
+        if re.search(r"\b(explain|interpret|review|analyze|what do)\b.*\b(my|latest|recent)\b.*\b(lab|labs|test|result|results|report|biomarker|blood work|panel)\b", p):
+            return "LAB_EXPLANATION"
+
+        # 3. Default to MEDICAL_QUESTION
+        return "MEDICAL_QUESTION"
+
+    def handle_app_guidance(self, prompt: str, user=None) -> str:
+        """
+        Directly answers UI and application navigation inquiries without querying PubMed.
+        """
+        p = prompt.strip().lower()
+
+        if any(w in p for w in ["appointment", "doctor", "consult", "visit", "schedule", "book", "apply"]):
+            return (
+                "You can book an appointment by navigating to 'Appointments' in the left navigation sidebar and clicking 'Book Appointment'. "
+                "From there, you can select an available doctor, choose your preferred date and time slot, specify your reason for visit, and confirm your booking."
+            )
+        elif any(w in p for w in ["upload", "record", "report", "lab", "pdf", "document", "file"]):
+            return (
+                "To upload your laboratory test reports or medical records, navigate to 'Lab Tests' (or 'Medical Records') in the left navigation sidebar and click the 'Upload Report' button. "
+                "You can upload standard text-based PDF documents or clinical images. Once uploaded, MediCare will automatically parse the document and extract quantitative clinical biomarkers."
+            )
+        elif any(w in p for w in ["prescription", "medicine", "medication", "drug"]):
+            return (
+                "You can review your active medications and prescription instructions by selecting 'Prescriptions' from the left navigation sidebar. "
+                "This view outlines your active drug regimens, prescribing clinicians, and refill statuses."
+            )
+        else:
+            return (
+                "You can navigate through MediCare using the left sidebar:\n"
+                "• **Dashboard**: Clinical overview, vital trends, and upcoming appointments.\n"
+                "• **Appointments**: Schedule and manage consultations with physicians.\n"
+                "• **Lab Tests**: View diagnostic panels, historical biomarker trends, and upload documents.\n"
+                "• **Prescriptions**: Review active medications and dosages.\n"
+                "• **AI Assistant**: Clinical educational guidance and test interpretation."
+            )
+
+    def extract_clinical_keywords(
+        self,
+        prompt: str,
+        patient_context: str = "",
+        intent: str = "MEDICAL_QUESTION",
+        predicted_condition: Optional[str] = None,
+    ) -> str:
+        """
+        Extracts concise clinical search terms suitable for PubMed ESearch.
+        Prevents conversational natural language filler from contaminating PubMed queries.
+        Ensures queries are dynamically generated for the current prompt turn, preventing
+        stale or unrelated context from bleeding into new queries.
+        If a clinical condition is predicted for the current symptoms, grounds the search
+        query in that condition name combined with key symptom descriptors.
+        """
+        clean_p = prompt.strip()
+        lowered_p = clean_p.lower()
+
+        # Stop words filter for natural language query cleaning
+        stop_words = {
+            "what", "is", "are", "the", "a", "an", "and", "or", "in", "on", "at", "to", "for", "from",
+            "with", "by", "of", "can", "you", "please", "tell", "me", "about", "how", "do", "does",
+            "i", "my", "we", "our", "this", "that", "it", "should", "know", "help", "explain",
+            "latest", "recent", "test", "results", "report", "app", "there", "where", "why", "who",
+            "which", "would", "could", "give", "some", "any", "have", "been", "feeling", "user",
+            "submits", "symptoms", "consistent", "with", "sudden", "severe", "mild", "acute",
+            "chronic", "repeated", "triggers", "exposure", "new", "unrelated", "description",
+        }
+
+        # If a specific condition was predicted for the current symptoms, anchor the PubMed query in that condition
+        if predicted_condition and predicted_condition not in ["Undifferentiated / Unmapped Symptoms"]:
+            clean_condition = re.sub(r"\(.*?\)", "", predicted_condition).strip()
+            tokens = re.findall(r"[a-zA-Z0-9_-]+", lowered_p)
+            cond_words = {w.lower() for w in clean_condition.split()}
+            meaningful = [t for t in tokens if t not in stop_words and t not in cond_words and len(t) > 2]
+            if meaningful:
+                return f"{clean_condition} {' '.join(meaningful[:4])}".strip()
+            return clean_condition
+
+        # Only inject biomarker keywords if the user is explicitly inquiring about their lab tests/metrics
+        is_lab_inquiry = (intent == "LAB_EXPLANATION") or any(
+            phrase in lowered_p for phrase in [
+                "my lab", "my test", "my report", "my result", "my blood work", "my biomarker",
+                "explain my result", "explain my lab", "what do my results mean"
+            ]
+        )
+
+        if is_lab_inquiry and "Recent Lab Metrics:" in patient_context and "None on file" not in patient_context:
+            has_hyperglycemia = ("Glucose" in patient_context and "HIGH" in patient_context) or \
+                               ("HbA1c" in patient_context and "HIGH" in patient_context)
+            has_renal = ("Creatinine" in patient_context and "HIGH" in patient_context) or \
+                        ("eGFR" in patient_context and "LOW" in patient_context)
+            has_lipid = ("Cholesterol" in patient_context and "HIGH" in patient_context) or \
+                        ("Triglycerides" in patient_context and "HIGH" in patient_context)
+
+            if has_hyperglycemia and has_renal:
+                return "hyperglycemia elevated HbA1c complications diabetic nephropathy"
+            elif has_hyperglycemia:
+                return "hyperglycemia elevated HbA1c complications"
+            elif has_lipid:
+                return "mixed dyslipidemia hypercholesterolemia cardiovascular management"
+            elif has_renal:
+                return "elevated serum creatinine renal impairment guidelines"
+
+        # Standard keyword extraction for general medical queries dynamically generated from this turn's prompt
+        tokens = re.findall(r"[a-zA-Z0-9_-]+", lowered_p)
+        meaningful = [t for t in tokens if t not in stop_words and len(t) > 2]
+
+        if meaningful:
+            return " ".join(meaningful[:6])
+        return clean_p
+
+    def _build_patient_context(self, patient_user, include_lab_metrics: bool = False) -> str:
+        """
+        Assembles individualized patient clinical context:
+        - Patient Profile: [Name]
+        - Active Medications
+        - Recent Lab Metrics (ONLY included if include_lab_metrics is True for LAB_EXPLANATION intent)
+        """
         if not patient_user:
             return ""
 
-        context_parts = []
+        context_lines = []
         try:
+            # 1. Patient Profile
+            name = (
+                f"{patient_user.first_name} {patient_user.last_name}".strip()
+                or getattr(patient_user, "username", "")
+                or getattr(patient_user, "email", "Patient")
+            )
+            context_lines.append(f"Patient Profile: {name}")
+
+            # 2. Active Medications
             from apps.medicines.models import Medication
-            from apps.medical_records.models import LabReport
-
-            active_meds = Medication.objects.filter(patient=patient_user, is_active=True).values_list("name", flat=True)[:5]
+            active_meds = list(
+                Medication.objects.filter(patient=patient_user, is_active=True).values_list("name", flat=True)[:5]
+            )
             if active_meds:
-                context_parts.append(f"Active Medications: {', '.join(active_meds)}.")
+                context_lines.append(f"Active Medications: {', '.join(active_meds)}")
 
-            recent_labs = LabReport.objects.filter(patient=patient_user).values_list("title", flat=True)[:3]
-            if recent_labs:
-                context_parts.append(f"Recent Lab Records: {', '.join(recent_labs)}.")
+            # 3. Recent Lab Metrics (parsed Biomarkers from LabResult)
+            # ONLY injected if the user is explicitly requesting lab result explanation
+            if include_lab_metrics:
+                from apps.medical_records.models import LabReport, LabResult
+                results = (
+                    LabResult.objects.filter(report__patient=patient_user)
+                    .select_related("report")
+                    .order_by("-report__uploaded_at", "-id")
+                )
+
+                # Deduplicate by test name taking the most recent reading
+                seen = set()
+                biomarkers = []
+                for r in results:
+                    name_key = r.test_name.strip()
+                    if name_key not in seen:
+                        seen.add(name_key)
+                        flag = (r.flag or "NORMAL").upper()
+                        biomarkers.append({
+                            "test_name": r.test_name,
+                            "value": r.value,
+                            "unit": r.unit,
+                            "reference_range": r.reference_range,
+                            "flag": flag,
+                        })
+
+                if biomarkers:
+                    context_lines.append("Recent Lab Metrics:")
+                    for b in biomarkers[:12]:
+                        unit_str = f" {b['unit']}" if b.get("unit") else ""
+                        flag_str = f" ({b['flag']})" if b.get("flag") else ""
+                        context_lines.append(f"- {b['test_name']}: {b['value']}{unit_str}{flag_str}")
+                else:
+                    recent_labs = list(
+                        LabReport.objects.filter(patient=patient_user).values_list("title", flat=True)[:3]
+                    )
+                    if recent_labs:
+                        context_lines.append(f"Recent Lab Records: {', '.join(recent_labs)}")
+                    else:
+                        context_lines.append("Recent Lab Metrics: None on file.")
+
         except Exception as e:
             logger.warning("Could not assemble patient context: %s", e)
 
-        return " ".join(context_parts)
+        return "\n".join(context_lines)
 
     def process_chat(
         self,
@@ -55,19 +341,30 @@ class RAGAssistantEngine:
         patient_user=None,
         conversation_id: Optional[int] = None,
         limit_citations: int = 3,
+        user_symptoms_text: Optional[str] = None,
+        top_predicted_disease: Optional[str] = None,
+        confidence: Optional[Union[float, str]] = None,
+        shap_drivers: Optional[Union[str, List[str]]] = None,
+        prediction_id: Optional[int] = None,
+        prediction_context: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
-        Executes end-to-end RAG pipeline:
-        1. Manages chat conversation session.
-        2. Query normalization.
-        3. Retrieves PubMed citations and abstracts.
-        4. Synthesizes clinical answer via LLM provider.
-        5. Persists user and assistant messages with citations.
-        6. Returns structured payload with mandatory regulatory disclaimer.
+        Executes end-to-end evidence-based RAG chat workflow:
+        1. Session Management.
+        2. Persist User Inquiry Message.
+        3. Intent Classification & Routing (APP_NAVIGATION vs LAB_EXPLANATION vs MEDICAL_QUESTION).
+        4. Patient Context Injection with Quantitative Biomarkers & Active Disease Predictions.
+        5. Clinical Keywords Extraction & Relevance-Sorted PubMed Retrieval.
+        6. Dynamic Clinical Synthesis via LLM Provider Grounded in Model Predictions.
+        7. Persist Assistant Response with Citations & Regulatory Disclaimers.
         """
         clean_prompt = self._normalize_query(prompt)
+        if len(clean_prompt) > 4000:
+            clean_prompt = clean_prompt[:4000]
 
-        # 1. Session management
+        # ----------------------------------------------------------------------
+        # STEP 1: CONVERSATION SESSION MANAGEMENT & DIALOGUE CONTEXT
+        # ----------------------------------------------------------------------
         conversation = None
         if conversation_id:
             conversation = ChatConversation.objects.filter(id=conversation_id, user=user).first()
@@ -76,7 +373,18 @@ class RAGAssistantEngine:
             title = clean_prompt[:60] + "..." if len(clean_prompt) > 60 else clean_prompt
             conversation = ChatConversation.objects.create(user=user, title=title)
 
-        # 2. Record user message
+        # Preserve conversational history strictly as dialogue context
+        conversation_history_list = []
+        if conversation:
+            for msg in conversation.messages.order_by("created_at")[:10]:
+                conversation_history_list.append({
+                    "role": msg.role,
+                    "content": msg.content,
+                })
+
+        # ----------------------------------------------------------------------
+        # STEP 2: PERSIST USER INQUIRY MESSAGE
+        # ----------------------------------------------------------------------
         ChatMessage.objects.create(
             conversation=conversation,
             role="user",
@@ -84,17 +392,150 @@ class RAGAssistantEngine:
             sources=[],
         )
 
-        # 3. Retrieve PubMed evidence
-        pubmed_res = pubmed_service.search_pubmed(clean_prompt, limit=limit_citations, fetch_abstracts=True)
-        citations = pubmed_res.get("citations", [])
+        differential_diagnoses = []
 
-        # 4. Synthesize answer with context using LLM provider
-        patient_context = self._build_patient_context(patient_user)
-        llm_provider = get_llm_provider()
-        llm_result = llm_provider.generate_response(clean_prompt, citations, patient_context)
-        response_text = llm_result.get("response", "")
+        # ----------------------------------------------------------------------
+        # STEP 3: RED-FLAG EMERGENCY TRIAGE & INTENT CLASSIFICATION
+        # ----------------------------------------------------------------------
+        emergency = self.detect_emergency(clean_prompt)
+        if emergency:
+            intent = "EMERGENCY_TRIAGE"
+            categories = emergency.get("categories", [])
+            if "stroke_symptoms" in categories:
+                response_text = STROKE_EMERGENCY_INSTRUCTION
+            elif "chest_pain" in categories:
+                response_text = CARDIAC_EMERGENCY_INSTRUCTION
+            else:
+                response_text = EMERGENCY_ALERT_INSTRUCTION
+            citations = []
+            patient_context = ""
+            top_predicted_disease = None
+            confidence = None
+            shap_drivers = []
+            differential_diagnoses = []
+            llm_result = {
+                "provider": "emergency_triage_protocol",
+                "model": "red_flag_detector",
+                "grounded": False,
+                "is_emergency": True,
+            }
+        elif self.classify_intent(clean_prompt) == "APP_NAVIGATION":
+            intent = "APP_NAVIGATION"
+            response_text = self.handle_app_guidance(clean_prompt, user)
+            citations = []
+            patient_context = ""
+            top_predicted_disease = None
+            confidence = None
+            shap_drivers = []
+            differential_diagnoses = []
+            llm_result = {
+                "provider": "app_guidance_router",
+                "model": "navigation_handler",
+                "grounded": False,
+                "is_emergency": False,
+            }
+        else:
+            intent = self.classify_intent(clean_prompt)
+            # ------------------------------------------------------------------
+            # STEP 4: PATIENT CONTEXT INJECTION (EHR & BIOMARKERS)
+            # ------------------------------------------------------------------
+            target_patient = patient_user or (user if getattr(user, "role", "") == "patient" else None)
+            include_lab_metrics = (intent == "LAB_EXPLANATION")
+            patient_context = self._build_patient_context(target_patient, include_lab_metrics=include_lab_metrics)
 
-        # 5. Record assistant response with citations
+            # Grounding in active caller-supplied prediction context or explicit prediction ID
+            if prediction_context and isinstance(prediction_context, dict):
+                user_symptoms_text = prediction_context.get("user_symptoms_text") or user_symptoms_text
+                top_predicted_disease = prediction_context.get("top_predicted_disease") or top_predicted_disease
+                confidence = prediction_context.get("confidence") or confidence
+                shap_drivers = prediction_context.get("shap_drivers") or shap_drivers
+                differential_diagnoses = prediction_context.get("differential_diagnoses") or differential_diagnoses
+            elif prediction_id:
+                try:
+                    from apps.predictions.models import DiseasePrediction
+                    pred_record = DiseasePrediction.objects.filter(id=prediction_id).first()
+                    if pred_record:
+                        top_predicted_disease = pred_record.predicted_condition
+                        confidence = pred_record.confidence
+                        if isinstance(pred_record.input_data, dict):
+                            user_symptoms_text = (
+                                pred_record.input_data.get("symptoms_input")
+                                or pred_record.input_data.get("symptoms")
+                                or pred_record.input_data.get("text")
+                            )
+                        if isinstance(pred_record.explanation, dict):
+                            raw_feats = pred_record.explanation.get("features") or pred_record.explanation.get("shap_attributions") or []
+                            if isinstance(raw_feats, list):
+                                shap_drivers = [
+                                    f.get("feature") or f.get("name")
+                                    for f in raw_feats
+                                    if isinstance(f, dict) and (f.get("direction") == "increases_risk" or f.get("contribution", 0) > 0)
+                                ][:5]
+                except Exception as pred_err:
+                    logger.debug("Could not resolve DiseasePrediction context: %s", pred_err)
+
+            # Freshly evaluate current prompt symptoms for clinical impression
+            # Always prioritizes symptoms in the current prompt over previous or stale contexts
+            if intent == "MEDICAL_QUESTION":
+                try:
+                    from ai.prediction_service import execute_ai_disease_prediction
+                    pred_res = execute_ai_disease_prediction(clean_prompt, patient=target_patient)
+                    canonical_symptoms = pred_res.get("canonical_symptoms", [])
+                    if canonical_symptoms:
+                        top_predicted_disease = pred_res.get("predicted_condition")
+                        confidence = pred_res.get("confidence")
+                        user_symptoms_text = clean_prompt
+                        raw_feats = pred_res.get("shap_analysis", {}).get("top_features", [])
+                        if isinstance(raw_feats, list):
+                            shap_drivers = [
+                                f.get("feature") or f.get("name")
+                                for f in raw_feats
+                                if isinstance(f, dict) and f.get("contribution", 0) > 0
+                            ][:5]
+                        diff_list = pred_res.get("differential_diagnoses", [])
+                        if isinstance(diff_list, list):
+                            differential_diagnoses = [
+                                d.get("condition") or d.get("disease")
+                                for d in diff_list
+                                if (d.get("condition") or d.get("disease")) != top_predicted_disease
+                            ][:3]
+                except Exception as eval_err:
+                    logger.warning("Clinical prediction evaluation failed on prompt: %s", eval_err)
+
+            # ------------------------------------------------------------------
+            # STEP 5: CLINICAL KEYWORDS & RELEVANCE-SORTED PUBMED RETRIEVAL
+            # ------------------------------------------------------------------
+            pubmed_keywords = self.extract_clinical_keywords(
+                clean_prompt,
+                patient_context,
+                intent=intent,
+                predicted_condition=top_predicted_disease,
+            )
+            pubmed_res = pubmed_service.search_pubmed(pubmed_keywords, limit=limit_citations, fetch_abstracts=True)
+            citations = pubmed_res.get("citations", [])
+
+            # ------------------------------------------------------------------
+            # STEP 6: DYNAMIC CLINICAL SYNTHESIS VIA LLM PROVIDER
+            # ------------------------------------------------------------------
+            llm_provider = get_llm_provider()
+            llm_result = llm_provider.generate_response(
+                prompt=clean_prompt,
+                citations=citations,
+                patient_context=patient_context,
+                intent=intent,
+                user_symptoms_text=user_symptoms_text,
+                top_predicted_disease=top_predicted_disease,
+                confidence=confidence,
+                shap_drivers=shap_drivers,
+                prediction_context=prediction_context,
+                differential_diagnoses=differential_diagnoses,
+                conversation_history=conversation_history_list,
+            )
+            response_text = llm_result.get("response", "")
+
+        # ----------------------------------------------------------------------
+        # STEP 7: PERSIST ASSISTANT RESPONSE WITH CITATIONS
+        # ----------------------------------------------------------------------
         assistant_msg = ChatMessage.objects.create(
             conversation=conversation,
             role="assistant",
@@ -102,8 +543,65 @@ class RAGAssistantEngine:
             sources=citations,
         )
 
-        # Update conversation timestamp
+        # Update conversation timestamp for chronological ordering
         conversation.save(update_fields=["updated_at"])
+
+        # ----------------------------------------------------------------------
+        # STEP 8: RETURN STRUCTURED CLINICAL RESPONSE
+        # ----------------------------------------------------------------------
+        is_emergency = (intent == "EMERGENCY_TRIAGE")
+        disclaimer = EMERGENCY_REGULATORY_DISCLAIMER if is_emergency else MANDATORY_REGULATORY_DISCLAIMER
+
+        emergency_triage_data = {
+            "is_emergency": is_emergency,
+            "categories": emergency.get("categories", []) if emergency else [],
+            "status": "CRITICAL_RED_FLAG" if is_emergency else "NON_EMERGENCY",
+        }
+        urgency_level = (
+            "CRITICAL_EMERGENCY" if is_emergency
+            else ("ROUTINE_NAVIGATION" if intent == "APP_NAVIGATION" else "EVALUATION_RECOMMENDED")
+        )
+        input_summary = user_symptoms_text or clean_prompt[:200]
+
+        possible_conditions = []
+        if top_predicted_disease and not is_emergency:
+            possible_conditions.append({
+                "condition": top_predicted_disease,
+                "status": "candidate_impression",
+                "confidence": confidence,
+            })
+            for d in (differential_diagnoses or []):
+                if d != top_predicted_disease:
+                    possible_conditions.append({
+                        "condition": d,
+                        "status": "differential_diagnosis",
+                        "confidence": None,
+                    })
+
+        supporting_symptoms = shap_drivers if (shap_drivers and not is_emergency) else []
+
+        if is_emergency:
+            missing_info = ["Exact time of symptom onset / last known well for emergency responders"]
+            next_steps = [
+                "Call local emergency services (911/112/999) immediately",
+                "Do NOT drive yourself to the hospital",
+                "Record exact time symptoms began or when last known well",
+                "Do not delay seeking immediate medical attention",
+            ]
+        elif intent == "APP_NAVIGATION":
+            missing_info = []
+            next_steps = ["Follow in-app navigation guidance to access desired features"]
+        else:
+            missing_info = [
+                "Exact symptom onset and duration timeline",
+                "Severity progression rating (1-10)",
+                "Relevant past medical history, current medications, or allergies",
+            ]
+            next_steps = [
+                "Schedule a clinical consultation with a licensed healthcare provider",
+                "Seek emergency care if symptoms rapidly worsen or red-flag signs develop",
+                "Do not start or modify prescription medications without clinical supervision",
+            ]
 
         return {
             "conversation_id": conversation.id,
@@ -111,11 +609,26 @@ class RAGAssistantEngine:
             "query": clean_prompt,
             "response": response_text,
             "citations": citations,
-            "disclaimer": MANDATORY_REGULATORY_DISCLAIMER,
-            "patient_context_applied": bool(patient_context),
+            "literature_references": citations,
+            "disclaimer": disclaimer,
+            "patient_context_applied": bool(patient_context) if intent not in ["APP_NAVIGATION", "EMERGENCY_TRIAGE"] else False,
+            "intent": intent,
+            "is_emergency": is_emergency,
+            "emergency": is_emergency,
+            "emergency_triage": emergency_triage_data,
+            "urgency_level": urgency_level,
+            "input_summary": input_summary,
+            "possible_conditions": possible_conditions,
+            "supporting_symptoms": supporting_symptoms,
+            "missing_information": missing_info,
+            "recommended_next_steps": next_steps,
             "provider": llm_result.get("provider", "extractive"),
             "model": llm_result.get("model", "grounded_rules"),
-            "grounded": llm_result.get("grounded", bool(citations)),
+            "grounded": False if is_emergency else llm_result.get("grounded", bool(citations)),
+            "predicted_condition": top_predicted_disease,
+            "confidence": confidence,
+            "shap_drivers": shap_drivers,
+            "differential_diagnoses": differential_diagnoses,
             "created_at": assistant_msg.created_at,
         }
 

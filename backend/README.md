@@ -223,3 +223,68 @@ Services:
 - `db`: PostgreSQL 16 Alpine with healthcheck.
 - `backend`: Gunicorn WSGI server running 3 workers.
 - `nginx`: Alpine reverse proxy routing `/api/`, `/admin/`, `/static/`, `/media/`.
+
+---
+
+## 9. Google Gemini API Integration & Clinical Decision Support
+
+MediCare integrates Google Gemini API using the official Google Gen AI SDK (`google-genai`) for natural-language clinical explanation, patient communication, and uncertainty identification.
+
+### Key Capabilities
+1. **Official Google Gen AI SDK**: Uses `google-genai>=1.0.0` with dynamic model selection via `GEMINI_MODEL` (default: `gemini-3.5-flash`, free-tier eligible).
+2. **Independent Emergency Triage Protocol**: A safety-first rule-based triage layer executes **before** calling external LLMs or PubMed. Catches red flags for stroke (sudden facial droop, unilateral weakness, slurred speech), acute cardiac distress (severe chest pressure with breathlessness or sweating), respiratory failure, and anaphylaxis.
+3. **Stroke Emergency Instructions**: Explicitly directs patients to call emergency dispatch immediately (911 / 112 / 999), record the exact time of onset or when last known well, avoid driving themselves, and avoid delaying care.
+4. **Multi-Turn Conversation Freshness**: Every message triggers fresh symptom extraction and disease inference. Previous conversation history provides dialogue context only; diagnoses from prior turns are never reused for unrelated symptoms.
+5. **NCBI PubMed RAG Grounding**: Generates responses strictly grounded in peer-reviewed biomedical literature without fabricated PMIDs or hallucinated clinical citations. For emergency triage, PubMed lookups are bypassed to avoid attaching irrelevant citations (such as pericarditis or depression).
+6. **Calibrated Confidence**: Confidence percentages are only displayed when provided by the verified machine learning classifier. Missing confidence scores are never fabricated.
+
+### Environment Configuration
+
+Add the following environment variables to your `.env` file (see `.env.example`):
+
+```bash
+# Google Gemini API Configuration
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-3.5-flash
+
+# Optional: Set LLM_PROVIDER to force provider selection (gemini, openai, or extractive)
+LLM_PROVIDER=gemini
+```
+
+### Obtaining an API Key from Google AI Studio
+1. Visit [Google AI Studio](https://aistudio.google.com/).
+2. Sign in with your Google account.
+3. Click **"Get API key"** and create an API key in a Google Cloud project.
+4. Copy the key and set `GEMINI_API_KEY=your_key` in `backend/.env`.
+5. Keep your key confidential: `.env` is ignored by Git and must never be committed.
+
+### Structured Response Schema
+The `/api/v1/assistant/chat/` endpoint returns a structured response payload:
+```json
+{
+  "conversation_id": 12,
+  "message_id": 45,
+  "query": "Repeated sneezing, itchy nose, clear watery nasal discharge",
+  "response": "Clinical impression and literature synthesis...",
+  "citations": [ ... ],
+  "literature_references": [ ... ],
+  "emergency_triage": {
+    "is_emergency": false,
+    "categories": [],
+    "status": "NON_EMERGENCY"
+  },
+  "urgency_level": "EVALUATION_RECOMMENDED",
+  "input_summary": "repeated sneezing, itchy nose...",
+  "possible_conditions": [
+    { "condition": "Allergic Rhinitis", "status": "candidate_impression", "confidence": 0.8527 }
+  ],
+  "supporting_symptoms": ["sneezing", "nasal_discharge", "itchy_nose"],
+  "missing_information": [ ... ],
+  "recommended_next_steps": [ ... ],
+  "disclaimer": "MANDATORY REGULATORY DISCLAIMER: This system provides AI-assisted clinical decision support..."
+}
+```
+
+### Regulatory Disclaimer & Safety Limitations
+> **CRITICAL MEDICAL DISCLAIMER**: MediCare is an educational clinical decision-support prototype (Software as a Medical Device, SaMD educational tier). It does NOT provide confirmed diagnoses or medical advice. Rule-based emergency detection relies on clinical pattern matching and cannot replace qualified in-person emergency physician triage. Always consult a licensed healthcare professional.
+

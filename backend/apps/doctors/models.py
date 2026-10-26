@@ -1,7 +1,18 @@
+# ==============================================================================
+# FILE: backend/apps/doctors/models.py
+# PURPOSE: Relational data models for physician profiles and clinical consultation notes.
+# VIVA EXPLANATION: Implements clinician modeling in MediCare. DoctorProfile tracks medical licenses, specialties, and hospital affiliations, while ClinicalNote stores physician diagnostic notes linked to patients and indexed for clinical audit trails.
+# ==============================================================================
+
 from django.conf import settings
 from django.db import models
 
 
+# --- DoctorProfile ---
+# What it does: Stores clinician credentials, medical license number, verification status, and hospital affiliation.
+# Why it's structured this way: OneToOne relationship with User separates general auth from clinical credential management.
+# Parameters & Returns: Django Model representing doctor credentials.
+# ------------------------------------------------------------------------------
 class DoctorProfile(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -27,6 +38,11 @@ class DoctorProfile(models.Model):
         return f"Dr. {self.user.first_name} {self.user.last_name} ({self.user.email}){spec}"
 
 
+# --- ClinicalNote ---
+# What it does: Records doctor clinical consultation notes, provisional diagnoses, and therapeutic guidance.
+# Why it's structured this way: Indexed on (doctor, patient, -created_at) for efficient patient chart reviews and EHR timeline rendering.
+# Parameters & Returns: Django Model representing clinical notes.
+# ------------------------------------------------------------------------------
 class ClinicalNote(models.Model):
     doctor = models.ForeignKey(
         settings.AUTH_USER_MODEL,

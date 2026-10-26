@@ -1,3 +1,9 @@
+# ==============================================================================
+# FILE: backend/apps/appointments/views.py
+# PURPOSE: REST API views for appointment listing, patient booking, and status updates.
+# VIVA EXPLANATION: Implements role-filtered appointment feeds (patients see their own, doctors see assigned), patient booking validation, and object-level permission enforcement on patch updates.
+# ==============================================================================
+
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -15,6 +21,11 @@ from .serializers import (
 from .services import create_appointment, update_appointment
 
 
+# --- AppointmentListCreateView ---
+# What it does: GET lists appointments filtered by role and optional status; POST allows patients to book a new appointment.
+# Why it's structured this way: Enforces role isolation—only patients can initiate bookings; doctors and patients can only see their relevant calendar items.
+# Parameters & Returns: GET returns paginated list; POST returns newly created Appointment with status 201.
+# ------------------------------------------------------------------------------
 class AppointmentListCreateView(APIView):
     permission_classes = [IsAuthenticatedUser]
 
@@ -62,6 +73,11 @@ class AppointmentListCreateView(APIView):
         )
 
 
+# --- AppointmentDetailView ---
+# What it does: GET retrieves single appointment details; PATCH modifies appointment status (e.g. Confirmed, Completed, Cancelled).
+# Why it's structured this way: Enforces strict object-level access—only the assigned doctor, owning patient, or admin can inspect or modify the appointment.
+# Parameters & Returns: GET/PATCH for specific appointment_id; returns updated Appointment object.
+# ------------------------------------------------------------------------------
 class AppointmentDetailView(APIView):
     permission_classes = [IsAuthenticatedUser]
 

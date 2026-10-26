@@ -1,3 +1,9 @@
+# ==============================================================================
+# FILE: backend/apps/predictions/services/disease_engine.py
+# PURPOSE: Clinical disease profile catalog and heuristic probabilistic scoring engine.
+# VIVA EXPLANATION: This module contains clinical disease priors, hallmark weights, red-flag triggers, and an analytical softmax probabilistic scoring engine. It serves as an interpretable diagnostic baseline and reference dataset for common acute and chronic conditions.
+# ==============================================================================
+
 import math
 from typing import List, Dict, Any
 
@@ -110,9 +116,132 @@ DISEASE_PROFILES = {
         "red_flags": ["dyspnea", "chest_pain"],
         "recommendation": "Use prescribed inhaled bronchodilator rescue inhaler. Seek immediate emergency care if peak flow drops severely.",
     },
+    "Malaria": {
+        "prior": 0.08,
+        "severity": "high",
+        "weights": {
+            "fever": 3.8,
+            "high_fever": 3.8,
+            "chills": 3.6,
+            "shivering": 3.4,
+            "rigors": 3.5,
+            "sweating": 3.5,
+            "excessive_sweating": 3.5,
+            "headache": 2.2,
+            "throbbing_headache": 2.2,
+            "myalgia": 2.4,
+            "muscle_pain": 2.4,
+            "body_aches": 2.4,
+            "nausea": 2.0,
+            "vomiting": 1.8,
+            "fatigue": 2.0,
+        },
+        "red_flags": ["jaundice", "confusion", "dyspnea"],
+        "recommendation": "Urgent medical evaluation and blood smear / rapid diagnostic test (RDT) for Plasmodium species. Prompt antimalarial therapy (ACT) required.",
+    },
+    "Plasmodium falciparum Malaria": {
+        "prior": 0.08,
+        "severity": "high",
+        "weights": {
+            "fever": 3.8,
+            "high_fever": 3.8,
+            "chills": 3.6,
+            "shivering": 3.4,
+            "rigors": 3.5,
+            "sweating": 3.5,
+            "excessive_sweating": 3.5,
+            "headache": 2.2,
+            "throbbing_headache": 2.2,
+            "myalgia": 2.4,
+            "muscle_pain": 2.4,
+            "body_aches": 2.4,
+            "nausea": 2.0,
+            "vomiting": 1.8,
+            "fatigue": 2.0,
+        },
+        "red_flags": ["jaundice", "confusion", "dyspnea"],
+        "recommendation": "Urgent medical evaluation and blood smear / rapid diagnostic test (RDT) for Plasmodium species. Prompt antimalarial therapy (ACT) required.",
+    },
+    "Plaque Psoriasis": {
+        "prior": 0.06,
+        "severity": "moderate",
+        "weights": {
+            "scaly_rash": 4.5,
+            "skin_peeling": 3.8,
+            "skin_rash": 3.2,
+            "itching": 2.8,
+            "erythema": 2.4,
+            "nail_clubbing": 2.2,
+        },
+        "red_flags": [],
+        "recommendation": "Dermatology evaluation for topical corticosteroids, vitamin D analogues, phototherapy, or biologic therapy.",
+    },
+    "Psoriasis": {
+        "prior": 0.06,
+        "severity": "moderate",
+        "weights": {
+            "scaly_rash": 4.5,
+            "skin_peeling": 3.8,
+            "skin_rash": 3.2,
+            "itching": 2.8,
+            "erythema": 2.4,
+            "nail_clubbing": 2.2,
+        },
+        "red_flags": [],
+        "recommendation": "Dermatology evaluation for topical corticosteroids, vitamin D analogues, phototherapy, or biologic therapy.",
+    },
+    "Bell's Palsy": {
+        "prior": 0.05,
+        "severity": "high",
+        "weights": {
+            "facial_droop": 5.0,
+            "facial_palsy": 5.0,
+            "cranial_nerve_deficit": 4.0,
+            "loss_of_taste": 2.2,
+            "epiphora": 2.0,
+            "ear_pain": 1.5,
+        },
+        "red_flags": ["dysphagia", "limb_weakness", "confusion"],
+        "recommendation": "Urgent neurological evaluation to rule out stroke. Early oral corticosteroids (within 72 hours) and eye protection.",
+    },
+    "Acute Gout": {
+        "prior": 0.06,
+        "severity": "moderate",
+        "weights": {
+            "podagra": 5.0,
+            "joint_pain": 3.6,
+            "joint_swelling": 3.6,
+            "erythema": 3.0,
+            "fever_low_grade": 1.5,
+        },
+        "red_flags": [],
+        "recommendation": "Anti-inflammatory therapy (NSAIDs, colchicine, or corticosteroids). Serum uric acid check and long-term urate-lowering therapy.",
+    },
+    "Acute Appendicitis": {
+        "prior": 0.06,
+        "severity": "critical",
+        "weights": {
+            "acute_appendicitis": 5.0,
+            "rebound_tenderness": 4.5,
+            "right_lower_quadrant_pain": 4.5,
+            "periumbilical_pain": 3.8,
+            "abdominal_pain": 3.8,
+            "nausea": 2.4,
+            "vomiting": 2.4,
+            "fever": 2.2,
+            "anorexia": 2.0,
+        },
+        "red_flags": ["rebound_tenderness", "high_fever"],
+        "recommendation": "Immediate surgical evaluation / emergency department presentation for ultrasound/CT imaging and potential appendectomy.",
+    },
 }
 
 
+# --- predict_diseases ---
+# What it does: Computes normalized disease probabilities and differential diagnoses from a multi-hot symptom vector.
+# Why it's structured this way: Applies softmax normalization over log-priors and symptom likelihood weights for calibrated probability outputs.
+# Parameters & Returns: feature_vector (Dict[str, int]) -> Dict containing predicted_disease, confidence, probabilities, and differential_diagnoses.
+# ------------------------------------------------------------------------------
 def predict_diseases(feature_vector: Dict[str, int]) -> Dict[str, Any]:
     """
     Executes multi-class disease prediction over binary/multi-hot feature vector.

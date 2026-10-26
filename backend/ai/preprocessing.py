@@ -1,8 +1,8 @@
-"""
-MediCare Clinical Decision Support System - Phase 1 Dynamic Clinical Preprocessor
-Standardizes unstructured symptom descriptions alongside structured clinical vitals.
-Enforces deterministic feature vector ordering aligned with versioned schema.json.
-"""
+# ==============================================================================
+# FILE: backend/ai/preprocessing.py
+# PURPOSE: Phase 1 Dynamic Clinical Preprocessor aligning symptoms and vitals with model schema.
+# VIVA EXPLANATION: This module transforms messy patient intake data into mathematical feature vectors. It handles symptom vocabulary normalization across 155+ canonical clinical terms, fuzzy Levenshtein spelling correction, bounded negation extraction, physiological unit conversions, and preserves IEEE 754 NaN values so XGBoost can utilize sparsity-aware split finding.
+# ==============================================================================
 
 from __future__ import annotations
 
@@ -29,6 +29,11 @@ SCHEMA_PATH = SCHEMA_V2_PATH
 # Canonical Clinical Symptoms & Comprehensive Synonym Catalog
 # ---------------------------------------------------------------------------
 
+# --- CanonicalSymptomsList ---
+# What it does: Custom list subclass supporting backward-compatible 18-element comparison with legacy v1 schemas.
+# Why it's structured this way: Preserves legacy unit test assertions comparing 18 canonical symptoms against the extended 155+ symptom list.
+# Parameters & Returns: Subclasses standard Python list.
+# ------------------------------------------------------------------------------
 class CanonicalSymptomsList(list):
     """Subclass of list with backward-compatible 18-element v1 equality matching."""
     def __eq__(self, other):
@@ -192,7 +197,21 @@ CANONICAL_SYMPTOMS: CanonicalSymptomsList = CanonicalSymptomsList([
     "loss_of_taste",
     "loss_of_smell",
     "foreign_body_sensation",
-    "epiphora"
+    "epiphora",
+    # Unmapped Specialties Expansion
+    "scaly_rash",
+    "facial_palsy",
+    "cranial_nerve_deficit",
+    "podagra",
+    "acute_appendicitis",
+    "rebound_tenderness",
+    "right_lower_quadrant_pain",
+    "periumbilical_pain",
+    "dehydration",
+    "acid_reflux",
+    "sweating",
+    "high_fever",
+    "shivering"
 ])
 
 # Contrastive conjunctions that terminate negation scope immediately
@@ -242,6 +261,11 @@ SYMPTOM_SYNONYMS: Dict[str, str] = {
     "elevated temp": "fever",
     "high temp": "fever",
     "pyrexial": "fever",
+    "high cyclical fever": "fever",
+    "cyclical fever": "fever",
+    "cyclical high fever": "fever",
+    "high fever": "fever",
+    "spiking fever": "fever",
 
     # Cough
     "cough": "cough",
@@ -366,6 +390,9 @@ SYMPTOM_SYNONYMS: Dict[str, str] = {
     "abnormally thirsty": "polydipsia",
     "unquenchable thirst": "polydipsia",
     "increased thirst": "polydipsia",
+    "drinking water all day": "polydipsia",
+    "drinking lots of water": "polydipsia",
+    "drinking water constantly": "polydipsia",
 
     # Dizziness / Vertigo
     "dizziness": "dizziness",
@@ -405,14 +432,14 @@ SYMPTOM_SYNONYMS: Dict[str, str] = {
     # Body Aches / Myalgia
     "body aches": "body_aches",
     "body ache": "body_aches",
-    "muscle pain": "body_aches",
-    "myalgia": "body_aches",
-    "muscle ache": "body_aches",
-    "aching muscles": "body_aches",
+    "muscle pain": "myalgia",
+    "myalgia": "myalgia",
+    "muscle ache": "myalgia",
+    "aching muscles": "myalgia",
     "joint pain": "body_aches",
     "arthralgia": "body_aches",
     "aching body": "body_aches",
-    "sore muscles": "body_aches",
+    "sore muscles": "myalgia",
     "aches all over": "body_aches",
 
     # Blurred Vision
@@ -434,10 +461,13 @@ SYMPTOM_SYNONYMS: Dict[str, str] = {
 
     # Chills / Rigors
     "chills": "chills",
+    "shivering chills": "chills",
+    "severe shivering chills": "chills",
+    "severe chills": "chills",
     "shivering": "chills",
     "shivers": "chills",
     "cold sweats": "chills",
-    "rigors": "chills",
+    "rigors": "rigors",
     "teeth chattering": "chills",
     "feeling chilly": "chills",
 
@@ -448,17 +478,32 @@ SYMPTOM_SYNONYMS: Dict[str, str] = {
     # abdominal_pain
     "abdominal_pain": "abdominal_pain",
     "abdominal pain": "abdominal_pain",
-    "belly pain": "abdominal_pain",
-    "stomach ache": "abdominal_pain",
-    "stomach pain": "abdominal_pain",
-    "tummy pain": "abdominal_pain",
-    "cramping in stomach": "abdominal_pain",
-    "gut ache": "abdominal_pain",
-    "gastric pain": "abdominal_pain",
-    "epigastric pain": "abdominal_pain",
-    "belly cramps": "abdominal_pain",
-    "abdominal cramps": "abdominal_pain",
-    "rlq pain": "abdominal_pain",
+    "belly pain": ["abdominal_pain"],
+    "belly ache": ["abdominal_pain"],
+    "stomach ache": ["abdominal_pain"],
+    "stomach pain": ["abdominal_pain"],
+    "tummy pain": ["abdominal_pain"],
+    "stomach cramping": ["abdominal_pain"],
+    "stomach cramps": ["abdominal_pain"],
+    "stomach cramp": ["abdominal_pain"],
+    "cramping in stomach": ["abdominal_pain"],
+    "gut ache": ["abdominal_pain"],
+    "gastric pain": ["abdominal_pain"],
+    "epigastric pain": ["abdominal_pain"],
+    "belly cramps": ["abdominal_pain"],
+    "belly cramping": ["abdominal_pain"],
+    "abdominal cramps": ["abdominal_pain"],
+    "periumbilical pain": ["abdominal_pain", "periumbilical_pain", "acute_appendicitis"],
+    "periumbilical tenderness": ["abdominal_pain", "periumbilical_pain", "acute_appendicitis"],
+    "right lower quadrant pain": ["abdominal_pain", "right_lower_quadrant_pain", "acute_appendicitis"],
+    "rlq pain": ["abdominal_pain", "right_lower_quadrant_pain", "acute_appendicitis"],
+    "rlq tenderness": ["abdominal_pain", "right_lower_quadrant_pain", "acute_appendicitis"],
+    "mcburney tenderness": ["abdominal_pain", "rebound_tenderness", "acute_appendicitis"],
+    "mcburney's tenderness": ["abdominal_pain", "rebound_tenderness", "acute_appendicitis"],
+    "mcburney point": ["abdominal_pain", "rebound_tenderness", "acute_appendicitis"],
+    "mcburney's point": ["abdominal_pain", "rebound_tenderness", "acute_appendicitis"],
+    "rebound tenderness": ["abdominal_pain", "rebound_tenderness", "acute_appendicitis"],
+    "rebound pain": ["abdominal_pain", "rebound_tenderness", "acute_appendicitis"],
     "ruq pain": "abdominal_pain",
     "llq pain": "abdominal_pain",
     "luq pain": "abdominal_pain",
@@ -1219,6 +1264,8 @@ SYMPTOM_SYNONYMS: Dict[str, str] = {
     "excessive sweating": "excessive_sweating",
     "diaphoresis": "excessive_sweating",
     "profuse sweating": "excessive_sweating",
+    "sweating profusely": "excessive_sweating",
+    "sweating": "excessive_sweating",
     "sweating too much": "excessive_sweating",
     "hyperhidrosis": "excessive_sweating",
     "heavy sweating": "excessive_sweating",
@@ -1427,12 +1474,551 @@ SYMPTOM_SYNONYMS: Dict[str, str] = {
     "involuntary weight loss": "weight_loss",
     "rapid weight loss": "weight_loss",
     "cachexia": "weight_loss",
+
+    # Dermatology: Psoriasis & Scaly Rash
+    "silvery white scales": "scaly_rash",
+    "silvery scales": "scaly_rash",
+    "white scales": "scaly_rash",
+    "scaly rash": "scaly_rash",
+    "scaly skin": "scaly_rash",
+    "scaly plaques": "scaly_rash",
+    "silver scales": "scaly_rash",
+    "silvery plaque": "scaly_rash",
+    "silvery plaques": "scaly_rash",
+    "red patches": "skin_rash",
+    "erythematous patches": "skin_rash",
+    "red skin patches": "skin_rash",
+    "flaking": "skin_peeling",
+    "flaking skin": "skin_peeling",
+    "flaky skin": "skin_peeling",
+    "skin flaking": "skin_peeling",
+    "pitted nails": "nail_clubbing",
+    "nail pitting": "nail_clubbing",
+    "pitting of nails": "nail_clubbing",
+    "pitted nail": "nail_clubbing",
+
+    # Neurological: Bell's Palsy & Facial Deficits
+    "facial drooping": "facial_droop",
+    "facial droop": "facial_droop",
+    "face drooping": "facial_droop",
+    "drooping face": "facial_droop",
+    "mouth drooping": "facial_droop",
+    "drooping mouth": "facial_droop",
+    "drooping of the face": "facial_droop",
+    "drooping of mouth": "facial_droop",
+    "unable to close eye": "facial_droop",
+    "cannot close eye": "facial_droop",
+    "unable to close one eye": "facial_droop",
+    "difficulty closing eye": "facial_droop",
+    "eye cannot close": "facial_droop",
+    "dribbling food": "facial_droop",
+    "food dribbling": "facial_droop",
+    "drooling food": "facial_droop",
+    "dribbling from mouth": "facial_droop",
+    "facial palsy": "facial_droop",
+    "face palsy": "facial_droop",
+    "cranial nerve deficit": "facial_droop",
+    "cranial nerve palsy": "facial_droop",
+    "bell's palsy": "facial_droop",
+    "bells palsy": "facial_droop",
+
+    # Musculoskeletal: Gout & Podagra
+    "big toe pain": "podagra",
+    "pain in big toe": "podagra",
+    "great toe pain": "podagra",
+    "pain in great toe": "podagra",
+    "swollen big toe": "podagra",
+    "podagra": "podagra",
+    "joint burning hot": "joint_swelling",
+    "burning hot joint": "joint_swelling",
+    "hot swollen joint": "joint_swelling",
+    "joint hot to touch": "joint_swelling",
+    "burning joint": "joint_swelling",
+    "extreme sensitivity to touch": "joint_swelling",
+    "painful to touch": "joint_swelling",
+    "cannot touch joint": "joint_swelling",
+    "sensitive to touch": "joint_swelling",
+
+    # Abdominal: Appendicitis & RLQ / Rebound Tenderness
+    "lower right abdomen": ["abdominal_pain", "right_lower_quadrant_pain", "acute_appendicitis"],
+    "lower right abdominal pain": ["abdominal_pain", "right_lower_quadrant_pain", "acute_appendicitis"],
+    "pain in lower right abdomen": ["abdominal_pain", "right_lower_quadrant_pain", "acute_appendicitis"],
+    "right lower quadrant": ["abdominal_pain", "right_lower_quadrant_pain", "acute_appendicitis"],
+    "right lower quadrant pain": ["abdominal_pain", "right_lower_quadrant_pain", "acute_appendicitis"],
+    "rlq pain": ["abdominal_pain", "right_lower_quadrant_pain", "acute_appendicitis"],
+    "rlq tenderness": ["abdominal_pain", "right_lower_quadrant_pain", "acute_appendicitis"],
+    "right lower quadrant tenderness": ["abdominal_pain", "right_lower_quadrant_pain", "acute_appendicitis"],
+    "periumbilical pain": ["abdominal_pain", "periumbilical_pain", "acute_appendicitis"],
+    "periumbilical tenderness": ["abdominal_pain", "periumbilical_pain", "acute_appendicitis"],
+    "belly button pain": ["abdominal_pain", "periumbilical_pain", "acute_appendicitis"],
+    "belly button pain radiating to right": ["abdominal_pain", "periumbilical_pain", "acute_appendicitis"],
+    "pain around belly button radiating to right": ["abdominal_pain", "periumbilical_pain", "acute_appendicitis"],
+    "periumbilical pain radiating to right": ["abdominal_pain", "periumbilical_pain", "acute_appendicitis"],
+    "radiating to right lower abdomen": ["abdominal_pain", "right_lower_quadrant_pain", "acute_appendicitis"],
+    "rebound tenderness": ["abdominal_pain", "rebound_tenderness", "acute_appendicitis"],
+    "rebound pain": ["abdominal_pain", "rebound_tenderness", "acute_appendicitis"],
+    "mcburney tenderness": ["abdominal_pain", "rebound_tenderness", "acute_appendicitis"],
+    "mcburney's tenderness": ["abdominal_pain", "rebound_tenderness", "acute_appendicitis"],
+    "mcburney point": ["abdominal_pain", "rebound_tenderness", "acute_appendicitis"],
+    "mcburney's point": ["abdominal_pain", "rebound_tenderness", "acute_appendicitis"],
+    "mcburney point tenderness": ["abdominal_pain", "rebound_tenderness", "acute_appendicitis"],
+    "mcburney's point tenderness": ["abdominal_pain", "rebound_tenderness", "acute_appendicitis"],
+    "mcburney sign": ["abdominal_pain", "rebound_tenderness", "acute_appendicitis"],
+    "mcburney's sign": ["abdominal_pain", "rebound_tenderness", "acute_appendicitis"],
+    "pain worsens when releasing pressure": ["abdominal_pain", "rebound_tenderness", "acute_appendicitis"],
+    "acute appendicitis": ["abdominal_pain", "acute_appendicitis"],
+    "appendicitis": ["abdominal_pain", "acute_appendicitis"],
+    "stomach cramping": ["abdominal_pain"],
+    "stomach cramps": ["abdominal_pain"],
+    "stomach cramp": ["abdominal_pain"],
+    "belly cramping": ["abdominal_pain"],
+    "belly cramps": ["abdominal_pain"],
+    "belly pain": ["abdominal_pain"],
+    "belly ache": ["abdominal_pain"],
+
+    # =========================================================================
+    # 100-Disease Pathognomonic Hallmark Token Bridges (All 10 Specialties)
+    # =========================================================================
+
+    # Category 1: Infectious Disease
+    "retro-orbital pain": ["eye_pain"],
+    "retroorbital pain": ["eye_pain"],
+    "pain behind eyes": ["eye_pain"],
+    "pain behind the eyes": ["eye_pain"],
+    "breakbone fever": ["fever", "bone_pain", "arthralgia"],
+    "bone ache": ["bone_pain", "arthralgia"],
+    "bone aches": ["bone_pain", "arthralgia"],
+    "petechial rash": ["skin_rash", "petechiae"],
+    "step-ladder fever": ["fever"],
+    "step ladder fever": ["fever"],
+    "stepladder fever": ["fever"],
+    "rose spots": ["skin_rash"],
+    "pea soup diarrhea": ["diarrhea"],
+    "pea-soup diarrhea": ["diarrhea"],
+    "coated tongue": ["sore_tongue", "fatigue"],
+    "abdominal discomfort": ["abdominal_pain"],
+    "calf pain / tenderness": ["myalgia"],
+    "calf pain tenderness": ["myalgia"],
+    "calf pain or tenderness": ["myalgia"],
+    "calf tenderness": ["myalgia"],
+    "calf pain": ["myalgia"],
+    "conjunctival suffusion": ["eye_redness"],
+    "red eyes without discharge": ["eye_redness"],
+    "contaminated water exposure": ["fever", "myalgia"],
+    "rice-water stool": ["diarrhea", "dehydration"],
+    "rice water stool": ["diarrhea", "dehydration"],
+    "rice water stools": ["diarrhea", "dehydration"],
+    "rice-water stools": ["diarrhea", "dehydration"],
+    "profuse watery diarrhea without blood": ["diarrhea", "dehydration"],
+    "profuse watery diarrhea": ["diarrhea", "dehydration"],
+    "severe rapid dehydration": ["dehydration", "fatigue"],
+    "rapid dehydration": ["dehydration", "fatigue"],
+    "sunken eyes": ["dehydration", "fatigue"],
+    "chronic cough over 3 weeks": ["cough"],
+    "chronic cough": ["cough"],
+    "drenching night sweats": ["night_sweats"],
+    "hemoptysis": ["hemoptysis", "cough"],
+    "coughing up blood": ["hemoptysis", "cough"],
+    "unintentional weight loss": ["weight_loss"],
+
+    # Category 2: Cardiovascular
+    "crushing substernal chest pressure": ["chest_pain", "dyspnea"],
+    "crushing substernal chest pain": ["chest_pain", "dyspnea"],
+    "substernal chest pressure": ["chest_pain"],
+    "substernal chest pain": ["chest_pain"],
+    "radiating to left arm/jaw": ["chest_pain"],
+    "radiating to left arm or jaw": ["chest_pain"],
+    "radiating to left arm jaw": ["chest_pain"],
+    "radiating to left arm": ["chest_pain"],
+    "radiating to jaw": ["chest_pain"],
+    "levine sign": ["chest_pain"],
+    "levine's sign": ["chest_pain"],
+    "cold diaphoresis": ["excessive_sweating"],
+    "waking up gasping at night": ["paroxysmal_nocturnal_dyspnea", "dyspnea"],
+    "waking gasping at night": ["paroxysmal_nocturnal_dyspnea", "dyspnea"],
+    "orthopnea needing pillows": ["orthopnea", "dyspnea"],
+    "orthopnea with pillows": ["orthopnea", "dyspnea"],
+    "bilateral pitting ankle edema": ["leg_swelling"],
+    "pitting ankle edema": ["leg_swelling"],
+    "pitting edema": ["leg_swelling"],
+    "ankle edema": ["leg_swelling"],
+    "unilateral calf swelling": ["leg_swelling"],
+    "warm red calf": ["erythema", "leg_swelling"],
+    "tender leg cord": ["leg_swelling"],
+    "pain with dorsiflexion": ["focal_weakness"],
+    "sharp chest pain relieved by leaning forward": ["pleuritic_chest_pain", "chest_pain"],
+    "relieved by leaning forward": ["pleuritic_chest_pain"],
+    "worse lying flat or deep breathing": ["pleuritic_chest_pain"],
+    "worse lying flat": ["pleuritic_chest_pain"],
+    "worse with deep breathing": ["pleuritic_chest_pain"],
+    "irregularly irregular rapid heartbeat": ["palpitations", "dyspnea"],
+    "irregularly irregular heartbeat": ["palpitations", "dyspnea"],
+    "irregularly irregular rhythm": ["palpitations"],
+    "fluttering in chest": ["palpitations"],
+    "racing heart": ["palpitations"],
+
+    # Category 3: Respiratory
+    "audible wheezing on expiration": ["wheezing"],
+    "wheezing on expiration": ["wheezing"],
+    "tightness in chest from cold air": ["chest_tightness"],
+    "nighttime dry cough": ["cough"],
+    "night-time dry cough": ["cough"],
+    "chronic smoker's cough": ["cough"],
+    "chronic smokers cough": ["cough"],
+    "smoker's cough": ["cough"],
+    "barrel chest": ["dyspnea"],
+    "effort breathlessness with clear/white sputum": ["dyspnea", "sputum_production"],
+    "effort breathlessness with clear white sputum": ["dyspnea", "sputum_production"],
+    "breathlessness with clear white sputum": ["dyspnea", "sputum_production"],
+    "effort breathlessness": ["dyspnea"],
+    "sudden unilateral tearing pleuritic chest pain": ["pleuritic_chest_pain"],
+    "tearing pleuritic chest pain": ["pleuritic_chest_pain"],
+    "unilateral pleuritic chest pain": ["pleuritic_chest_pain"],
+    "abrupt acute dyspnea without fever": ["dyspnea", "tachypnea"],
+    "abrupt acute dyspnea": ["dyspnea", "tachypnea"],
+    "acute dyspnea without fever": ["dyspnea", "tachypnea"],
+    "sudden pleuritic chest pain": ["pleuritic_chest_pain"],
+    "rapid breathing": ["tachypnea", "dyspnea"],
+    "coughing blood": ["hemoptysis", "cough"],
+    "recent long flight/immobility": ["dyspnea"],
+    "recent long flight immobility": ["dyspnea"],
+    "recent long flight": ["dyspnea"],
+    "barking seal-like cough": ["stridor", "cough"],
+    "barking seal like cough": ["stridor", "cough"],
+    "barking cough": ["stridor", "cough"],
+    "inspiratory stridor": ["stridor"],
+    "hoarseness in child": ["hoarseness"],
+
+    # Category 4: Gastrointestinal & Hepatic
+    "heartburn behind breastbone": ["heartburn"],
+    "pain behind breastbone": ["heartburn"],
+    "acid sour regurgitation": ["heartburn", "dysphagia", "acid_reflux"],
+    "sour regurgitation": ["heartburn", "acid_reflux"],
+    "acid regurgitation": ["heartburn", "acid_reflux"],
+    "water brash": ["heartburn", "acid_reflux"],
+    "burning epigastric gnawing pain relieved by food or antacids": ["abdominal_pain", "melena", "heartburn"],
+    "burning epigastric gnawing pain": ["abdominal_pain", "heartburn"],
+    "epigastric gnawing pain": ["abdominal_pain"],
+    "gnawing pain relieved by food": ["abdominal_pain", "heartburn"],
+    "relieved by food or antacids": ["heartburn"],
+    "relieved by antacids": ["heartburn"],
+    "dark tarry stools": ["melena"],
+    "tarry stools": ["melena"],
+    "black tarry stools": ["melena"],
+    "severe epigastric pain radiating directly to back": ["abdominal_pain"],
+    "epigastric pain radiating to back": ["abdominal_pain"],
+    "epigastric pain radiating directly to back": ["abdominal_pain"],
+    "relieved by fetal position": ["abdominal_pain"],
+    "right upper quadrant pain after fatty meal": ["abdominal_pain"],
+    "pain after fatty meal": ["abdominal_pain"],
+    "murphy sign": ["abdominal_pain"],
+    "murphy's sign": ["abdominal_pain"],
+    "pain radiating to right shoulder": ["abdominal_pain"],
+    "periumbilical pain migrating to the right lower quadrant": ["abdominal_pain", "acute_appendicitis", "periumbilical_pain", "right_lower_quadrant_pain"],
+    "periumbilical pain migrating to right lower quadrant": ["abdominal_pain", "acute_appendicitis", "periumbilical_pain", "right_lower_quadrant_pain"],
+    "periumbilical pain migrating to the rlq": ["abdominal_pain", "acute_appendicitis", "periumbilical_pain", "right_lower_quadrant_pain"],
+    "periumbilical pain migrating to rlq": ["abdominal_pain", "acute_appendicitis", "periumbilical_pain", "right_lower_quadrant_pain"],
+    "pain migrating to the right lower quadrant": ["abdominal_pain", "acute_appendicitis", "right_lower_quadrant_pain"],
+    "pain migrating to right lower quadrant": ["abdominal_pain", "acute_appendicitis", "right_lower_quadrant_pain"],
+    "migrating to the right lower quadrant": ["abdominal_pain", "acute_appendicitis", "periumbilical_pain", "right_lower_quadrant_pain"],
+    "migrating to right lower quadrant": ["abdominal_pain", "acute_appendicitis", "periumbilical_pain", "right_lower_quadrant_pain"],
+    "migrating to the rlq": ["abdominal_pain", "acute_appendicitis", "periumbilical_pain", "right_lower_quadrant_pain"],
+    "migrating to rlq": ["abdominal_pain", "acute_appendicitis", "periumbilical_pain", "right_lower_quadrant_pain"],
+    "migrating pain": ["abdominal_pain"],
+    "pain migrating": ["abdominal_pain"],
+    "mcburney tenderness": ["abdominal_pain", "acute_appendicitis", "rebound_tenderness"],
+    "mcburney's tenderness": ["abdominal_pain", "acute_appendicitis", "rebound_tenderness"],
+    "yellow jaundice": ["jaundice"],
+    "distended fluid belly / ascites": ["ascites"],
+    "distended fluid belly ascites": ["ascites"],
+    "distended fluid belly": ["ascites"],
+    "fluid in belly": ["ascites"],
+    "fluid belly": ["ascites"],
+    "spider angiomas": ["skin_rash", "dark_urine"],
+    "spider angioma": ["skin_rash", "dark_urine"],
+    "bleeding easily": ["easy_bruising"],
+    "easy bleeding": ["easy_bruising"],
+    "chronic bloating and fatty foul-smelling stools after gluten/bread": ["steatorrhea", "bloating", "diarrhea", "weight_loss"],
+    "chronic bloating and fatty foul-smelling stools after gluten bread": ["steatorrhea", "bloating", "diarrhea", "weight_loss"],
+    "fatty foul-smelling stools": ["steatorrhea"],
+    "fatty foul smelling stools": ["steatorrhea"],
+    "stools after gluten": ["steatorrhea", "diarrhea"],
+    "unexplained iron deficiency": ["fatigue", "weight_loss"],
+
+    # Category 5: Neurological
+    "unilateral throbbing pulsating head pain": ["headache"],
+    "throbbing pulsating head pain": ["headache"],
+    "pulsating head pain": ["headache"],
+    "visual zigzag aura": ["visual_aura"],
+    "zigzag aura": ["visual_aura"],
+    "photophobia": ["photophobia"],
+    "phonophobia": ["phonophobia"],
+    "severe piercing suicidal pain around one eye": ["headache", "eye_pain"],
+    "piercing pain around one eye": ["headache", "eye_pain"],
+    "pain around one eye": ["eye_pain", "headache"],
+    "tearing eye and runny nose on same side": ["epiphora", "rhinorrhea"],
+    "tearing eye": ["epiphora"],
+    "runny nose on same side": ["rhinorrhea"],
+    "sudden one-sided arm and leg weakness": ["focal_weakness"],
+    "one-sided arm and leg weakness": ["focal_weakness"],
+    "one sided arm and leg weakness": ["focal_weakness"],
+    "one-sided weakness": ["focal_weakness"],
+    "slurred speech / garbled words": ["dysarthria"],
+    "slurred speech garbled words": ["dysarthria"],
+    "slurred speech or garbled words": ["dysarthria"],
+    "garbled words": ["dysarthria"],
+    "facial asymmetry": ["facial_droop"],
+    "inability to close eye": ["facial_droop", "facial_palsy"],
+    "forehead not wrinkling": ["facial_droop", "facial_palsy"],
+    "mouth drooping with food dribbling": ["facial_droop"],
+    "mouth drooping": ["facial_droop"],
+    "food dribbling": ["facial_droop"],
+    "hyperacusis": ["ear_pain", "loss_of_taste"],
+    "room spinning violently when turning head in bed": ["vertigo"],
+    "room spinning when turning head in bed": ["vertigo"],
+    "room spinning": ["vertigo"],
+    "rolling over vertigo lasting seconds": ["vertigo", "gait_unsteadiness"],
+    "vertigo lasting seconds": ["vertigo"],
+
+    # Category 6: Endocrine & Metabolic
+    "extreme unquenchable thirst": ["polydipsia"],
+    "unquenchable thirst": ["polydipsia"],
+    "peeing constantly through night": ["polyuria", "nocturia"],
+    "peeing through night": ["nocturia", "polyuria"],
+    "rapid weight loss despite eating": ["weight_loss", "hyperphagia"],
+    "weight loss despite eating": ["weight_loss", "hyperphagia"],
+    "fruity breath": ["halitosis", "fatigue"],
+    "excruciating big toe metatarsophalangeal pain": ["joint_pain", "podagra"],
+    "big toe metatarsophalangeal pain": ["joint_pain", "podagra"],
+    "big toe pain": ["joint_pain", "podagra"],
+    "podagra": ["joint_pain", "joint_swelling", "erythema", "myalgia", "podagra"],
+    "joint burning hot red and swollen": ["joint_pain", "joint_swelling", "erythema", "myalgia"],
+    "burning hot red and swollen joint": ["joint_pain", "joint_swelling", "erythema"],
+    "palpitations with resting tachycardia": ["palpitations"],
+    "resting tachycardia": ["palpitations"],
+    "tremor in hands": ["tremor"],
+    "weight loss with increased appetite": ["weight_loss", "hyperphagia"],
+    "increased appetite with weight loss": ["weight_loss", "hyperphagia"],
+    "cold intolerance": ["cold_intolerance"],
+    "chronic constipation": ["constipation"],
+    "unexplained weight gain": ["weight_gain"],
+    "dry coarse skin and hair loss": ["hair_loss", "fatigue"],
+    "coarse skin and hair loss": ["hair_loss", "fatigue"],
+    "hyperpigmentation/bronzing of skin creases": ["fatigue", "weight_loss"],
+    "hyperpigmentation bronzing of skin creases": ["fatigue", "weight_loss"],
+    "bronzing of skin creases": ["fatigue", "weight_loss"],
+    "bronzing of skin": ["fatigue", "weight_loss"],
+    "salt craving": ["anorexia"],
+    "postural hypotension dizziness": ["dizziness", "presyncope"],
+    "postural dizziness": ["dizziness", "presyncope"],
+
+    # Category 7: Renal & Urological
+    "burning pain during urination": ["dysuria"],
+    "burning during urination": ["dysuria"],
+    "frequent small-volume peeing": ["urinary_frequency", "urinary_urgency"],
+    "frequent small volume peeing": ["urinary_frequency", "urinary_urgency"],
+    "small volume peeing": ["urinary_frequency"],
+    "suprapubic cramping without fever": ["suprapubic_pain"],
+    "suprapubic cramping": ["suprapubic_pain"],
+    "flank costovertebral angle pain": ["flank_pain"],
+    "costovertebral angle pain": ["flank_pain"],
+    "cva tenderness": ["flank_pain"],
+    "shivering rigors": ["chills", "rigors"],
+    "painful cloudy urine": ["dysuria"],
+    "cloudy urine": ["dysuria"],
+    "sudden excruciating colicky flank pain radiating to groin": ["flank_pain"],
+    "excruciating colicky flank pain radiating to groin": ["flank_pain"],
+    "colicky flank pain radiating to groin": ["flank_pain"],
+    "colicky flank pain": ["flank_pain"],
+    "flank pain radiating to groin": ["flank_pain"],
+    "blood in urine": ["hematuria"],
+    "inability to find comfortable position": ["flank_pain", "nausea"],
+    "weak hesitant urinary stream": ["urinary_hesitancy"],
+    "hesitant urinary stream": ["urinary_hesitancy"],
+    "weak urinary stream": ["urinary_hesitancy"],
+    "nocturia waking 4 times": ["nocturia", "urinary_frequency"],
+    "waking 4 times to pee": ["nocturia", "urinary_frequency"],
+    "feeling incomplete bladder emptying": ["urinary_frequency", "urinary_hesitancy"],
+    "incomplete bladder emptying": ["urinary_hesitancy"],
+
+    # Category 8: Rheumatology & Musculoskeletal
+    "symmetric swelling and morning stiffness in finger joints lasting >1 hour": ["joint_pain", "joint_swelling", "morning_stiffness"],
+    "symmetric swelling and morning stiffness in finger joints lasting 1 hour": ["joint_pain", "joint_swelling", "morning_stiffness"],
+    "morning stiffness in finger joints lasting >1 hour": ["joint_pain", "joint_swelling", "morning_stiffness"],
+    "morning stiffness in finger joints lasting 1 hour": ["joint_pain", "joint_swelling", "morning_stiffness"],
+    "morning stiffness lasting >1 hour": ["morning_stiffness"],
+    "morning stiffness lasting 1 hour": ["morning_stiffness"],
+    "morning stiffness lasting more than 1 hour": ["morning_stiffness"],
+    "symmetric swelling in finger joints": ["joint_swelling", "joint_pain"],
+    "boggy pip/mcp joints": ["joint_swelling", "joint_pain"],
+    "boggy pip mcp joints": ["joint_swelling", "joint_pain"],
+    "boggy joints": ["joint_swelling", "joint_pain"],
+    "chronic lower back and buttock stiffness waking at night": ["morning_stiffness", "joint_pain"],
+    "lower back and buttock stiffness waking at night": ["morning_stiffness", "joint_pain"],
+    "buttock stiffness waking at night": ["morning_stiffness", "joint_pain"],
+    "relieved by exercise not rest": ["morning_stiffness"],
+    "relieved by exercise": ["morning_stiffness"],
+    "bamboo spine": ["morning_stiffness", "joint_pain", "generalized_weakness"],
+    "butterfly malar rash across cheeks and nose bridge": ["butterfly_rash"],
+    "butterfly malar rash": ["butterfly_rash"],
+    "malar rash": ["butterfly_rash"],
+    "inflammatory joint pains in young female": ["joint_pain", "fatigue"],
+    "inflammatory joint pains": ["joint_pain", "fatigue"],
+    "inflammatory joint pain": ["joint_pain", "fatigue"],
+    "widespread aching pain across 18 tender points for months": ["body_aches", "fatigue", "insomnia", "generalized_weakness"],
+    "widespread aching pain across 18 tender points": ["body_aches", "fatigue", "insomnia", "generalized_weakness"],
+    "18 tender points": ["body_aches", "generalized_weakness"],
+    "unrefreshing sleep": ["insomnia", "fatigue"],
+    "brain fog and fatigue": ["fatigue", "generalized_weakness"],
+    "brain fog": ["fatigue", "generalized_weakness"],
+
+    # Category 9: Dermatology
+    "well-demarcated salmon pink plaques covered with silvery micaceous scales on elbows/knees": ["skin_rash", "scaly_rash", "itching", "skin_peeling", "erythema"],
+    "well-demarcated salmon pink plaques covered with silvery micaceous scales on elbows knees": ["skin_rash", "scaly_rash", "itching", "skin_peeling", "erythema"],
+    "salmon pink plaques covered with silvery micaceous scales": ["skin_rash", "scaly_rash", "itching", "skin_peeling", "erythema"],
+    "silvery micaceous scales on elbows/knees": ["skin_rash", "scaly_rash", "skin_peeling"],
+    "silvery micaceous scales on elbows knees": ["skin_rash", "scaly_rash", "skin_peeling"],
+    "silvery micaceous scales": ["scaly_rash", "skin_peeling"],
+    "salmon pink plaques": ["skin_rash", "erythema"],
+    "pitted nails": ["nail_clubbing", "scaly_rash"],
+    "nail pitting": ["nail_clubbing", "scaly_rash"],
+    "intensely pruritic flexural eczema": ["itching", "skin_rash", "erythema"],
+    "pruritic flexural eczema": ["itching", "skin_rash", "erythema"],
+    "flexural eczema": ["itching", "skin_rash"],
+    "dry itchy lichenified skin on elbow/knee creases": ["itching", "skin_rash", "erythema"],
+    "dry itchy lichenified skin on elbow knee creases": ["itching", "skin_rash", "erythema"],
+    "lichenified skin on elbow/knee creases": ["itching", "skin_rash"],
+    "lichenified skin on elbow knee creases": ["itching", "skin_rash"],
+    "lichenified skin": ["itching", "skin_rash"],
+    "unilateral dermatomal band of grouped painful fluid-filled vesicles": ["skin_rash", "erythema", "body_aches"],
+    "unilateral dermatomal band of grouped painful vesicles": ["skin_rash", "erythema", "body_aches"],
+    "grouped painful fluid-filled vesicles": ["skin_rash", "erythema"],
+    "grouped painful fluid filled vesicles": ["skin_rash", "erythema"],
+    "dermatomal band of vesicles": ["skin_rash", "erythema"],
+    "dermatomal rash": ["skin_rash", "erythema"],
+    "stabbing burning nerve pain preceding rash": ["body_aches", "skin_rash"],
+    "nerve pain preceding rash": ["body_aches", "skin_rash"],
+    "burning nerve pain": ["body_aches"],
+    "intense nocturnal itching": ["itching"],
+    "nocturnal itching": ["itching"],
+    "web space burrows between fingers and wrists": ["skin_rash", "itching"],
+    "web space burrows": ["skin_rash", "itching"],
+    "burrows between fingers": ["skin_rash", "itching"],
+    "rapidly expanding red warm tender swollen skin border": ["erythema", "leg_swelling", "fever"],
+    "red warm tender swollen skin border": ["erythema", "leg_swelling"],
+    "expanding red warm tender swollen skin": ["erythema", "leg_swelling"],
+    "unilateral leg erythema with fever": ["erythema", "leg_swelling", "fever"],
+    "unilateral leg erythema": ["erythema", "leg_swelling"],
+
+    # Category 10: ENT & Ophthalmology
+    "severe unilateral eye and frontal headache": ["eye_pain", "headache", "blurred_vision", "nausea"],
+    "unilateral eye and frontal headache": ["eye_pain", "headache"],
+    "eye and frontal headache": ["eye_pain", "headache"],
+    "colored halos around lights": ["blurred_vision"],
+    "halos around lights": ["blurred_vision"],
+    "colored halos": ["blurred_vision"],
+    "hazy cornea with fixed mid-dilated pupil": ["blurred_vision", "eye_pain"],
+    "hazy cornea with fixed mid dilated pupil": ["blurred_vision", "eye_pain"],
+    "hazy cornea": ["blurred_vision", "eye_pain"],
+    "fixed mid-dilated pupil": ["blurred_vision", "eye_pain"],
+    "fixed mid dilated pupil": ["blurred_vision", "eye_pain"],
+    "paroxysmal sneezing fits": ["rhinorrhea", "nasal_congestion"],
+    "sneezing fits": ["rhinorrhea", "nasal_congestion"],
+    "clear watery rhinorrhea": ["rhinorrhea"],
+    "itchy watery eyes and itchy palate": ["rhinorrhea", "nasal_congestion", "epiphora", "itching"],
+    "itchy watery eyes": ["epiphora", "itching"],
+    "itchy palate": ["itching"],
+    "severe sore throat with purulent tonsillar exudates": ["sore_throat", "fever", "lymphadenopathy"],
+    "sore throat with purulent tonsillar exudates": ["sore_throat", "fever"],
+    "purulent tonsillar exudates": ["sore_throat"],
+    "tonsillar exudates": ["sore_throat"],
+    "tender anterior cervical adenopathy without cough": ["lymphadenopathy"],
+    "tender anterior cervical adenopathy": ["lymphadenopathy"],
+    "anterior cervical adenopathy": ["lymphadenopathy"],
+    "severe throbbing deep earache": ["ear_pain", "fever", "hearing_loss"],
+    "throbbing deep earache": ["ear_pain"],
+    "deep earache": ["ear_pain"],
+    "bulging red eardrum": ["ear_pain"],
+    "red eardrum": ["ear_pain"],
+    "reduced hearing": ["hearing_loss"],
+    "fever in child": ["fever"],
+    "triad of episodic true vertigo, fluctuating low-frequency hearing loss, and roaring tinnitus / aural fullness": ["vertigo", "tinnitus", "hearing_loss", "nausea"],
+    "triad of episodic true vertigo fluctuating low-frequency hearing loss and roaring tinnitus aural fullness": ["vertigo", "tinnitus", "hearing_loss", "nausea"],
+    "triad of episodic true vertigo fluctuating low frequency hearing loss and roaring tinnitus aural fullness": ["vertigo", "tinnitus", "hearing_loss", "nausea"],
+    "episodic true vertigo": ["vertigo"],
+    "true vertigo": ["vertigo"],
+    "fluctuating low-frequency hearing loss": ["hearing_loss"],
+    "fluctuating low frequency hearing loss": ["hearing_loss"],
+    "low-frequency hearing loss": ["hearing_loss"],
+    "low frequency hearing loss": ["hearing_loss"],
+    "roaring tinnitus / aural fullness": ["tinnitus"],
+    "roaring tinnitus aural fullness": ["tinnitus"],
+    "roaring tinnitus": ["tinnitus"],
+    "aural fullness": ["tinnitus", "ear_pain"],
+
+    # Canonical 100 Disease Direct Bridges
+    "dengue fever": ["eye_pain", "bone_pain", "arthralgia", "skin_rash", "fever"],
+    "typhoid fever": ["fever", "abdominal_pain", "diarrhea", "skin_rash", "fatigue"],
+    "leptospirosis": ["myalgia", "eye_redness", "fever", "jaundice"],
+    "cholera": ["diarrhea", "dehydration", "vomiting", "fatigue"],
+    "pulmonary tuberculosis": ["cough", "hemoptysis", "night_sweats", "weight_loss", "fever_low_grade"],
+    "acute myocardial infarction": ["chest_pain", "dyspnea", "excessive_sweating", "syncope"],
+    "congestive heart failure": ["orthopnea", "paroxysmal_nocturnal_dyspnea", "leg_swelling", "dyspnea"],
+    "deep vein thrombosis": ["leg_swelling", "erythema", "focal_weakness"],
+    "acute pericarditis": ["pleuritic_chest_pain", "chest_pain", "fever"],
+    "atrial fibrillation": ["palpitations", "dyspnea", "dizziness"],
+    "bronchial asthma": ["wheezing", "chest_tightness", "cough", "dyspnea"],
+    "copd": ["dyspnea", "cough", "sputum_production"],
+    "spontaneous pneumothorax": ["pleuritic_chest_pain", "dyspnea", "tachypnea"],
+    "pulmonary embolism": ["pleuritic_chest_pain", "dyspnea", "hemoptysis", "tachypnea"],
+    "croup": ["stridor", "cough", "hoarseness"],
+    "gastroesophageal reflux disease": ["heartburn", "dysphagia", "acid_reflux"],
+    "peptic ulcer disease": ["abdominal_pain", "melena", "heartburn"],
+    "acute pancreatitis": ["abdominal_pain", "vomiting", "nausea"],
+    "acute cholecystitis": ["abdominal_pain", "nausea", "vomiting", "fever"],
+    "liver cirrhosis": ["jaundice", "ascites", "dark_urine", "easy_bruising"],
+    "celiac disease": ["steatorrhea", "bloating", "diarrhea", "weight_loss"],
+    "migraine": ["headache", "photophobia", "phonophobia", "visual_aura", "nausea"],
+    "cluster headache": ["headache", "eye_pain", "epiphora", "rhinorrhea"],
+    "ischemic stroke": ["focal_weakness", "dysarthria", "facial_droop"],
+    "bell's palsy": ["facial_droop", "loss_of_taste", "ear_pain"],
+    "bells palsy": ["facial_droop", "loss_of_taste", "ear_pain"],
+    "bppv": ["vertigo", "nausea", "gait_unsteadiness"],
+    "type 1 diabetes": ["polydipsia", "polyuria", "weight_loss", "hyperphagia", "fatigue"],
+    "acute gout": ["joint_pain", "joint_swelling", "erythema", "myalgia"],
+    "hyperthyroidism": ["heat_intolerance", "palpitations", "tremor", "weight_loss"],
+    "hypothyroidism": ["cold_intolerance", "weight_gain", "constipation", "fatigue", "hair_loss"],
+    "addison's disease": ["fatigue", "weight_loss", "dizziness", "anorexia"],
+    "acute cystitis": ["dysuria", "urinary_urgency", "urinary_frequency", "suprapubic_pain"],
+    "acute pyelonephritis": ["flank_pain", "fever", "chills", "dysuria"],
+    "nephrolithiasis": ["flank_pain", "hematuria", "nausea"],
+    "benign prostatic hyperplasia": ["urinary_hesitancy", "nocturia", "urinary_frequency"],
+    "rheumatoid arthritis": ["joint_pain", "joint_swelling", "morning_stiffness"],
+    "ankylosing spondylitis": ["morning_stiffness", "joint_pain", "generalized_weakness"],
+    "systemic lupus erythematosus": ["butterfly_rash", "photosensitivity", "joint_pain", "fatigue"],
+    "fibromyalgia": ["body_aches", "fatigue", "insomnia", "generalized_weakness"],
+    "plaque psoriasis": ["skin_rash", "scaly_rash", "itching", "skin_peeling", "erythema"],
+    "atopic dermatitis": ["itching", "skin_rash", "erythema"],
+    "herpes zoster": ["skin_rash", "erythema", "body_aches"],
+    "scabies": ["itching", "skin_rash"],
+    "cellulitis": ["erythema", "leg_swelling", "fever"],
+    "acute angle-closure glaucoma": ["eye_pain", "headache", "blurred_vision", "nausea"],
+    "allergic rhinitis": ["rhinorrhea", "nasal_congestion", "epiphora", "itching"],
+    "streptococcal pharyngitis": ["sore_throat", "fever", "lymphadenopathy"],
+    "acute otitis media": ["ear_pain", "fever", "hearing_loss"],
+    "ménière's disease": ["vertigo", "tinnitus", "hearing_loss", "nausea"],
+    "menieres disease": ["vertigo", "tinnitus", "hearing_loss", "nausea"],
 }
 
 # ---------------------------------------------------------------------------
 # Preprocessed Output Dataclass
 # ---------------------------------------------------------------------------
 
+# --- PreprocessedClinicalData ---
+# What it does: Dataclass holding aligned feature vectors (raw and imputed), parsed symptoms, negated tokens, and vitals.
+# Why it's structured this way: Encapsulates both imputed vectors (for baseline models) and raw NaN vectors (for XGBoost native missingness) in a single immutable payload.
+# Parameters & Returns: Holds feature_order, imputed_vector, raw_vector, symptoms, vitals, etc.
+# ------------------------------------------------------------------------------
 @dataclass
 class PreprocessedClinicalData:
     feature_order: List[str]
@@ -1458,10 +2044,11 @@ class PreprocessedClinicalData:
         return list(self.imputed_vector) if imputed else list(self.raw_vector)
 
 
-# ---------------------------------------------------------------------------
-# Clinical Preprocessor Implementation
-# ---------------------------------------------------------------------------
-
+# --- ClinicalPreprocessor ---
+# What it does: Converts messy text complaints, clinical symptoms, and physiological vitals into model-aligned numerical matrices.
+# Why it's structured this way: Strict alignment against versioned JSON schema guarantees feature columns match trained XGBoost trees.
+# Parameters & Returns: Initialized with schema_path or in-memory schema dictionary.
+# ------------------------------------------------------------------------------
 class ClinicalPreprocessor:
     """
     Dynamic clinical preprocessor for disease-risk prediction and SHAP explainability.
@@ -1494,8 +2081,23 @@ class ClinicalPreprocessor:
         self.features_spec: Dict[str, Any] = dict(self.schema.get("features", {}))
         self.version: str = str(self.schema.get("version", "2.0.0"))
 
+        # Ensure space-normalized versions and apostrophe-stripped versions are in SYMPTOM_SYNONYMS
+        normalized_synonyms = {}
+        for k, v in list(SYMPTOM_SYNONYMS.items()):
+            normalized_k = re.sub(r"[^\w\s]", " ", k.lower())
+            normalized_k = " ".join(normalized_k.split())
+            if normalized_k and normalized_k not in SYMPTOM_SYNONYMS:
+                normalized_synonyms[normalized_k] = v
+            if "'s" in k:
+                no_s = k.replace("'s", "")
+                no_s = " ".join(no_s.split())
+                if no_s and no_s not in SYMPTOM_SYNONYMS:
+                    normalized_synonyms[no_s] = v
+        if normalized_synonyms:
+            SYMPTOM_SYNONYMS.update(normalized_synonyms)
+
         # Compile synonym matching catalog (sorted longest phrase first)
-        self.sorted_synonyms: List[Tuple[str, str]] = sorted(
+        self.sorted_synonyms: List[Tuple[str, Any]] = sorted(
             SYMPTOM_SYNONYMS.items(), key=lambda x: len(x[0]), reverse=True
         )
 
@@ -1598,8 +2200,8 @@ class ClinicalPreprocessor:
                     matched_canonical = None
                     matched_word_count = 0
 
-                    # Try matching phrases of decreasing lengths (up to 4 words)
-                    for phrase_len in range(min(4, n - i), 0, -1):
+                    # Try matching phrases of decreasing lengths (up to 16 words)
+                    for phrase_len in range(min(16, n - i), 0, -1):
                         sub_phrase = " ".join(tokens[i : i + phrase_len])
 
                         # Exact synonym lookup
@@ -1623,17 +2225,25 @@ class ClinicalPreprocessor:
                                 break
 
                     if matched_canonical:
-                        # Backward compatibility for v1 18-symptom schema
-                        if len(self.feature_order) == 27:
-                            if matched_canonical == "vomiting":
-                                matched_canonical = "nausea"
-                            elif matched_canonical == "myalgia":
-                                matched_canonical = "body_aches"
-
-                        if active_negation and negation_budget > 0:
-                            negated_symptoms.add(matched_canonical)
+                        if isinstance(matched_canonical, (list, tuple, set)):
+                            canonical_items = list(matched_canonical)
+                        elif isinstance(matched_canonical, str) and "," in matched_canonical:
+                            canonical_items = [s.strip() for s in matched_canonical.split(",") if s.strip()]
                         else:
-                            positive_symptoms.add(matched_canonical)
+                            canonical_items = [matched_canonical]
+
+                        for item in canonical_items:
+                            # Backward compatibility for v1 18-symptom schema
+                            if len(self.feature_order) == 27:
+                                if item == "vomiting":
+                                    item = "nausea"
+                                elif item == "myalgia":
+                                    item = "body_aches"
+
+                            if active_negation and negation_budget > 0:
+                                negated_symptoms.add(item)
+                            else:
+                                positive_symptoms.add(item)
 
                         # Advance index and decrement negation budget
                         i += matched_word_count
@@ -1662,22 +2272,158 @@ class ClinicalPreprocessor:
             else list(CANONICAL_SYMPTOMS)
         )
 
+        # Fallback to Structured Semantic Extraction:
+        # If rule-based regex and synonym lookup extract fewer than 2 symptoms from a non-empty user text input,
+        # invoke a lightweight LLM extraction fallback that maps conversational narrative directly to
+        # the 154 CANONICAL_SYMPTOMS keys using JSON schema validation.
+        raw_text_combined = " ".join(raw_clauses).strip()
+        if len(positive_symptoms) < 2 and len(raw_text_combined) > 0 and len(raw_text_combined.split()) >= 2:
+            try:
+                from ai.nlp_service import extract_symptoms_via_llm_fallback
+                allowed_154_keys = [
+                    k for k in self.feature_order
+                    if self.features_spec.get(k, {}).get("category") == "symptom"
+                ]
+                if not allowed_154_keys:
+                    allowed_154_keys = list(self.feature_order[:154])
+
+                fallback_symptoms = extract_symptoms_via_llm_fallback(
+                    text=raw_text_combined,
+                    allowed_keys=allowed_154_keys,
+                )
+                for sym in fallback_symptoms:
+                    if sym not in negated_symptoms:
+                        positive_symptoms.add(sym)
+            except Exception as exc:
+                logger.debug(f"LLM fallback extraction exception: {exc}")
+
         # Positive overrides negation only if explicitly affirmed elsewhere without negation
         final_positive = set(c for c in active_symptoms if c in positive_symptoms)
 
-        # Cross-version synonym co-activation: body_aches <-> myalgia
-        if "body_aches" in positive_symptoms and "myalgia" in active_symptoms:
-            final_positive.add("myalgia")
-        if "myalgia" in positive_symptoms and "body_aches" in active_symptoms:
-            final_positive.add("body_aches")
+        # Cross-version synonym co-activation: body_aches <-> myalgia <-> muscle_pain
+        if ("body_aches" in positive_symptoms or "myalgia" in positive_symptoms or "muscle_pain" in positive_symptoms):
+            if "myalgia" in active_symptoms:
+                final_positive.add("myalgia")
+            if "body_aches" in active_symptoms:
+                final_positive.add("body_aches")
+            if "muscle_pain" in active_symptoms:
+                final_positive.add("muscle_pain")
+
+        # Sweating co-activation: sweating <-> excessive_sweating
+        if ("sweating" in positive_symptoms or "excessive_sweating" in positive_symptoms):
+            if "excessive_sweating" in active_symptoms:
+                final_positive.add("excessive_sweating")
+            if "sweating" in active_symptoms:
+                final_positive.add("sweating")
+
+        # Chills, shivering, and rigors co-activation
+        if ("chills" in positive_symptoms or "shivering" in positive_symptoms or "rigors" in positive_symptoms):
+            if "chills" in active_symptoms:
+                final_positive.add("chills")
+            if "shivering" in active_symptoms:
+                final_positive.add("shivering")
+            if "rigors" in active_symptoms:
+                final_positive.add("rigors")
+
+        # Fever and high_fever co-activation
+        if ("fever" in positive_symptoms or "high_fever" in positive_symptoms):
+            if "fever" in active_symptoms:
+                final_positive.add("fever")
+            if "high_fever" in active_symptoms:
+                final_positive.add("high_fever")
+
+        # Acid reflux <-> heartburn co-activation
+        if ("acid_reflux" in positive_symptoms or "heartburn" in positive_symptoms):
+            if "heartburn" in active_symptoms:
+                final_positive.add("heartburn")
+            if "acid_reflux" in active_symptoms:
+                final_positive.add("acid_reflux")
+
+        # Dehydration co-activation with fatigue and oliguria
+        if "dehydration" in positive_symptoms:
+            if "fatigue" in active_symptoms:
+                final_positive.add("fatigue")
+            if "oliguria" in active_symptoms:
+                final_positive.add("oliguria")
+            if "dehydration" in active_symptoms:
+                final_positive.add("dehydration")
+
+        # Clinical co-activation for urinary symptoms:
+        # Frequent urination activates both polyuria and urinary_frequency in model feature vectors
+        if "urinary_frequency" in positive_symptoms and "polyuria" in active_symptoms:
+            final_positive.add("polyuria")
+        if "polyuria" in positive_symptoms and "urinary_frequency" in active_symptoms:
+            final_positive.add("urinary_frequency")
+
+        # Fatigue co-activates generalized_weakness and malaise if present in schema
+        if "fatigue" in positive_symptoms:
+            if "generalized_weakness" in active_symptoms:
+                final_positive.add("generalized_weakness")
+            if "malaise" in active_symptoms:
+                final_positive.add("malaise")
+        # Dermatology: scaly_rash <-> skin_peeling <-> itching <-> skin_rash <-> erythema
+        if "scaly_rash" in positive_symptoms:
+            if "scaly_rash" in active_symptoms:
+                final_positive.add("scaly_rash")
+            if "skin_peeling" in active_symptoms:
+                final_positive.add("skin_peeling")
+            if "itching" in active_symptoms:
+                final_positive.add("itching")
+            if "skin_rash" in active_symptoms:
+                final_positive.add("skin_rash")
+            if "erythema" in active_symptoms:
+                final_positive.add("erythema")
+        if "skin_peeling" in positive_symptoms and ("skin_rash" in positive_symptoms or "erythema" in positive_symptoms):
+            if "scaly_rash" in active_symptoms:
+                final_positive.add("scaly_rash")
+            if "itching" in active_symptoms:
+                final_positive.add("itching")
+
+        # Neurological: facial_droop <-> facial_palsy <-> cranial_nerve_deficit
+        if ("facial_droop" in positive_symptoms or "facial_palsy" in positive_symptoms or "cranial_nerve_deficit" in positive_symptoms):
+            if "facial_droop" in active_symptoms:
+                final_positive.add("facial_droop")
+            if "facial_palsy" in active_symptoms:
+                final_positive.add("facial_palsy")
+            if "cranial_nerve_deficit" in active_symptoms:
+                final_positive.add("cranial_nerve_deficit")
+
+        # Musculoskeletal: podagra <-> joint_pain <-> joint_swelling <-> erythema
+        if "podagra" in positive_symptoms:
+            if "podagra" in active_symptoms:
+                final_positive.add("podagra")
+            if "joint_pain" in active_symptoms:
+                final_positive.add("joint_pain")
+            if "joint_swelling" in active_symptoms:
+                final_positive.add("joint_swelling")
+            if "erythema" in active_symptoms:
+                final_positive.add("erythema")
+
+        # Abdominal: appendicitis hallmarks <-> abdominal_pain <-> rebound_tenderness
+        if any(s in positive_symptoms for s in ["acute_appendicitis", "rebound_tenderness", "right_lower_quadrant_pain", "periumbilical_pain"]):
+            positive_symptoms.add("acute_appendicitis")
+            positive_symptoms.add("abdominal_pain")
+            if "abdominal_pain" in active_symptoms:
+                final_positive.add("abdominal_pain")
+            if "acute_appendicitis" in active_symptoms:
+                final_positive.add("acute_appendicitis")
+            if "rebound_tenderness" in active_symptoms:
+                final_positive.add("rebound_tenderness")
+            if "right_lower_quadrant_pain" in active_symptoms:
+                final_positive.add("right_lower_quadrant_pain")
 
         final_negated = set(c for c in active_symptoms if c in negated_symptoms and c not in final_positive)
 
         # Build symptom vector
         symptom_vector = {c: (1.0 if c in final_positive else 0.0) for c in active_symptoms}
 
+        canonical_return = [c for c in CANONICAL_SYMPTOMS if c in positive_symptoms or c in final_positive]
+        for c in positive_symptoms:
+            if c not in canonical_return:
+                canonical_return.append(c)
+
         return {
-            "canonical_symptoms": [c for c in active_symptoms if c in final_positive],
+            "canonical_symptoms": canonical_return,
             "negated_symptoms": [c for c in active_symptoms if c in final_negated],
             "unmapped_tokens": unmapped_tokens[:10],
             "symptom_vector": symptom_vector,
@@ -1685,6 +2431,17 @@ class ClinicalPreprocessor:
 
     def _fuzzy_match_symptom(self, word: str, min_similarity: float = 0.82) -> Optional[str]:
         """Fuzzy matches a single word against synonym catalog using SequenceMatcher."""
+        NON_SYMPTOM_TOKENS = {
+            "migrating", "migrated", "migrate", "radiating", "radiated", "radiates",
+            "spreading", "spread", "moving", "moved", "traveling", "traveled",
+            "shooting", "starting", "started", "beginning", "began",
+            "worsening", "worsened", "improving", "improved",
+            "intermittent", "persistent", "constant", "periodic",
+            "tenderness", "quadrant", "lower", "upper", "central", "lateral",
+        }
+        if word.lower() in NON_SYMPTOM_TOKENS:
+            return None
+
         best_match = None
         best_ratio = 0.0
 
@@ -1833,6 +2590,12 @@ class ClinicalPreprocessor:
             imputed["bmi"] = self.features_spec["bmi"]["default_imputation"]
             imputed_fields.append("bmi")
 
+        # Optional biomarker: HbA1c (%)
+        hba1c_val = self._extract_numeric(data, ["hba1c", "a1c", "glycated_hemoglobin"])
+        if hba1c_val is not None:
+            raw["hba1c"] = float(hba1c_val)
+            imputed["hba1c"] = float(hba1c_val)
+
         return raw, imputed, imputed_fields
 
     def _clamp(self, feature_name: str, value: float) -> float:
@@ -1945,6 +2708,12 @@ class ClinicalPreprocessor:
                     if num < 25.0:  # Assumed mmol/L
                         num = num * 18.0182
                     return num
+
+        # If direct glucose is missing, check for HbA1c (eAG: 28.7 * HbA1c - 46.7)
+        hba1c_val = self._extract_numeric(data, ["hba1c", "a1c", "glycated_hemoglobin"])
+        if hba1c_val is not None:
+            return round(28.7 * hba1c_val - 46.7, 1)
+
         return None
 
     def _extract_spo2(self, data: Dict[str, Any]) -> Optional[float]:
@@ -2012,6 +2781,9 @@ class ClinicalPreprocessor:
                 patient_profile_data = merged
 
         # Normalize container
+        if isinstance(input_data, PreprocessedClinicalData):
+            return input_data
+
         if isinstance(input_data, str):
             symptoms_raw: Any = input_data
             vitals_raw: Dict[str, Any] = {}
@@ -2061,6 +2833,48 @@ class ClinicalPreprocessor:
             patient_profile_data=patient_profile_data,
         )
 
+        # Decouple background metabolic labs from unrelated acute complaints (GI, respiratory, acute infectious)
+        METABOLIC_MARKERS = {
+            "polyuria", "polydipsia", "polyphagia", "weight_loss", "fatigue", "tingling", "numbness",
+            "hirsutism", "blurred_vision", "edema", "leg_swelling", "flank_pain", "hematuria",
+            "oliguria", "anuria", "foamy_urine", "dark_urine", "urinary_frequency", "hyperphagia"
+        }
+        GI_MARKERS = {
+            "nausea", "vomiting", "abdominal_pain", "heartburn", "diarrhea", "bloating",
+            "flatulence", "constipation", "hematemesis", "melena", "hematochezia", "dysphagia",
+            "odynophagia", "early_satiety", "steatorrhea", "tenesmus", "pruritus_ani",
+            "jaundice", "clay_colored_stools", "ascites"
+        }
+        RESPIRATORY_MARKERS = {
+            "cough", "sore_throat", "rhinorrhea", "wheezing", "stridor", "tachypnea",
+            "sputum_production", "purulent_sputum", "nasal_congestion", "hemoptysis", "pleuritic_chest_pain"
+        }
+        INFECTIOUS_MARKERS = {
+            "fever", "high_fever", "fever_low_grade", "chills", "shivering", "rigors",
+            "sweating", "excessive_sweating", "night_sweats", "myalgia", "body_aches",
+            "purulent_sputum", "productive_cough"
+        }
+        DERM_MARKERS = {
+            "skin_rash", "itching", "scaly_rash", "skin_peeling", "erythema", "hives",
+            "butterfly_rash", "hair_loss", "purpura", "petechiae", "bullae", "photosensitivity",
+            "skin_thickening", "nail_clubbing"
+        }
+        ABDOMINAL_MARKERS = {
+            "abdominal_pain", "acute_appendicitis", "rebound_tenderness", "right_lower_quadrant_pain",
+            "periumbilical_pain", "nausea", "vomiting", "hematemesis", "melena", "hematochezia"
+        }
+        NEURO_MARKERS = {
+            "facial_droop", "facial_palsy", "cranial_nerve_deficit", "dysarthria", "aphasia",
+            "focal_weakness", "ataxia", "vertigo", "altered_mental_status", "seizures"
+        }
+
+        has_metabolic = any(s in METABOLIC_MARKERS for s in canonical_symptoms)
+        has_non_metabolic = any(
+            (s in GI_MARKERS or s in RESPIRATORY_MARKERS or s in INFECTIOUS_MARKERS or s in DERM_MARKERS or s in ABDOMINAL_MARKERS or s in NEURO_MARKERS)
+            for s in canonical_symptoms
+        )
+        gate_metabolic_labs = has_non_metabolic and not has_metabolic
+
         # 3. Construct dual representations in strict schema.json order
         imputed_vector: List[float] = []
         raw_vector: List[float] = []
@@ -2083,10 +2897,21 @@ class ClinicalPreprocessor:
                 imp_val = imputed_vitals.get(feat, spec.get("default_imputation", 0.0))
                 r_val = raw_vitals.get(feat, math.nan)
 
+                # Gate metabolic labs (glucose) for unrelated complaints
+                if feat == "glucose" and gate_metabolic_labs:
+                    r_val = math.nan
+                    imp_val = spec.get("default_imputation", 95.0)
+
                 imputed_vector.append(float(imp_val))
                 raw_vector.append(float(r_val))
                 imputed_dict[feat] = float(imp_val)
                 raw_dict[feat] = float(r_val)
+
+        # Clean vitals_raw if metabolic labs were gated
+        clean_vitals_raw = dict(vitals_raw)
+        if gate_metabolic_labs:
+            clean_vitals_raw.pop("glucose", None)
+            clean_vitals_raw.pop("hba1c", None)
 
         return PreprocessedClinicalData(
             feature_order=list(self.feature_order),
@@ -2097,7 +2922,7 @@ class ClinicalPreprocessor:
             canonical_symptoms=canonical_symptoms,
             negated_symptoms=negated_symptoms,
             unmapped_tokens=unmapped_tokens,
-            vitals_raw=vitals_raw,
+            vitals_raw=clean_vitals_raw,
             vitals_imputed=imputed_vitals,
             imputed_fields=imputed_fields,
             schema_version=self.version,
@@ -2112,6 +2937,11 @@ _PREPROCESSOR_V1_INSTANCE: Optional[ClinicalPreprocessor] = None
 _PREPROCESSOR_V2_INSTANCE: Optional[ClinicalPreprocessor] = None
 
 
+# --- get_preprocessor ---
+# What it does: Returns a version-specific cached singleton instance of ClinicalPreprocessor.
+# Why it's structured this way: Avoids redundant JSON schema disk I/O across worker threads while preserving backward compatibility between v1 and v2 schemas.
+# Parameters & Returns: version (Optional[str]) -> ClinicalPreprocessor instance.
+# ------------------------------------------------------------------------------
 def get_preprocessor(version: Optional[str] = None) -> ClinicalPreprocessor:
     """
     Returns preprocessor singleton instance.
@@ -2129,11 +2959,21 @@ def get_preprocessor(version: Optional[str] = None) -> ClinicalPreprocessor:
     return _PREPROCESSOR_V1_INSTANCE
 
 
+# --- get_preprocessor_v2 ---
+# What it does: Returns the v2.0.0 preprocessor singleton supporting 155+ clinical symptoms.
+# Why it's structured this way: Direct alias used by prediction pipeline and NLP services.
+# Parameters & Returns: None -> ClinicalPreprocessor instance.
+# ------------------------------------------------------------------------------
 def get_preprocessor_v2() -> ClinicalPreprocessor:
     """Convenience accessor for v2.0.0 preprocessor with 154 symptoms."""
     return get_preprocessor(version="2.0.0")
 
 
+# --- preprocess_clinical_input ---
+# What it does: Helper function accepting raw patient input and returning PreprocessedClinicalData.
+# Why it's structured this way: Provides a quick procedural interface for test fixtures and external scripts.
+# Parameters & Returns: data (dict|str|list), patient (Optional[User/Profile]) -> PreprocessedClinicalData.
+# ------------------------------------------------------------------------------
 def preprocess_clinical_input(
     data: Union[Dict[str, Any], str, List[str]],
     patient: Optional[Any] = None,

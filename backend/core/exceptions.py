@@ -1,3 +1,9 @@
+# ==============================================================================
+# FILE: backend/core/exceptions.py
+# PURPOSE: Global custom REST Framework exception handler and error response envelope.
+# VIVA EXPLANATION: Normalizes all application errors into a predictable JSON schema ({ error: { code, message, details } }) and suppresses sensitive database stack traces in production.
+# ==============================================================================
+
 import logging
 from rest_framework.views import exception_handler
 from rest_framework.response import Response
@@ -17,6 +23,11 @@ from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
 logger = logging.getLogger(__name__)
 
 
+# --- custom_exception_handler ---
+# What it does: Catches all DRF and Django exceptions, mapping them to standard error codes and sanitized messages.
+# Why it's structured this way: Enforces API consistency across all endpoints and prevents sensitive stack traces from leaking to clients.
+# Parameters & Returns: Takes (exc, context); returns DRF Response object containing structured error JSON.
+# ------------------------------------------------------------------------------
 def custom_exception_handler(exc, context):
     """
     Standardized MediCare exception handler.
@@ -68,7 +79,6 @@ def custom_exception_handler(exc, context):
     # Structure the error details safely
     details = {}
     if response is not None and isinstance(response.data, dict):
-        # Extract specific field errors or custom detail
         if "detail" in response.data:
             message = str(response.data["detail"])
             details = {k: v for k, v in response.data.items() if k != "detail"}

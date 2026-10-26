@@ -1,11 +1,18 @@
+# ==============================================================================
+# FILE: backend/apps/patients/services.py
+# PURPOSE: Service layer aggregating live database metrics for patient dashboard telemetry.
+# VIVA EXPLANATION: Gathers dynamic operational metrics across appointments, active prescriptions, electronic medical records, lab reports, and machine learning disease predictions without resorting to mock figures.
+# ==============================================================================
+
 from django.utils import timezone
 
 
+# --- get_patient_dashboard_data ---
+# What it does: Queries and summarizes patient clinical activity into a single JSON KPI payload.
+# Why it's structured this way: Uses local imports to prevent circular dependency cycles between apps and batches queries for high responsiveness.
+# Parameters & Returns: patient_user (User instance) -> Dict containing counts and next appointment metadata.
+# ------------------------------------------------------------------------------
 def get_patient_dashboard_data(patient_user):
-    """
-    Aggregates real database metrics for the patient's dashboard (Correction 9).
-    Never uses fake, hardcoded statistics.
-    """
     from apps.appointments.models import Appointment
     from apps.medical_records.models import MedicalRecord, LabReport
     from apps.medicines.models import Medication
@@ -51,3 +58,4 @@ def get_patient_dashboard_data(patient_user):
         "lab_reports_count": total_reports_count,
         "past_predictions_count": total_predictions_count,
     }
+

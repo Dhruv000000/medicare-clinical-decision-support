@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/doctor/patients.jsx
+// PURPOSE: Doctor Patient Cohort Management console providing directory search, risk classification, clinical notes, and prescription issuance.
+// VIVA EXPLANATION: This interface provides doctors with a comprehensive patient management dashboard. It renders patient demographic profiles, triage risk tiers, and provides direct modal workflows to author clinical consultation notes and issue verified prescription records through authenticated API endpoints.
+// ==============================================================================
+
 import React, { useEffect, useMemo, useState } from "react";
 
 import {
@@ -26,10 +32,11 @@ import { useTheme } from "../ThemeContext";
 import { useAuth } from "../../../_core/hooks/useAuth";
 import doctorService from "../../../services/doctorService";
 
-// =========================================================
-// STATUS BADGE
-// =========================================================
-
+// --- StatusBadge ---
+// What it does: Renders a color-coded status badge with a pulse indicator dot for patient activity states.
+// Why it's structured this way: Encapsulates status color mappings (Active, Stable, Monitoring, Attention) for consistent clinical visualization.
+// Parameters & Returns: Props: status (string). Returns styled JSX span badge.
+// ------------------------------------------------------------------------------
 function StatusBadge({ status = "Active" }) {
   const styles = {
     Active: "bg-emerald-500/10 text-emerald-500",
@@ -71,10 +78,11 @@ function StatusBadge({ status = "Active" }) {
   );
 }
 
-// =========================================================
-// RISK BADGE
-// =========================================================
-
+// --- RiskBadge ---
+// What it does: Renders a color-coded clinical risk level badge (Low, Medium, High).
+// Why it's structured this way: Provides rapid visual triage identification so healthcare providers immediately distinguish high-risk patients.
+// Parameters & Returns: Props: risk (string). Returns styled JSX span.
+// ------------------------------------------------------------------------------
 function RiskBadge({ risk = "Low" }) {
   const styles = {
     Low: "bg-emerald-500/10 text-emerald-500",
@@ -99,10 +107,11 @@ function RiskBadge({ risk = "Low" }) {
   );
 }
 
-// =========================================================
-// PATIENTS PAGE
-// =========================================================
-
+// --- Patients ---
+// What it does: Main doctor cohort dashboard component managing patient fetching, search filtering, and clinical action modals.
+// Why it's structured this way: Integrates doctorService with React state, memoized filtering, and modal dialog handlers for seamless bedside data entry.
+// Parameters & Returns: None. Returns doctor patient management view JSX.
+// ------------------------------------------------------------------------------
 export default function Patients() {
   const { isDark, toggleTheme } = useTheme();
   const { user } = useAuth();
@@ -541,10 +550,11 @@ export default function Patients() {
   );
 }
 
-// =========================================================
-// CLINICAL NOTE MODAL COMPONENT
-// =========================================================
-
+// --- ClinicalNoteModal ---
+// What it does: Modal form enabling doctors to document diagnoses and clinical notes for a selected patient.
+// Why it's structured this way: Enforces role permissions and input validation before committing notes through doctorService.createClinicalNote.
+// Parameters & Returns: Props: isDark (boolean), patient (object), onClose (func), onSuccess (func), onError (func). Returns modal dialog JSX.
+// ------------------------------------------------------------------------------
 function ClinicalNoteModal({ isDark, patient, onClose, onSuccess, onError }) {
   const [diagnosis, setDiagnosis] = useState("");
   const [note, setNote] = useState("");
@@ -667,10 +677,11 @@ function ClinicalNoteModal({ isDark, patient, onClose, onSuccess, onError }) {
   );
 }
 
-// =========================================================
-// PRESCRIBE MEDICATION MODAL COMPONENT
-// =========================================================
-
+// --- PrescribeMedicationModal ---
+// What it does: Modal form enabling physicians to prescribe medications with dosage and administration frequency.
+// Why it's structured this way: Captures structured prescription parameters and dispatches via doctorService.prescribeMedication with active safety boundaries.
+// Parameters & Returns: Props: isDark (boolean), patient (object), onClose (func), onSuccess (func), onError (func). Returns modal dialog JSX.
+// ------------------------------------------------------------------------------
 function PrescribeMedicationModal({ isDark, patient, onClose, onSuccess, onError }) {
   const [name, setName] = useState("");
   const [dosage, setDosage] = useState("");

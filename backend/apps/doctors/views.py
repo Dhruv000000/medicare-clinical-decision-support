@@ -1,3 +1,9 @@
+# ==============================================================================
+# FILE: backend/apps/doctors/views.py
+# PURPOSE: HTTP REST API controllers for physician profiles, authorized patient charts, and clinical notes.
+# VIVA EXPLANATION: Implements the clinician dashboard backend. It strictly enforces the doctor_can_access_patient security boundary so physicians can only view patient charts, medical records, and diagnostic lab reports when an active appointment or note relationship exists.
+# ==============================================================================
+
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -21,6 +27,11 @@ from .serializers import (
 from .services import get_authorized_patients_for_doctor, get_doctor_insights
 
 
+# --- get_patient_or_404 ---
+# What it does: Helper function resolving patient User by ID or raising HTTP 404 NotFound.
+# Why it's structured this way: Enforces role verification ensuring queried ID represents a patient rather than a doctor/admin.
+# Parameters & Returns: patient_id -> User instance with role == 'patient'.
+# ------------------------------------------------------------------------------
 def get_patient_or_404(patient_id):
     try:
         return User.objects.get(id=patient_id, role=User.Roles.PATIENT)
@@ -28,6 +39,11 @@ def get_patient_or_404(patient_id):
         raise NotFound(f"Patient with ID {patient_id} does not exist.")
 
 
+# --- DoctorProfileView ---
+# What it does: GET retrieves doctor credentials; PATCH updates bio, specialization, hospital, or experience.
+# Why it's structured this way: Uses get_or_create to guarantee profile existence for authenticated clinicians.
+# Parameters & Returns: GET/PATCH request -> Serialized DoctorProfile.
+# ------------------------------------------------------------------------------
 class DoctorProfileView(APIView):
     permission_classes = [IsDoctor]
 
@@ -44,11 +60,12 @@ class DoctorProfileView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+# --- DoctorPublicListView ---
+# What it does: GET /api/v1/doctor/list/ - Returns directory of active physicians with names, specializations, and licenses.
+# Why it's structured this way: Read-only endpoint open to all authenticated users (including patients) to populate appointment booking selectors.
+# Parameters & Returns: GET request -> List of doctor profiles with IDs and specialty information.
+# ------------------------------------------------------------------------------
 class DoctorPublicListView(APIView):
-    """
-    GET /api/v1/doctor/list/
-    Lists available doctors (id, full_name, specialization, license_number) for patient booking.
-    """
     permission_classes = [IsAuthenticatedUser]
 
     def get(self, request):
@@ -73,11 +90,12 @@ class DoctorPublicListView(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
+# --- PatientsView ---
+# What it does: GET /api/v1/doctor/patients/ - Returns paginated list of patients with whom this doctor has active relationships.
+# Why it's structured this way: Enforces role security; doctors cannot browse all patients in the system, only assigned/consulting ones.
+# Parameters & Returns: GET request with pagination query params -> Paginated DoctorPatientSummarySerializer payload.
+# ------------------------------------------------------------------------------
 class PatientsView(APIView):
-    """
-    GET /api/v1/doctor/patients/
-    Lists patients authorized for this doctor.
-    """
     permission_classes = [IsDoctor]
 
     def get(self, request):
@@ -88,11 +106,12 @@ class PatientsView(APIView):
         return paginator.get_paginated_response(serializer.data)
 
 
+# --- PatientDetailView ---
+# What it does: GET /api/v1/doctor/patients/<id>/ - Returns specific patient demographic and clinical overview.
+# Why it's structured this way: Checks doctor_can_access_patient permission guard before returning protected medical data.
+# Parameters & Returns: patient_id URL argument -> DoctorPatientSummarySerializer or 403 Forbidden.
+# ------------------------------------------------------------------------------
 class PatientDetailView(APIView):
-    """
-    GET /api/v1/doctor/patients/<id>/
-    Retrieves authorized patient profile details.
-    """
     permission_classes = [IsDoctor]
 
     def get(self, request, patient_id):
@@ -103,11 +122,12 @@ class PatientDetailView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+# --- PatientRecordsView ---
+# What it does: GET /api/v1/doctor/patients/<id>/records/ - Retrieves chronological EHR records for an authorized patient.
+# Why it's structured this way: Applies pagination and verification guards to protect longitudinal medical histories.
+# Parameters & Returns: patient_id URL argument -> Paginated MedicalRecordSerializer collection.
+# ------------------------------------------------------------------------------
 class PatientRecordsView(APIView):
-    """
-    GET /api/v1/doctor/patients/<id>/records/
-    Retrieves authorized patient's medical records.
-    """
     permission_classes = [IsDoctor]
 
     def get(self, request, patient_id):
@@ -122,11 +142,12 @@ class PatientRecordsView(APIView):
         return paginator.get_paginated_response(serializer.data)
 
 
+# --- PatientReportsView ---
+# What it does: GET /api/v1/doctor/patients/<id>/reports/ - Retrieves diagnostic laboratory tests and parsed biomarkers.
+# Why it's structured this way: Uses prefetch_related('results') for performance optimization across biomarker sets.
+# Parameters & Returns: patient_id URL argument -> Paginated LabReportSerializer results.
+# ------------------------------------------------------------------------------
 class PatientReportsView(APIView):
-    """
-    GET /api/v1/doctor/patients/<id>/reports/
-    Retrieves authorized patient's lab reports.
-    """
     permission_classes = [IsDoctor]
 
     def get(self, request, patient_id):
@@ -141,11 +162,12 @@ class PatientReportsView(APIView):
         return paginator.get_paginated_response(serializer.data)
 
 
+# --- PatientClinicalNotesView ---
+# What it does: GET lists physician consultation notes; POST creates a new SOAP clinical note and logs an audit trail event.
+# Why it's structured this way: Enforces mandatory physician-patient clinical authorization and writes to immutable audit logs.
+# Parameters & Returns: patient_id URL argument, POST body (note, diagnosis) -> Created ClinicalNoteSerializer response.
+# ------------------------------------------------------------------------------
 class PatientClinicalNotesView(APIView):
-    """
-    POST /api/v1/doctor/patients/<id>/clinical-notes/
-    Creates a clinical observation/note for an authorized patient.
-    """
     permission_classes = [IsDoctor]
 
     def get(self, request, patient_id):
@@ -190,11 +212,12 @@ class PatientClinicalNotesView(APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
+# --- AppointmentsView ---
+# What it does: GET /api/v1/doctor/appointments/ - Lists all scheduled, completed, and pending appointments for this clinician.
+# Why it's structured this way: Optimized with select_related for patient/doctor records and ordered chronologically.
+# Parameters & Returns: GET request -> Paginated AppointmentSerializer items.
+# ------------------------------------------------------------------------------
 class AppointmentsView(APIView):
-    """
-    GET /api/v1/doctor/appointments/
-    Lists appointments scheduled with this doctor.
-    """
     permission_classes = [IsDoctor]
 
     def get(self, request):
@@ -209,13 +232,15 @@ class AppointmentsView(APIView):
         return paginator.get_paginated_response(serializer.data)
 
 
+# --- InsightsView ---
+# What it does: GET /api/v1/doctor/insights/ - Computes real clinical KPI metrics, patient volume, and appointment stats.
+# Why it's structured this way: Aggregates real DB counts via get_doctor_insights service to drive analytical clinical dashboard.
+# Parameters & Returns: GET request -> Dict of statistical metrics (total_patients, pending_reviews, etc.).
+# ------------------------------------------------------------------------------
 class InsightsView(APIView):
-    """
-    GET /api/v1/doctor/insights/
-    Returns real database metrics for doctor decision support.
-    """
     permission_classes = [IsDoctor]
 
     def get(self, request):
         insights = get_doctor_insights(request.user)
         return Response(insights, status=status.HTTP_200_OK)
+

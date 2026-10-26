@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/patient/ai_assistant.jsx
+// PURPOSE: Conversational medical AI assistant with PubMed RAG citation integration and session history.
+// VIVA EXPLANATION: This interface provides patient-facing medical Q&A backed by Retrieval-Augmented Generation (RAG). Every clinical claim is matched against peer-reviewed PubMed citations (with PMIDs and article abstracts) and clearly disclaimed under regulatory SaMD standards.
+// ==============================================================================
+
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -53,6 +59,11 @@ const initialWelcomeMessage = {
   disclaimer: null,
 };
 
+// --- cleanAssistantText ---
+// What it does: Sanitizes AI output by removing raw SVG artifacts, HTML tags, and HTML character entities.
+// Why it's structured this way: Prevents XSS vulnerabilities and ensures raw LLM markdown artifacts do not pollute chat typography.
+// Parameters & Returns: text (string). Returns cleaned plain text string.
+// ------------------------------------------------------------------------------
 function cleanAssistantText(text) {
   return String(text || "")
     .replace(/<svg\b[^>]*>[\s\S]*?<\/svg\s*>/gi, "")
@@ -104,10 +115,11 @@ const quickPrompts = [
   "What does an elevated blood pressure mean?",
 ];
 
-/* =========================================================
-   THEME
-========================================================= */
-
+// --- useDarkMode ---
+// What it does: Custom state hook managing client theme preference persisted in localStorage and document root.
+// Why it's structured this way: Synchronizes theme transitions across body styles, HTML classes, and local storage keys.
+// Parameters & Returns: None. Returns [darkMode, setDarkMode] tuple.
+// ------------------------------------------------------------------------------
 function useDarkMode() {
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window === "undefined") return true;
@@ -127,10 +139,11 @@ function useDarkMode() {
   return [darkMode, setDarkMode];
 }
 
-/* =========================================================
-   HEADER
-========================================================= */
-
+// --- Header ---
+// What it does: Top navigation banner showing page branding and logged-in patient avatar.
+// Why it's structured this way: Connects with useAuth to personalize clinical greeting and display theme toggle.
+// Parameters & Returns: Props: darkMode (boolean), setDarkMode (func). Returns header JSX.
+// ------------------------------------------------------------------------------
 function Header({ darkMode, setDarkMode }) {
   const { user } = useAuth();
   const patientName = user
@@ -201,12 +214,90 @@ function Header({ darkMode, setDarkMode }) {
   );
 }
 
-/* =========================================================
-   CHAT MESSAGE WITH PUBMED CITATIONS & REGULATORY DISCLAIMER
-========================================================= */
+// --- CollapsibleReferences ---
+// What it does: Displays PubMed clinical references inside a collapsible accordion button.
+// Why it's structured this way: Prevents academic metadata (PMIDs, journals, years) from cluttering the patient-facing chat bubble while keeping citations fully accessible on click.
+// Parameters & Returns: citations (array), darkMode (boolean). Returns collapsible reference JSX.
+// ------------------------------------------------------------------------------
+function CollapsibleReferences({ citations, darkMode }) {
+  const [isOpen, setIsOpen] = useState(false);
 
+  if (!citations || citations.length === 0) return null;
+
+  return (
+    <div className="mt-3 border-t border-slate-700/30 pt-2">
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-[11px] font-semibold transition ${
+          darkMode
+            ? "bg-[#0d1716] text-emerald-400 hover:bg-[#122220]"
+            : "bg-emerald-50/70 text-emerald-700 hover:bg-emerald-100/70"
+        }`}
+        aria-expanded={isOpen}
+      >
+        <div className="flex items-center gap-1.5">
+          <BookOpen size={13} className="text-emerald-400 shrink-0" />
+          <span>View Clinical References ({citations.length})</span>
+        </div>
+        <ChevronDown
+          size={13}
+          className={`shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {isOpen && (
+        <div className="mt-2 flex flex-col gap-1.5 pl-0.5">
+          {citations.map((cite, idx) => {
+            const pubmedUrl =
+              cite.url || `https://pubmed.ncbi.nlm.nih.gov/${cite.pmid}/`;
+
+            return (
+              <a
+                key={idx}
+                href={pubmedUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`group flex items-center justify-between gap-2 rounded-lg border p-2 text-left transition ${
+                  darkMode
+                    ? "border-slate-800 bg-[#0d1716] hover:border-emerald-500/40 hover:bg-[#101e1d]"
+                    : "border-slate-200 bg-slate-50 hover:border-emerald-300 hover:bg-white"
+                }`}
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="line-clamp-1 text-[11px] font-semibold text-slate-200 group-hover:text-emerald-400">
+                    {cite.title || `PubMed Study #${cite.pmid}`}
+                  </p>
+                  <p className="text-[9px] text-slate-400">
+                    {cite.journal ? `${cite.journal} • ` : ""}
+                    {cite.year || "NCBI"}
+                  </p>
+                </div>
+
+                <div className="flex shrink-0 items-center gap-1 rounded bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-mono font-bold text-emerald-400">
+                  <span>PMID: {cite.pmid}</span>
+                  <ExternalLink size={10} />
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// --- MessageBubble ---
+// What it does: Renders user and assistant dialogue balloons with structured PubMed citations and regulatory disclaimers.
+// Why it's structured this way: Separates user requests from assistant evidence cards, rendering interactive external links to NCBI PubMed.
+// Parameters & Returns: Props: message (object), darkMode (boolean). Returns styled chat message JSX.
+// ------------------------------------------------------------------------------
 function MessageBubble({ message, darkMode }) {
   const isUser = message.role === "user";
+  const isEmergency = Boolean(
+    message.is_emergency ||
+      /EMERGENCY (MEDICAL )?ALERT|RED-FLAG EMERGENCY/i.test(message.text)
+  );
 
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
@@ -219,79 +310,104 @@ function MessageBubble({ message, darkMode }) {
           className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
             isUser
               ? "bg-slate-700 text-white"
+              : isEmergency
+              ? "bg-red-500 text-white shadow-md shadow-red-500/30"
               : "bg-emerald-500/10 text-emerald-400"
           }`}
         >
-          {isUser ? <UserRound size={15} /> : <Bot size={15} />}
+          {isUser ? (
+            <UserRound size={15} />
+          ) : isEmergency ? (
+            <AlertTriangle size={16} className="animate-pulse" />
+          ) : (
+            <Bot size={15} />
+          )}
         </div>
 
         <div className="min-w-0 space-y-2">
-          {/* Main Bubble Content */}
-          <div
-            className={`rounded-2xl px-4 py-3 text-[13px] leading-relaxed shadow-sm ${
-              isUser
-                ? "rounded-br-md bg-emerald-500 text-white"
-                : darkMode
-                ? "rounded-bl-md border border-slate-800 bg-[#15211f] text-slate-200"
-                : "rounded-bl-md border border-slate-100 bg-white text-slate-700 shadow-sm"
-            }`}
-          >
-            <p className="whitespace-pre-wrap">{cleanAssistantText(message.text)}</p>
-
-            {/* Clickable PubMed Citation Badges */}
-            {message.citations && message.citations.length > 0 && (
-              <div className="mt-3.5 border-t border-slate-700/40 pt-2.5">
-                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400 mb-2">
-                  <BookOpen size={12} />
-                  <span>Peer-Reviewed PubMed Sources</span>
+          {isEmergency ? (
+            /* Red-Flag Emergency Alert Banner */
+            <div
+              className={`rounded-2xl border-2 px-5 py-4 text-[13px] leading-relaxed shadow-lg ${
+                darkMode
+                  ? "border-red-500/80 bg-red-950/40 text-red-100 shadow-red-950/50"
+                  : "border-red-500 bg-red-50 text-red-900 shadow-red-200"
+              }`}
+            >
+              {/* Header Badge */}
+              <div className="mb-3 flex items-center gap-2 border-b border-red-500/30 pb-2.5">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white animate-pulse">
+                  <AlertTriangle size={16} />
                 </div>
-
-                <div className="flex flex-col gap-1.5">
-                  {message.citations.map((cite, idx) => {
-                    const pubmedUrl =
-                      cite.url || `https://pubmed.ncbi.nlm.nih.gov/${cite.pmid}/`;
-
-                    return (
-                      <a
-                        key={idx}
-                        href={pubmedUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`group flex items-center justify-between gap-2 rounded-lg border p-2 text-left transition ${
-                          darkMode
-                            ? "border-slate-800 bg-[#0d1716] hover:border-emerald-500/40 hover:bg-[#101e1d]"
-                            : "border-slate-200 bg-slate-50 hover:border-emerald-300 hover:bg-white"
-                        }`}
-                      >
-                        <div className="min-w-0 flex-1">
-                          <p className="line-clamp-1 text-[11px] font-semibold text-slate-200 group-hover:text-emerald-400">
-                            {cite.title || `PubMed Study #${cite.pmid}`}
-                          </p>
-                          <p className="text-[9px] text-slate-400">
-                            {cite.journal ? `${cite.journal} • ` : ""}
-                            {cite.year || "NCBI"}
-                          </p>
-                        </div>
-
-                        <div className="flex shrink-0 items-center gap-1 rounded bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-mono font-bold text-emerald-400">
-                          <span>PMID: {cite.pmid}</span>
-                          <ExternalLink size={10} />
-                        </div>
-                      </a>
-                    );
-                  })}
+                <div>
+                  <h4 className="text-[13px] font-bold uppercase tracking-wider text-red-500 dark:text-red-400">
+                    Red-Flag Emergency Triage Alert
+                  </h4>
+                  <p className="text-[11px] font-medium text-red-600 dark:text-red-300">
+                    Immediate In-Person Medical Attention Required
+                  </p>
                 </div>
               </div>
-            )}
 
-            {/* Mandatory Regulatory Clinical Disclaimer */}
-            {message.disclaimer && (
-              <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 p-2 text-[9px] leading-normal text-amber-300/90">
-                <ShieldAlert size={12} className="shrink-0 mt-0.5 text-amber-400" />
-                <span>{message.disclaimer}</span>
+              {/* Emergency Text Content */}
+              <p className="whitespace-pre-wrap font-medium">{cleanAssistantText(message.text)}</p>
+
+              {/* Quick Action Emergency Buttons */}
+              <div className="mt-4 flex flex-wrap gap-2.5">
+                <a
+                  href="tel:911"
+                  className="flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-xs font-bold text-white shadow-md transition hover:bg-red-700 active:scale-95"
+                >
+                  <span>📞 Call Emergency (911 / 112 / 108)</span>
+                </a>
+                <a
+                  href="https://www.google.com/maps/search/emergency+room+near+me"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition ${
+                    darkMode
+                      ? "border-red-400/30 bg-red-900/30 text-red-200 hover:bg-red-900/50"
+                      : "border-red-300 bg-white text-red-700 hover:bg-red-100"
+                  }`}
+                >
+                  <span>Find Nearest ER</span>
+                  <ExternalLink size={12} />
+                </a>
               </div>
-            )}
-          </div>
+
+              {/* Emergency Regulatory Clinical Disclaimer */}
+              {message.disclaimer && (
+                <div className="mt-3.5 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-2.5 text-[10px] leading-normal font-semibold text-red-300">
+                  <ShieldAlert size={14} className="shrink-0 mt-0.5 text-red-400" />
+                  <span>{message.disclaimer}</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Main Standard Bubble Content */
+            <div
+              className={`rounded-2xl px-4 py-3 text-[13px] leading-relaxed shadow-sm ${
+                isUser
+                  ? "rounded-br-md bg-emerald-500 text-white"
+                  : darkMode
+                  ? "rounded-bl-md border border-slate-800 bg-[#15211f] text-slate-200"
+                  : "rounded-bl-md border border-slate-100 bg-white text-slate-700 shadow-sm"
+              }`}
+            >
+              <p className="whitespace-pre-wrap">{cleanAssistantText(message.text)}</p>
+
+              {/* Collapsible PubMed Clinical References */}
+              <CollapsibleReferences citations={message.citations} darkMode={darkMode} />
+
+              {/* Mandatory Regulatory Clinical Disclaimer */}
+              {message.disclaimer && (
+                <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 p-2 text-[9px] leading-normal text-amber-300/90">
+                  <ShieldAlert size={12} className="shrink-0 mt-0.5 text-amber-400" />
+                  <span>{message.disclaimer}</span>
+                </div>
+              )}
+            </div>
+          )}
 
           <p
             className={`px-1 text-[10px] ${
@@ -310,10 +426,11 @@ function MessageBubble({ message, darkMode }) {
   );
 }
 
-/* =========================================================
-   QUICK PROMPT
-========================================================= */
-
+// --- QuickPrompt ---
+// What it does: Pre-configured prompt pill button allowing one-click query dispatch.
+// Why it's structured this way: Reduces cognitive friction for patients seeking common diagnostic explanations.
+// Parameters & Returns: Props: text (string), darkMode (boolean), onClick (func). Returns button JSX.
+// ------------------------------------------------------------------------------
 function QuickPrompt({ text, darkMode, onClick }) {
   return (
     <button
@@ -330,10 +447,11 @@ function QuickPrompt({ text, darkMode, onClick }) {
   );
 }
 
-/* =========================================================
-   MAIN ASSISTANT PAGE
-========================================================= */
-
+// --- AIAssistant ---
+// What it does: Master AI assistant conversation cockpit managing message streaming, chat history, and prompt submissions.
+// Why it's structured this way: Coordinates asynchronous RAG API requests via aiService.sendChatMessage with optimistic UI updates.
+// Parameters & Returns: None. Returns conversational AI clinical assistant portal JSX.
+// ------------------------------------------------------------------------------
 export default function AIAssistant() {
   const { user } = useAuth();
   const [darkMode, setDarkMode] = useDarkMode();
@@ -440,6 +558,7 @@ export default function AIAssistant() {
         }),
         citations: normalizeCitations(result.citations),
         disclaimer: result.disclaimer,
+        is_emergency: Boolean(result.is_emergency),
       };
 
       setMessages((current) => [...current, assistantMessage]);
@@ -458,6 +577,7 @@ export default function AIAssistant() {
         }),
         citations: [],
         disclaimer: null,
+        is_emergency: false,
       };
       setMessages((current) => [...current, errorMessage]);
     } finally {
@@ -475,22 +595,30 @@ export default function AIAssistant() {
   const loadConversationThread = (conv) => {
     setConversationId(conv.id);
     if (conv.messages && conv.messages.length > 0) {
-      const formatted = conv.messages.map((m) => ({
-        id: m.id,
-        role: m.role,
-        text: cleanAssistantText(m.content),
-        time: m.created_at
-          ? new Date(m.created_at).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-          : "Past message",
-        citations: normalizeCitations(m.sources),
-        disclaimer:
-          m.role === "assistant"
-            ? "This system provides AI-assisted clinical information based on medical literature and available clinical records. Consult a licensed physician before making clinical decisions."
-            : null,
-      }));
+      const formatted = conv.messages.map((m) => {
+        const isEmerg =
+          Boolean(m.is_emergency) ||
+          /EMERGENCY (MEDICAL )?ALERT|RED-FLAG EMERGENCY/i.test(m.content || "");
+        return {
+          id: m.id,
+          role: m.role,
+          text: cleanAssistantText(m.content),
+          time: m.created_at
+            ? new Date(m.created_at).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "Past message",
+          citations: normalizeCitations(m.sources),
+          is_emergency: isEmerg,
+          disclaimer:
+            m.role === "assistant"
+              ? isEmerg
+                ? "EMERGENCY PROTOCOL: This assistant is not equipped to handle life-threatening emergencies. Please seek in-person emergency medical care immediately."
+                : "This system provides AI-assisted clinical information based on medical literature and available clinical records. Consult a licensed physician before making clinical decisions."
+              : null,
+        };
+      });
       setMessages(formatted);
     } else {
       setMessages([initialWelcomeMessage]);

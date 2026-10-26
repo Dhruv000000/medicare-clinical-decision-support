@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/doctor/doctor_dashboard.jsx
+// PURPOSE: Clinician cockpit displaying practice volume, patient roster KPIs, and risk distributions.
+// VIVA EXPLANATION: Implements the central dashboard for physicians. Queries /doctor/dashboard/ to aggregate live practice statistics (total authorized patients, today's consultation schedule, completed visits, EHR notes recorded) and visualizes risk stratification distributions.
+// ==============================================================================
+
 import React, { useEffect, useState } from "react";
 import {
   Users,
@@ -28,10 +34,11 @@ const trendData = [
   { month: "Aug", high: 76, medium: 61, low: 36 },
 ];
 
-/* =========================================================
-   TREND CHART
-========================================================= */
-
+// --- TrendChart ---
+// What it does: Renders SVG linear trajectory curves for high, medium, and low clinical risk cohorts over 6 months.
+// Why it's structured this way: Uses native SVG vector math without heavy charting dependencies for high rendering performance.
+// Parameters & Returns: None. Returns rendered SVG trend visualization.
+// ------------------------------------------------------------------------------
 function TrendChart() {
   const width = 720;
   const height = 330;
@@ -185,10 +192,11 @@ function TrendChart() {
   );
 }
 
-/* =========================================================
-   LEGEND DOT
-========================================================= */
-
+// --- LegendDot ---
+// What it does: Visual dot indicator linking color tokens with categorical risk labels.
+// Why it's structured this way: Encapsulates inline color styles for reusable legend mapping.
+// Parameters & Returns: Props: color (string), label (string). Returns styled JSX element.
+// ------------------------------------------------------------------------------
 function LegendDot({ color, label }) {
   return (
     <div className="flex items-center gap-2">
@@ -201,10 +209,11 @@ function LegendDot({ color, label }) {
   );
 }
 
-/* =========================================================
-   RISK BAR
-========================================================= */
-
+// --- RiskBar ---
+// What it does: Displays proportional horizontal progress bar with percentage indicator for clinical risk categories.
+// Why it's structured this way: Normalizes cohort volume into intuitive visual ratios for fast practitioner digestion.
+// Parameters & Returns: Props: label (string), value (number/string), percentage (string), active (boolean). Returns styled progress card JSX.
+// ------------------------------------------------------------------------------
 function RiskBar({ label, value, percentage, active }) {
   return (
     <div className="border-b border-[var(--border)] py-4 last:border-b-0">
@@ -241,10 +250,11 @@ function RiskBar({ label, value, percentage, active }) {
   );
 }
 
-/* =========================================================
-   DOCTOR DASHBOARD
-========================================================= */
-
+// --- DoctorDashboard ---
+// What it does: Master physician dashboard component fetching practice metrics and rendering clinical overview cards.
+// Why it's structured this way: Asynchronously queries doctorService to replace mock data with authenticated clinical counts.
+// Parameters & Returns: Props (none) -> Rendered physician portal dashboard JSX.
+// ------------------------------------------------------------------------------
 export default function DoctorDashboard() {
   const { isDark, toggleTheme } = useTheme();
   const location = useLocation();

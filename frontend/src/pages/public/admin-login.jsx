@@ -1,8 +1,20 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/admin-login.jsx
+// PURPOSE: Dedicated administrative authentication portal and credential verification screen.
+// VIVA EXPLANATION: Implements the restricted administrator login console. Validates JWT login credentials and enforces role verification checking that user.role === 'admin' before navigating to /admin/dashboard.
+// ==============================================================================
+
 import React, { useState } from "react";
 import { ShieldCheck, Lock, HeartPulse, ArrowLeft, ArrowUpRight, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../_core/hooks/useAuth";
 
+
+// --- AdminLogin ---
+// What it does: Renders administrative login form, invokes login() hook, and confirms role is 'admin'.
+// Why it's structured this way: Separates high-privilege administrator entrance from standard patient/doctor portals.
+// Parameters & Returns: Props (none) -> Admin login JSX page.
+// ------------------------------------------------------------------------------
 export default function AdminLogin() {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -101,3 +113,4 @@ export default function AdminLogin() {
     </div>
   );
 }
+

@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/patient/drug_interactions.jsx
+// PURPOSE: Pharmacovigilance and drug-drug interaction (DDI) checker against FDA and clinical registries.
+// VIVA EXPLANATION: This screen allows patients and doctors to screen combinations of medications for adverse interactions. It evaluates active prescriptions against FDA contraindication feeds and visualizes interaction severity, mechanism of action, and clinical mitigations.
+// ==============================================================================
+
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -96,6 +102,11 @@ const defaultCommonMeds = [
   "Lisinopril",
 ];
 
+// --- useDarkMode ---
+// What it does: Custom theme hook persisting patient dark/light mode preference across DOM and localStorage.
+// Why it's structured this way: Enforces cohesive visual styling across healthcare widgets.
+// Parameters & Returns: None. Returns [darkMode, setDarkMode] state pair.
+// ------------------------------------------------------------------------------
 function useDarkMode() {
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -119,6 +130,11 @@ function isActivePath(pathname, route) {
   return pathname.replace(/\/$/, "") === route.replace(/\/$/, "");
 }
 
+// --- Sidebar ---
+// What it does: Left navigation drawer for patient portal routing.
+// Why it's structured this way: Categorizes clinical tools into MAIN, HEALTH, MEDICAL, AI HEALTH, and MEDICINES sections.
+// Parameters & Returns: Props: darkMode (boolean). Returns navigation sidebar JSX.
+// ------------------------------------------------------------------------------
 function Sidebar({ darkMode }) {
   const location = useLocation();
 
@@ -229,6 +245,11 @@ function Sidebar({ darkMode }) {
   );
 }
 
+// --- Header ---
+// What it does: Clinical navigation header with quick search and authenticated profile metadata.
+// Why it's structured this way: Binds with useAuth to render user name and theme controls.
+// Parameters & Returns: Props: darkMode (boolean), setDarkMode (func). Returns header JSX.
+// ------------------------------------------------------------------------------
 function Header({ darkMode, setDarkMode }) {
   const { user } = useAuth();
   const displayName =
@@ -335,6 +356,11 @@ function Header({ darkMode, setDarkMode }) {
   );
 }
 
+// --- SeverityBadge ---
+// What it does: Renders color-coded severity tag (High, Moderate, Low) for drug-drug interactions.
+// Why it's structured this way: Standardizes visual risk hierarchy across pharmaceutical screening cards.
+// Parameters & Returns: Props: level (string), darkMode (boolean). Returns styled badge JSX.
+// ------------------------------------------------------------------------------
 function SeverityBadge({ level, darkMode }) {
   const className =
     level === "High"
@@ -356,6 +382,11 @@ function SeverityBadge({ level, darkMode }) {
   );
 }
 
+// --- Selector ---
+// What it does: Dual-input drug selector combining common medication dropdown options with custom text input.
+// Why it's structured this way: Provides rapid selection for common pharmaceuticals while permitting arbitrary drug lookups.
+// Parameters & Returns: Props: label (string), value (string), onChange (func), darkMode (boolean), options (array). Returns form control JSX.
+// ------------------------------------------------------------------------------
 function Selector({ label, value, onChange, darkMode, options = [] }) {
   return (
     <label
@@ -396,6 +427,11 @@ function Selector({ label, value, onChange, darkMode, options = [] }) {
   );
 }
 
+// --- ResultPanel ---
+// What it does: Diagnostic interaction report panel showing risk tiers, clinical mechanism, and precautions.
+// Why it's structured this way: Renders structured interaction cards when risks are detected or reassurance banners when safe.
+// Parameters & Returns: Props: result (object), darkMode (boolean). Returns interaction results JSX.
+// ------------------------------------------------------------------------------
 function ResultPanel({ result, darkMode }) {
   if (!result) {
     return (
@@ -518,6 +554,11 @@ function ResultPanel({ result, darkMode }) {
   );
 }
 
+// --- DrugInteractions ---
+// What it does: Master pharmacovigilance screening console managing drug pair selection and API evaluation.
+// Why it's structured this way: Preloads active patient medications from patientService, combining with clinical drug catalogs.
+// Parameters & Returns: None. Returns drug interaction checker workspace JSX.
+// ------------------------------------------------------------------------------
 export default function DrugInteractions() {
   const [darkMode, setDarkMode] = useDarkMode();
   const [medicineA, setMedicineA] = useState("Warfarin");

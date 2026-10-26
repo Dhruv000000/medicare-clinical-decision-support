@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/patient/patient_shared.jsx
+// PURPOSE: Reusable atomic UI components and style helpers for patient portal interfaces.
+// VIVA EXPLANATION: Implements the shared component library for patient interfaces. Encapsulates design tokens (surface, inputStyle, status badges), accessible modals, metric stat cards, and section card containers to ensure consistent clinical UX across all patient pages.
+// ==============================================================================
+
 import React, { useEffect } from "react";
 import {
   AlertCircle,
@@ -31,6 +37,12 @@ export const inputStyle = (darkMode = false) =>
     ? "border-slate-700 bg-[#101918] text-slate-100 placeholder:text-slate-500 focus:border-emerald-400"
     : "border-slate-200 bg-white text-slate-800 placeholder:text-slate-400 focus:border-emerald-500";
 
+
+// --- PageHeader ---
+// What it does: Standardized top header with title, eyebrow category, and action button slots.
+// Why it's structured this way: Enforces uniform typographic hierarchy across all patient views.
+// Parameters & Returns: { darkMode, eyebrow, title, description, action } -> Header JSX element.
+// ------------------------------------------------------------------------------
 export function PageHeader({ darkMode, eyebrow, title, description, action }) {
   return (
     <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
@@ -48,7 +60,14 @@ export function PageHeader({ darkMode, eyebrow, title, description, action }) {
   );
 }
 
+
+// --- SectionCard ---
+// What it does: Container card component wrapping functional patient widgets with borders and padding.
+// Why it's structured this way: Promotes consistent card surfaces and dark-theme compliance.
+// Parameters & Returns: { darkMode, title, description, action, children, className } -> Section card JSX.
+// ------------------------------------------------------------------------------
 export function SectionCard({ darkMode, title, description, action, children, className = "" }) {
+
   return (
     <section className={cx("rounded-[18px] border p-5 shadow-[0_3px_15px_rgba(15,23,42,0.025)]", surface(darkMode), className)}>
       {(title || description || action) && (

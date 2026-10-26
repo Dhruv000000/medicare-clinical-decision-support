@@ -1,9 +1,20 @@
+# ==============================================================================
+# FILE: backend/apps/doctors/serializers.py
+# PURPOSE: Serializers for clinician profiles, clinical consultation notes, and patient summaries.
+# VIVA EXPLANATION: Transforms DoctorProfile and ClinicalNote ORM models into JSON representations. Implements cross-domain authorization validation within ClinicalNoteSerializer.validate() to prevent doctors from filing notes on unauthorized patients.
+# ==============================================================================
+
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 from apps.accounts.models import User
 from .models import DoctorProfile, ClinicalNote
 
 
+# --- DoctorProfileSerializer ---
+# What it does: Serializes clinician metadata including medical license, hospital affiliation, and specialty.
+# Why it's structured this way: Pulls account fields (email, names) directly from related user model via source attributes.
+# Parameters & Returns: DoctorProfile instance -> Serialized dictionary with read-only audit and verification stamps.
+# ------------------------------------------------------------------------------
 class DoctorProfileSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source="user.email", read_only=True)
     first_name = serializers.CharField(source="user.first_name", read_only=True)
@@ -28,6 +39,11 @@ class DoctorProfileSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "is_verified", "created_at", "updated_at"]
 
 
+# --- ClinicalNoteSerializer ---
+# What it does: Serializes physician SOAP clinical notes and verifies clinical access boundaries during validation.
+# Why it's structured this way: Enforces doctor_can_access_patient within DRF validation pipeline to guarantee data integrity.
+# Parameters & Returns: ClinicalNote instance <-> Serialized JSON with doctor_name and patient_email.
+# ------------------------------------------------------------------------------
 class ClinicalNoteSerializer(serializers.ModelSerializer):
     doctor_name = serializers.SerializerMethodField()
     patient_email = serializers.EmailField(source="patient.email", read_only=True)
@@ -61,6 +77,11 @@ class ClinicalNoteSerializer(serializers.ModelSerializer):
         return name if name else obj.doctor.email
 
 
+# --- DoctorPatientSummarySerializer ---
+# What it does: Serializes a patient user entity along with nested clinical profile details for doctor overview.
+# Why it's structured this way: Employs SerializerMethodField for lazy loading to prevent circular serializer imports.
+# Parameters & Returns: User instance -> Serialized patient representation including profile attributes.
+# ------------------------------------------------------------------------------
 class DoctorPatientSummarySerializer(serializers.ModelSerializer):
     patient_profile = serializers.SerializerMethodField()
 
@@ -73,3 +94,4 @@ class DoctorPatientSummarySerializer(serializers.ModelSerializer):
             from apps.patients.serializers import PatientProfileSerializer
             return PatientProfileSerializer(obj.patient_profile).data
         return None
+

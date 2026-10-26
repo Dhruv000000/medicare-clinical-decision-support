@@ -1,7 +1,18 @@
+# ==============================================================================
+# FILE: backend/apps/medicines/models.py
+# PURPOSE: Relational data model for patient medications and electronic prescriptions.
+# VIVA EXPLANATION: Represents active and historical patient prescriptions. Tracks medication names, dosages, administration frequencies, prescribing clinician, and active status indexed for rapid multi-drug safety checks.
+# ==============================================================================
+
 from django.conf import settings
 from django.db import models
 
 
+# --- Medication ---
+# What it does: Stores prescribed drugs with dosages, schedules, prescribing doctor, and active status flags.
+# Why it's structured this way: Indexed on (patient, is_active) to optimize pharmacovigilance and drug interaction lookup queries.
+# Parameters & Returns: Django Model representing a prescription.
+# ------------------------------------------------------------------------------
 class Medication(models.Model):
     patient = models.ForeignKey(
         settings.AUTH_USER_MODEL,

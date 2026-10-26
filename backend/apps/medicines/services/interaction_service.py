@@ -1,13 +1,9 @@
-"""
-Canonical Medicine Interaction Service.
+# ==============================================================================
+# FILE: backend/apps/medicines/services/interaction_service.py
+# PURPOSE: Pharmacovigilance and drug-drug interaction (DDI) risk stratification service.
+# VIVA EXPLANATION: This service protects patient safety by detecting dangerous drug-drug interactions across active prescriptions. It queries FDA warning labels, categorizes severity tiers (critical, severe, moderate), and recommends clinical substitutions or therapeutic monitoring.
+# ==============================================================================
 
-Evaluates pharmacological interactions across multiple medications using
-OpenFDA clinical label databases and optional DrugBank adapter.
-Supports:
-- Explicit drug lists (e.g. ["warfarin", "aspirin"])
-- Single queried medication evaluated against patient's active prescriptions
-- Structured severity classification without fabricating interaction severity.
-"""
 import logging
 from typing import List, Dict, Any, Optional
 from apps.medicines.models import Medication
@@ -17,11 +13,21 @@ from integrations.drugbank_client import drugbank_client
 logger = logging.getLogger(__name__)
 
 
+# --- MedicineInteractionService ---
+# What it does: Analyzes active prescriptions and candidate medications for drug-drug interaction contraindications.
+# Why it's structured this way: Encapsulates multi-source pharmacological APIs into a unified clinical risk tier (critical, high, moderate, none).
+# Parameters & Returns: Service class exposing evaluate_interactions.
+# ------------------------------------------------------------------------------
 class MedicineInteractionService:
     """
-    Canonical service for drug-drug interaction detection and risk stratification.
+    Evaluates drug-drug interactions and stratifies pharmacological safety risks.
     """
 
+    # --- evaluate_interactions ---
+    # What it does: Evaluates pairwise drug combinations against FDA boxed warnings and adverse interactions.
+    # Why it's structured this way: Merges patient's currently prescribed medications with newly prescribed drugs to prevent polypharmacy complications.
+    # Parameters & Returns: drugs, queried_drug, patient_user, current_medications -> Dictionary of interactions, risk level, and recommendations.
+    # ------------------------------------------------------------------------------
     def evaluate_interactions(
         self,
         drugs: Optional[List[str]] = None,
@@ -30,41 +36,65 @@ class MedicineInteractionService:
         current_medications: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """
-        Executes drug interaction analysis.
-        Normalizes input drugs, resolves active patient prescriptions if provided,
-        and aggregates evidence from OpenFDA and DrugBank.
+        Executes comprehensive multi-drug interaction analysis.
+
+        Viva Walkthrough:
+            - STEP 1: Normalize and aggregate input drug list from explicit params,
+              queried candidates, and patient's active prescriptions.
+            - STEP 2: Guard check: Requires at least 2 distinct medications to form pairs.
+            - STEP 3: Query OpenFDA SPL database for pharmacodynamic interactions.
+            - STEP 4: Query DrugBank commercial database adapter if configured.
+            - STEP 5: Stratify severity levels and flag critical/contraindicated risks.
+
+        Parameters:
+            - drugs (list[str] | None): Explicit list of medication names to evaluate.
+            - queried_drug (str | None): Single newly proposed medication.
+            - patient_user (User | None): Patient instance whose active prescriptions are merged.
+            - current_medications (list[str] | None): Explicit list of current medications.
+
+        Returns:
+            Dictionary containing drugs_analyzed, interactions, has_critical_interaction,
+            and provider metadata.
         """
         resolved_drugs = set()
 
-        # 1. Add explicit drug list
+        # ----------------------------------------------------------------------
+        # STEP 1: AGGREGATE MEDICATIONS FROM ALL INPUT CHANNELS
+        # ----------------------------------------------------------------------
+        # 1a. Explicit drug list
         if drugs and isinstance(drugs, list):
             for d in drugs:
                 if d and isinstance(d, str) and d.strip():
                     resolved_drugs.add(d.strip().title())
 
-        # 2. Add current medications list if supplied
+        # 1b. Supplied current medications list
         if current_medications and isinstance(current_medications, list):
             for d in current_medications:
                 if d and isinstance(d, str) and d.strip():
                     resolved_drugs.add(d.strip().title())
 
-        # 3. If patient user supplied, incorporate active prescriptions
+        # 1c. Patient's active prescriptions from database
         patient_med_names = []
         if patient_user:
             try:
-                active_qs = Medication.objects.filter(patient=patient_user, is_active=True).values_list("name", flat=True)
+                active_qs = Medication.objects.filter(
+                    patient=patient_user, is_active=True
+                ).values_list("name", flat=True)
                 patient_med_names = list(active_qs)
                 for med_name in patient_med_names:
                     resolved_drugs.add(med_name.strip().title())
             except Exception as e:
                 logger.warning("Could not retrieve active medications for patient %s: %s", patient_user.id, e)
 
-        # 4. Add queried single drug
+        # 1d. Newly queried drug to check against active regimen
         if queried_drug and isinstance(queried_drug, str) and queried_drug.strip():
             resolved_drugs.add(queried_drug.strip().title())
 
         drug_list = sorted(resolved_drugs)
 
+        # ----------------------------------------------------------------------
+        # STEP 2: GUARD CHECK FOR SUFFICIENT MEDICATIONS
+        # ----------------------------------------------------------------------
         if len(drug_list) < 2:
             return {
                 "drugs_analyzed": drug_list,
@@ -77,11 +107,15 @@ class MedicineInteractionService:
                 "message": "At least two distinct medications are required to analyze interactions.",
             }
 
-        # 5. Query OpenFDA canonical service
+        # ----------------------------------------------------------------------
+        # STEP 3: QUERY OPENFDA PHARMACOVIGILANCE DATABASE
+        # ----------------------------------------------------------------------
         openfda_res = openfda_service.check_interactions(drug_list)
         raw_interactions = openfda_res.get("interactions_found", [])
 
-        # 6. Normalize and map to structured interaction format
+        # ----------------------------------------------------------------------
+        # STEP 4: DEDUPLICATE AND NORMALIZE INTERACTION PAIRS
+        # ----------------------------------------------------------------------
         interactions = []
         seen_pairs = set()
 
@@ -103,7 +137,9 @@ class MedicineInteractionService:
                 "source_identifier": item.get("source_id", "openfda:drug_interactions"),
             })
 
-        # 7. Check DrugBank if configured
+        # ----------------------------------------------------------------------
+        # STEP 5: QUERY DRUGBANK COMMERCIAL ADAPTER (IF CONFIGURED)
+        # ----------------------------------------------------------------------
         if drugbank_client.is_configured:
             try:
                 db_res = drugbank_client.check_interactions(drug_list)
@@ -125,7 +161,13 @@ class MedicineInteractionService:
             except Exception as e:
                 logger.warning("Error querying DrugBank client: %s", e)
 
-        has_critical = any(item.get("severity") in ("high", "critical", "severe", "contraindicated") for item in interactions)
+        # ----------------------------------------------------------------------
+        # STEP 6: RISK STRATIFICATION & CONTRAINDICATION FLAGGING
+        # ----------------------------------------------------------------------
+        has_critical = any(
+            item.get("severity") in ("high", "critical", "severe", "contraindicated")
+            for item in interactions
+        )
 
         return {
             "drugs_analyzed": drug_list,

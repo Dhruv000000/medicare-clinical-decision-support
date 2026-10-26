@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/Landing.jsx
+// PURPOSE: Public product homepage presenting clinical decision support features, explanations, and navigation.
+// VIVA EXPLANATION: Serves as the public-facing promotional and overview portal for MediCare CDSS. Details core capabilities (AI symptom analysis, disease risk scoring with SHAP explanations, lab report parsing, OpenFDA safety), FAQs, and links to registration and sign-in.
+// ==============================================================================
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
@@ -84,6 +90,12 @@ const faqs = [
   },
 ];
 
+
+// --- Logo ---
+// What it does: Renders responsive SVG/icon branding badge for MediCare.
+// Why it's structured this way: Supports dynamic light and dark theme styling via props.
+// Parameters & Returns: { dark } -> Brand header element.
+// ------------------------------------------------------------------------------
 function Logo({ dark = false }) {
   return (
     <div className="flex items-center gap-2">
@@ -356,6 +368,11 @@ function PlanMiniCard({ title, value, icon: Icon }) {
   );
 }
 
+// --- LandingPage ---
+// What it does: Primary landing page displaying hero section, interactive clinical preview cards, feature breakdown, and FAQs.
+// Why it's structured this way: Assembles modular presentation sections and drives interactive theme toggle and mobile navigation drawer.
+// Parameters & Returns: Props (none) -> Landing page JSX hierarchy.
+// ------------------------------------------------------------------------------
 export default function LandingPage() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);

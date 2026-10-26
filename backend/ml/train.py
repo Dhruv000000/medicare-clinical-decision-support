@@ -1,11 +1,8 @@
-"""
-MediCare Clinical Decision Support System - Model Architecture & Training Pipeline
-Supports:
-- Tier 1: Multi-class XGBoost classifier across 163 features (v2.0.0) covering exactly 100 clinical conditions.
-- Legacy: Multi-class XGBoost classifier across 27 features (v1.0.0) covering 8 core conditions.
-- Missing Value Handling: Native directional tree split routing for unmeasured vitals (np.nan).
-- Artifact Serialization: xgboost_model.joblib, synced schema.json, and metadata.json.
-"""
+# ==============================================================================
+# FILE: backend/ml/train.py
+# PURPOSE: Machine learning training pipeline for Tier 1 100-disease multi-class XGBoost model.
+# VIVA EXPLANATION: This script trains the primary diagnostic classifier. It compiles clinical profiles across 100 conditions and 163 features, handles sparsity-aware split routing for missing vitals, computes multi-class log loss and F1-metrics, and serializes the model weights, label encoders, and schema artifacts.
+# ==============================================================================
 
 from __future__ import annotations
 
@@ -727,6 +724,11 @@ CLINICAL_PROFILES_100: Dict[str, Dict[str, Any]] = {
 # Clinically Realistic Synthetic Development Generator
 # ---------------------------------------------------------------------------
 
+# --- generate_synthetic_dev_data ---
+# What it does: Synthesizes clinically realistic patient cases with symptom distributions and vital sign noise.
+# Why it's structured this way: Allows deterministic offline model development and unit testing without accessing protected health information (PHI).
+# Parameters & Returns: n_samples_per_class (int), random_state (int), schema_version (str) -> pd.DataFrame.
+# ------------------------------------------------------------------------------
 def generate_synthetic_dev_data(
     n_samples_per_class: int = 150,
     random_state: int = 42,
@@ -941,6 +943,11 @@ def generate_synthetic_dev_data(
 # Training Pipeline
 # ---------------------------------------------------------------------------
 
+# --- train_model ---
+# What it does: Trains multi-class XGBoost model, computes cross-entropy log loss and F1-scores, and saves serializations.
+# Why it's structured this way: Enforces strict data splits, class weight balancing, and atomic artifact export for reproducible ML pipelines.
+# Parameters & Returns: data_path, output_dir, test_size, schema_version -> training metadata dictionary.
+# ------------------------------------------------------------------------------
 def train_model(
     data_path: Optional[str] = None,
     output_dir: Optional[str] = None,
@@ -1125,6 +1132,11 @@ def train_model(
 # CLI Entrypoint
 # ---------------------------------------------------------------------------
 
+# --- main ---
+# What it does: Command-line entrypoint parsing arguments (--version, --data, --output-dir) and executing model training.
+# Why it's structured this way: Enables automated MLOps retraining from terminal or continuous integration scripts.
+# Parameters & Returns: None.
+# ------------------------------------------------------------------------------
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="MediCare Multi-Disease Model Training & Artifact Serialization"

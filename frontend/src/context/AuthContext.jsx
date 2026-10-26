@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/context/AuthContext.jsx
+// PURPOSE: React context provider managing global authentication state, JWT tokens, and user credentials.
+// VIVA EXPLANATION: Implements the central authentication authority for the frontend. Coordinates JWT access and refresh token lifecycle, executes user login/registration/logout, synchronizes cross-tab sessions via localStorage storage events, and provides user role-based access state across components.
+// ==============================================================================
+
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import api, {
   getAccessToken,
@@ -8,17 +14,36 @@ import api, {
 
 const AuthContext = createContext(null);
 
+
+// --- AuthProvider ---
+// What it does: React context provider wrapping children with authentication state (user, role, isAuthenticated, tokens).
+// Why it's structured this way: Eliminates prop-drilling by providing reactive authentication state to all components in the React tree.
+// Parameters & Returns: { children } -> AuthContext.Provider JSX element.
+// ------------------------------------------------------------------------------
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem("medicare_user_info");
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // --- fetchCurrentUser ---
+  // What it does: Resolves the logged-in user profile from /auth/me/ using the stored JWT access token.
+  // Why it's structured this way: Verifies token validity on app initialization and rehydrates session state.
+  // Parameters & Returns: None -> Resolved user object or null if session is expired.
+  // ------------------------------------------------------------------------------
   const fetchCurrentUser = useCallback(async () => {
     const accessToken = getAccessToken();
     const refreshToken = getRefreshToken();
 
     if (!accessToken && !refreshToken) {
       setUser(null);
+      localStorage.removeItem("medicare_user_info");
       setLoading(false);
       return null;
     }
@@ -30,6 +55,7 @@ export function AuthProvider({ children }) {
       const enrichedUser = { ...data, full_name };
 
       setUser(enrichedUser);
+      localStorage.setItem("medicare_user_info", JSON.stringify(enrichedUser));
       return enrichedUser;
     } catch (err) {
       console.warn("Auth initialization: session invalid or expired", err);
@@ -46,6 +72,7 @@ export function AuthProvider({ children }) {
 
     const handleAuthExpired = () => {
       setUser(null);
+      localStorage.removeItem("medicare_user_info");
       setLoading(false);
     };
 
@@ -64,26 +91,47 @@ export function AuthProvider({ children }) {
     };
   }, [fetchCurrentUser]);
 
-  const login = useCallback(async ({ email, password }) => {
+  // --- login ---
+  // What it does: Submits credentials and selected role to /auth/login/, stores received JWT tokens, and initializes user state.
+  // Why it's structured this way: Enforces role verification, prevents stale tokens from corrupting active session, and enriches profile.
+  // Parameters & Returns: { email, password, role } -> { success: boolean, user?: object, error?: string }.
+  // ------------------------------------------------------------------------------
+  const login = useCallback(async ({ email, password, role }) => {
     setLoading(true);
     setError(null);
 
     try {
-      const { data } = await api.post("/auth/login/", {
+      // Clear previous tokens before establishing fresh authenticated session
+      clearTokens();
+
+      const payload = {
         email: email.trim().toLowerCase(),
         password,
-      });
+      };
+      if (role) {
+        payload.role = role.trim().toLowerCase();
+      }
+
+      const { data } = await api.post("/auth/login/", payload);
 
       const { access, refresh, user: loginUser } = data;
       setTokens(access, refresh);
 
-      // Verify or enrich with full /auth/me/ profile
-      let enrichedUser = loginUser;
+      // Verify or enrich with full /auth/me/ profile using the newly acquired access token
+      let enrichedUser = loginUser || {};
       try {
-        const meRes = await api.get("/auth/me/");
-        enrichedUser = meRes.data;
-      } catch {
-        // Fallback to loginUser payload if /auth/me/ is delayed
+        const meRes = await api.get("/auth/me/", {
+          headers: { Authorization: `Bearer ${access}` },
+        });
+        if (meRes.data && meRes.data.role) {
+          enrichedUser = meRes.data;
+        }
+      } catch (meErr) {
+        console.warn("Could not fetch /auth/me/, using login payload", meErr);
+      }
+
+      if (!enrichedUser.role && loginUser?.role) {
+        enrichedUser.role = loginUser.role;
       }
 
       const full_name =
@@ -92,15 +140,41 @@ export function AuthProvider({ children }) {
       const finalUser = { ...enrichedUser, full_name };
 
       setUser(finalUser);
+      localStorage.setItem("medicare_user_info", JSON.stringify(finalUser));
       window.dispatchEvent(new Event("medicare-auth-change"));
 
       return { success: true, user: finalUser };
     } catch (err) {
-      const errorMsg =
-        err.response?.data?.detail ||
-        err.response?.data?.error?.message ||
-        (typeof err.response?.data === "object" ? Object.values(err.response?.data).flat().join(" ") : null) ||
-        "Invalid email or password. Please try again.";
+      let errorMsg = "Invalid email or password. Please try again.";
+      const errorData = err.response?.data;
+      if (errorData) {
+        if (typeof errorData === "string") {
+          errorMsg = errorData;
+        } else if (errorData.error && typeof errorData.error === "object") {
+          const { message, details } = errorData.error;
+          if (details && typeof details === "object" && Object.keys(details).length > 0) {
+            const fieldMsgs = Object.entries(details).map(([k, v]) => {
+              const valText = Array.isArray(v) ? v.join(" ") : String(v);
+              return `${k !== "non_field_errors" && k !== "detail" ? `${k}: ` : ""}${valText}`;
+            });
+            errorMsg = fieldMsgs.join(" | ");
+          } else if (message) {
+            errorMsg = message;
+          }
+        } else if (errorData.detail) {
+          errorMsg = errorData.detail;
+        } else if (typeof errorData === "object") {
+          const fieldMsgs = Object.entries(errorData).map(([k, v]) => {
+            const valText = Array.isArray(v) ? v.join(" ") : String(v);
+            return `${k !== "non_field_errors" && k !== "detail" ? `${k}: ` : ""}${valText}`;
+          });
+          if (fieldMsgs.length > 0) {
+            errorMsg = fieldMsgs.join(" | ");
+          }
+        }
+      } else if (err.message) {
+        errorMsg = err.message;
+      }
 
       setError(errorMsg);
       return { success: false, error: errorMsg };
@@ -109,6 +183,11 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  // --- register ---
+  // What it does: Sends new user registration payload to /auth/register/ with password confirmation validation.
+  // Why it's structured this way: Sanitizes names, email, and parses structured DRF field-level error responses.
+  // Parameters & Returns: User attributes -> { success: boolean, data?: object, fieldErrors?: object }.
+  // ------------------------------------------------------------------------------
   const register = useCallback(
     async ({
       email,
@@ -204,6 +283,11 @@ export function AuthProvider({ children }) {
     []
   );
 
+  // --- logout ---
+  // What it does: Invalidates refresh token on the server (/auth/logout/) and deletes local credentials.
+  // Why it's structured this way: Flushes client-side state and broadcasts auth change event for instantaneous UI logout.
+  // Parameters & Returns: None -> Clears session state.
+  // ------------------------------------------------------------------------------
   const logout = useCallback(async () => {
     setLoading(true);
     try {
@@ -239,6 +323,12 @@ export function AuthProvider({ children }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+
+// --- useAuthContext ---
+// What it does: Custom React hook consuming the AuthContext value.
+// Why it's structured this way: Throws an explicit error if called outside AuthProvider to protect against improper context usage.
+// Parameters & Returns: None -> AuthContext state and methods (user, login, logout, role, etc.).
+// ------------------------------------------------------------------------------
 export function useAuthContext() {
   const context = useContext(AuthContext);
   if (!context) {
@@ -246,3 +336,4 @@ export function useAuthContext() {
   }
   return context;
 }
+

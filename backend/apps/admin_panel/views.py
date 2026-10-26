@@ -1,3 +1,9 @@
+# ==============================================================================
+# FILE: backend/apps/admin_panel/views.py
+# PURPOSE: Administrative portal controllers for user management, system audit log inspection, and system metrics.
+# VIVA EXPLANATION: Implements the system administrator back-office APIs guarded by IsAdmin. Exposes paginated user directory management (enabling account activation/role changes), security audit trail querying, and database-wide operational analytics.
+# ==============================================================================
+
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -14,11 +20,12 @@ from apps.audit_logs.serializers import AuditLogSerializer
 from apps.audit_logs.services import log_audit_event
 
 
+# --- AdminUsersView ---
+# What it does: GET lists registered users with optional role and status filters with pagination.
+# Why it's structured this way: Allows administrative staff to browse and filter platform accounts securely.
+# Parameters & Returns: GET request with query params (?role=doctor, ?is_active=true) -> Paginated UserSerializer results.
+# ------------------------------------------------------------------------------
 class AdminUsersView(APIView):
-    """
-    GET   /api/v1/admin/users/ - Paginated user list with filtering
-    PATCH /api/v1/admin/users/<id>/ - Update user status/role by Admin
-    """
     permission_classes = [IsAdmin]
 
     def get(self, request):
@@ -38,6 +45,11 @@ class AdminUsersView(APIView):
         return paginator.get_paginated_response(serializer.data)
 
 
+# --- AdminUserDetailView ---
+# What it does: PATCH modifies user account privileges, active flags, or user names, recording an audit log event.
+# Why it's structured this way: Whitelists allowed mutable fields and validates roles against User.Roles enum to maintain DB integrity.
+# Parameters & Returns: user_id URL param, PATCH body with updates -> Serialized UserSerializer response.
+# ------------------------------------------------------------------------------
 class AdminUserDetailView(APIView):
     permission_classes = [IsAdmin]
 
@@ -73,11 +85,12 @@ class AdminUserDetailView(APIView):
         return Response(UserSerializer(target_user).data, status=status.HTTP_200_OK)
 
 
+# --- AdminAuditLogsView ---
+# What it does: GET /api/v1/admin/audit-logs/ - Returns immutable chronological security and compliance log records.
+# Why it's structured this way: Supports forensic audits and compliance monitoring filtered by action and resource type.
+# Parameters & Returns: Query params (?action=..., ?resource_type=...) -> Paginated AuditLogSerializer items.
+# ------------------------------------------------------------------------------
 class AdminAuditLogsView(APIView):
-    """
-    GET /api/v1/admin/audit-logs/
-    Paginated audit log entries for application administrators.
-    """
     permission_classes = [IsAdmin]
 
     def get(self, request):
@@ -97,11 +110,12 @@ class AdminAuditLogsView(APIView):
         return paginator.get_paginated_response(serializer.data)
 
 
+# --- AdminAnalyticsView ---
+# What it does: GET /api/v1/admin/analytics/ - Compiles real-time metrics across users, appointments, and medical records.
+# Why it's structured this way: Runs live relational database aggregations to provide administrators with platform telemetry.
+# Parameters & Returns: GET request -> Consolidated JSON object containing user, appointment, and clinical statistics.
+# ------------------------------------------------------------------------------
 class AdminAnalyticsView(APIView):
-    """
-    GET /api/v1/admin/analytics/
-    Calculates genuine database metrics across the MediCare platform (Correction 9).
-    """
     permission_classes = [IsAdmin]
 
     def get(self, request):
@@ -148,3 +162,4 @@ class AdminAnalyticsView(APIView):
         }
 
         return Response(data, status=status.HTTP_200_OK)
+

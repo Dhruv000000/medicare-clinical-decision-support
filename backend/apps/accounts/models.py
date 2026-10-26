@@ -1,8 +1,19 @@
+# ==============================================================================
+# FILE: backend/apps/accounts/models.py
+# PURPOSE: Custom User model and authentication manager utilizing email-based identity.
+# VIVA EXPLANATION: Replaces default Django username authentication with email credentials and introduces strict RBAC role enums (Patient, Doctor, Administrator).
+# ==============================================================================
+
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 
+# --- CustomUserManager ---
+# What it does: Manages user creation using normalized lowercase email as the primary login credential.
+# Why it's structured this way: Eliminates legacy username requirements and standardizes user provisioning.
+# Parameters & Returns: create_user and create_superuser methods returning configured User instances.
+# ------------------------------------------------------------------------------
 class CustomUserManager(BaseUserManager):
     """
     Custom user manager where email is the unique identifier for authentication
@@ -36,6 +47,11 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 
+# --- User ---
+# What it does: Primary authentication and identity model extending Django's AbstractUser.
+# Why it's structured this way: Stores core user identity, email, first/last names, and role classification (PATIENT, DOCTOR, ADMIN).
+# Parameters & Returns: Custom Django User model.
+# ------------------------------------------------------------------------------
 class User(AbstractUser):
     class Roles(models.TextChoices):
         PATIENT = "patient", "Patient"

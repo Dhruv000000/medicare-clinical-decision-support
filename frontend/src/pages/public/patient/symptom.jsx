@@ -1,4 +1,10 @@
-import React, { useState, useEffect } from "react";
+// ==============================================================================
+// FILE: frontend/src/pages/public/patient/symptom.jsx
+// PURPOSE: Interactive symptom intake portal featuring real-time NLP parsing, vocabulary canonicalization, and CDSS inference.
+// VIVA EXPLANATION: This screen is the patient diagnostic intake interface. It accepts natural language clinical complaints, performs live debounced NLP parsing to map layman terms to canonical vocabularies (handling typo correction and negation), and submits features to the backend ML inference engine for diagnostic evaluation.
+// ==============================================================================
+
+import React, { useState, useEffect, useMemo } from "react";
 import { useTheme } from "../ThemeContext";
 import Sidebar from "./sidebar";
 import {
@@ -21,10 +27,16 @@ import {
   X,
   TrendingUp,
   BarChart2,
+  HelpCircle,
 } from "lucide-react";
 import { useAuth } from "../../../_core/hooks/useAuth";
 import aiService from "../../../services/aiService";
 
+// --- SymptomAnalysis ---
+// What it does: Primary patient symptom assessment intake component managing NLP parsing, symptom selection, and AI prediction triggers.
+// Why it's structured this way: Uses debounced effects calling aiService.parseSymptoms for live feedback, combining tag selection with free-text input.
+// Parameters & Returns: None. Returns interactive symptom assessment interface JSX.
+// ------------------------------------------------------------------------------
 export default function SymptomAnalysis() {
   const { isDark, toggleTheme } = useTheme();
   const { user } = useAuth();
@@ -56,7 +68,66 @@ export default function SymptomAnalysis() {
     "Nausea",
     "Dizziness",
     "Chest pain",
+    "Shortness of breath / Dyspnea",
+    "Acute numbness / weakness",
   ];
+
+  const cleanConditionName = (name) =>
+    (name || "").replace(/\s+of\s+[A-Za-z\s]+$/i, "").trim();
+
+  // Red-Flag Emergency Guardrail for Symptom Chips & Text Input
+  const redFlagEmergency = useMemo(() => {
+    if (prediction?.red_flag_alert) {
+      return {
+        active: true,
+        message: prediction.red_flag_alert,
+      };
+    }
+
+    // Inspect user's active inputs (chips + text)
+    const inputTerms = [
+      ...selectedSymptoms,
+      ...(inputText.trim() ? [inputText.trim()] : []),
+    ].map((s) => s.toLowerCase());
+
+    if (inputTerms.length === 0) {
+      return { active: false, message: null };
+    }
+
+    const combined = inputTerms.join(" ");
+
+    const CHEST_REGEX = /\b(chest\s+pain|chest\s+tightness|tight\s+chest|pressure\s+(on|in|across)\s+(the\s+|my\s+)?chest|squeezing\s+chest|angina|heart\s+pain|pain\s+in\s+chest|crushing\s+chest)\b/i;
+    const DYSPNEA_REGEX = /\b(shortness\s+of\s+breath|dyspnea|dyspnoea|difficulty\s+breathing|trouble\s+breathing|struggling\s+to\s+breathe|severe\s+breathlessness|can\'?t\s+breathe|cannot\s+breathe|unable\s+to\s+breathe|gasping\s+for\s+(air|breath)|air\s+hunger|respiratory\s+distress|suffocating)\b/i;
+    const NEURO_REGEX = /\b(stroke|facial\s+droop|face\s+droop|sudden\s+numbness|sudden\s+weakness|hemiplegia|hemiparesis|slurred\s+speech|loss\s+of\s+speech|unable\s+to\s+speak|acute\s+paralysis)\b/i;
+
+    const hasChest = CHEST_REGEX.test(combined);
+    const hasDyspnea = DYSPNEA_REGEX.test(combined);
+    const hasNeuro = NEURO_REGEX.test(combined);
+
+    if (hasChest) {
+      return {
+        active: true,
+        message:
+          "Warning: Selected symptoms include acute chest discomfort. Please seek immediate medical evaluation to rule out acute cardiovascular issues.",
+      };
+    }
+    if (hasDyspnea) {
+      return {
+        active: true,
+        message:
+          "Warning: Selected symptoms include acute shortness of breath / dyspnea. Please seek immediate medical evaluation to rule out acute respiratory or cardiovascular distress.",
+      };
+    }
+    if (hasNeuro) {
+      return {
+        active: true,
+        message:
+          "Warning: Selected symptoms include acute neurological deficits. Please seek immediate medical evaluation to rule out acute neurological or cerebrovascular conditions.",
+      };
+    }
+
+    return { active: false, message: null };
+  }, [selectedSymptoms, inputText, prediction]);
 
   const loadHistory = async () => {
     try {
@@ -251,6 +322,7 @@ export default function SymptomAnalysis() {
               <div style={styles.quickSymptoms}>
                 {quickSymptoms.map((symptom) => {
                   const active = selectedSymptoms.includes(symptom);
+                  const isRedFlagChip = symptom.includes("Chest") || symptom.includes("breath") || symptom.includes("numbness");
                   return (
                     <button
                       key={symptom}
@@ -258,9 +330,15 @@ export default function SymptomAnalysis() {
                       onClick={() => toggleSymptom(symptom)}
                       style={{
                         ...styles.symptomChip,
-                        background: active ? "var(--accent-soft)" : "var(--card-soft)",
-                        borderColor: active ? "var(--accent)" : "var(--border)",
-                        color: active ? "var(--accent-medium)" : "var(--text-secondary)",
+                        background: active
+                          ? (isRedFlagChip ? "rgba(239, 68, 68, 0.15)" : "var(--accent-soft)")
+                          : "var(--card-soft)",
+                        borderColor: active
+                          ? (isRedFlagChip ? "#ef4444" : "var(--accent)")
+                          : (isRedFlagChip ? "rgba(239, 68, 68, 0.3)" : "var(--border)"),
+                        color: active
+                          ? (isRedFlagChip ? "#ef4444" : "var(--accent-medium)")
+                          : "var(--text-secondary)",
                       }}
                     >
                       <Plus size={12} />
@@ -269,6 +347,29 @@ export default function SymptomAnalysis() {
                   );
                 })}
               </div>
+
+              {/* Instant Alert for Red Flag Chips in Panel 1 */}
+              {redFlagEmergency.active && (
+                <div
+                  style={{
+                    marginTop: "8px",
+                    padding: "8px 10px",
+                    borderRadius: "8px",
+                    background: "rgba(239, 68, 68, 0.12)",
+                    border: "1px solid rgba(239, 68, 68, 0.35)",
+                    color: "#ef4444",
+                    fontSize: "9px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                >
+                  <AlertTriangle size={14} style={{ flexShrink: 0 }} />
+                  <span>
+                    <strong>Red-Flag Detected:</strong> {redFlagEmergency.message}
+                  </span>
+                </div>
+              )}
 
               {/* Free Text Input */}
               <div style={{ marginTop: "10px" }}>
@@ -453,6 +554,64 @@ export default function SymptomAnalysis() {
                 </div>
               ) : prediction ? (
                 <div style={{ flex: 1, minHeight: 0, overflowY: "auto", paddingRight: "4px", marginTop: "10px" }}>
+                  {/* High-Priority Red-Flag Emergency Triage Banner */}
+                  {redFlagEmergency.active && (
+                    <div
+                      style={{
+                        marginBottom: "12px",
+                        padding: "12px 14px",
+                        borderRadius: "12px",
+                        background: "rgba(239, 68, 68, 0.15)",
+                        border: "2px solid #ef4444",
+                        color: "#ef4444",
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: "10px",
+                        boxShadow: "0 4px 14px rgba(239, 68, 68, 0.2)",
+                      }}
+                    >
+                      <AlertTriangle size={20} style={{ flexShrink: 0, marginTop: "2px", color: "#ef4444" }} />
+                      <div>
+                        <div style={{ fontSize: "11px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                          Emergency Clinical Triage Warning
+                        </div>
+                        <div style={{ fontSize: "11px", marginTop: "3px", lineHeight: 1.45, fontWeight: 600, color: isDark ? "#fca5a5" : "#b91c1c" }}>
+                          {redFlagEmergency.message}
+                        </div>
+                        <div style={{ fontSize: "10px", marginTop: "4px", color: "#ef4444", fontWeight: 700 }}>
+                          Immediate Action: Call 911 / 112 / 108 or proceed to the nearest emergency department without delay.
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Validation Notice Banner (Unmapped Symptom Text) */}
+                  {prediction.validation_status && (
+                    <div
+                      style={{
+                        marginBottom: "12px",
+                        padding: "12px 14px",
+                        borderRadius: "12px",
+                        background: "rgba(245, 158, 11, 0.15)",
+                        border: "2px solid #f59e0b",
+                        color: "#f59e0b",
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: "10px",
+                      }}
+                    >
+                      <AlertTriangle size={20} style={{ flexShrink: 0, marginTop: "2px", color: "#f59e0b" }} />
+                      <div>
+                        <div style={{ fontSize: "11px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                          Symptom Extraction Notice
+                        </div>
+                        <div style={{ fontSize: "11px", marginTop: "3px", lineHeight: 1.45, fontWeight: 600, color: isDark ? "#fde68a" : "#b45309" }}>
+                          {prediction.validation_status}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Top Prediction Badge */}
                   <div
                     style={{
@@ -470,7 +629,7 @@ export default function SymptomAnalysis() {
                         Most Likely Condition
                       </span>
                       <h3 style={{ margin: "2px 0 0", fontSize: "16px", fontWeight: 700, color: "var(--text)" }}>
-                        {prediction.predicted_condition}
+                        {cleanConditionName(prediction.predicted_condition)}
                       </h3>
                     </div>
 
@@ -514,63 +673,180 @@ export default function SymptomAnalysis() {
                   )}
 
                   {/* SHAP Feature Attribution Visualization */}
-                  <div style={{ marginTop: "14px" }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
-                      <span style={{ fontSize: "10px", fontWeight: 700, color: "var(--text)", display: "flex", alignItems: "center", gap: "5px" }}>
-                        <BarChart2 size={13} />
-                        SHAP Feature Attribution
-                      </span>
-                      <span style={{ fontSize: "8px", color: "var(--muted)" }}>
-                        Base value: {prediction.shap_explanations?.base_value ? Math.round(prediction.shap_explanations.base_value * 100) : 10}%
-                      </span>
-                    </div>
+                  {(() => {
+                    const shapFeatures = Array.isArray(prediction.shap_explanations?.features)
+                      ? prediction.shap_explanations.features
+                      : Array.isArray(prediction.shap_explanations)
+                      ? prediction.shap_explanations
+                      : Array.isArray(prediction.shap_analysis?.features)
+                      ? prediction.shap_analysis.features
+                      : Array.isArray(prediction.explanation?.features)
+                      ? prediction.explanation.features
+                      : Array.isArray(prediction.explanation?.shap_attributions)
+                      ? prediction.explanation.shap_attributions
+                      : [];
 
-                    <div style={{ background: "var(--card-soft)", border: "1px solid var(--border)", borderRadius: "10px", padding: "8px 10px" }}>
-                      {prediction.shap_explanations?.features && prediction.shap_explanations.features.length > 0 ? (
-                        <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
-                          {prediction.shap_explanations.features.slice(0, 5).map((f, i) => {
-                            const isIncrease = f.direction === "increases_risk" || f.contribution > 0;
-                            const absContrib = Math.min(100, Math.max(10, Math.round(Math.abs(f.contribution) * 100)));
+                    const baseVal =
+                      prediction.shap_explanations?.base_value != null
+                        ? prediction.shap_explanations.base_value
+                        : prediction.shap_analysis?.base_value != null
+                        ? prediction.shap_analysis.base_value
+                        : prediction.explanation?.base_value != null
+                        ? prediction.explanation.base_value
+                        : 0.10;
 
-                            return (
-                              <div key={i}>
-                                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "9px", marginBottom: "2px" }}>
-                                  <span style={{ fontWeight: 600, color: "var(--text)", textTransform: "capitalize" }}>
-                                    {f.feature}
-                                  </span>
-                                  <span
-                                    style={{
-                                      fontWeight: 700,
-                                      color: isIncrease ? "#ef4444" : "#10b981",
-                                    }}
-                                  >
-                                    {isIncrease ? `+${f.contribution.toFixed(2)} (Increases Risk)` : `${f.contribution.toFixed(2)} (Protective)`}
-                                  </span>
-                                </div>
-                                <div style={{ height: "6px", width: "100%", background: "var(--border)", borderRadius: "3px", overflow: "hidden" }}>
-                                  <div
-                                    style={{
-                                      height: "100%",
-                                      width: `${absContrib}%`,
-                                      background: isIncrease
-                                        ? "linear-gradient(90deg, #f59e0b, #ef4444)"
-                                        : "linear-gradient(90deg, #06b6d4, #10b981)",
-                                      borderRadius: "3px",
-                                      transition: "width 0.5s ease-in-out",
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            );
-                          })}
+                    const maxContrib = Math.max(
+                      ...shapFeatures.map((item) => Math.abs(Number(item.contribution || item.shap_value || 0.01))),
+                      0.01
+                    );
+
+                    return (
+                      <div style={{ marginTop: "14px" }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                          <span style={{ fontSize: "10px", fontWeight: 700, color: "var(--text)", display: "flex", alignItems: "center", gap: "5px" }}>
+                            <BarChart2 size={13} />
+                            SHAP Feature Attribution
+                          </span>
+                          <span style={{ fontSize: "8px", color: "var(--muted)" }}>
+                            Base expected margin: {typeof baseVal === "number" ? (baseVal >= 0 ? `+${baseVal.toFixed(2)}` : baseVal.toFixed(2)) : baseVal}
+                          </span>
                         </div>
-                      ) : (
-                        <span style={{ fontSize: "9px", color: "var(--muted)" }}>
-                          No individual feature attributions recorded.
-                        </span>
-                      )}
-                    </div>
-                  </div>
+
+                        <div style={{ background: "var(--card-soft)", border: "1px solid var(--border)", borderRadius: "10px", padding: "10px" }}>
+                          {shapFeatures.length > 0 ? (
+                            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                              {shapFeatures.slice(0, 6).map((f, i) => {
+                                const isIncrease = f.direction === "increases_risk" || (f.shap_value != null ? f.shap_value > 0 : (f.contribution > 0));
+                                const numContrib = Math.abs(Number(f.contribution || f.shap_value || 0));
+                                const barPercent = Math.min(100, Math.max(12, Math.round((numContrib / maxContrib) * 100)));
+                                const featureLabel = f.label || (typeof f.feature === "string" ? f.feature.replace(/_/g, " ") : "Clinical Feature");
+                                const valueText = f.display_value || (f.value !== null && f.value !== undefined ? (f.value === 1 ? "Present" : f.value === 0 ? "Absent" : String(f.value)) : null);
+                                const importanceText = f.importance || (isIncrease ? `+${numContrib.toFixed(2)}` : `-${numContrib.toFixed(2)}`);
+
+                                return (
+                                  <div key={i}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "9px", marginBottom: "3px" }}>
+                                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                        <span style={{ fontWeight: 600, color: "var(--text)", textTransform: "capitalize" }}>
+                                          {featureLabel}
+                                        </span>
+                                        {valueText && (
+                                          <span
+                                            style={{
+                                              fontSize: "8px",
+                                              padding: "1px 5px",
+                                              borderRadius: "4px",
+                                              background: "var(--border)",
+                                              color: "var(--text-secondary)",
+                                              fontWeight: 500,
+                                            }}
+                                          >
+                                            {valueText}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <span
+                                        style={{
+                                          fontWeight: 700,
+                                          fontSize: "9px",
+                                          color: isIncrease ? "#ef4444" : "#10b981",
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: "3px",
+                                        }}
+                                      >
+                                        <span>{importanceText}</span>
+                                        <span style={{ fontSize: "8px", opacity: 0.85, fontWeight: 500 }}>
+                                          ({isIncrease ? "Elevates Risk" : "Protective"})
+                                        </span>
+                                      </span>
+                                    </div>
+                                    <div style={{ height: "6px", width: "100%", background: "var(--border)", borderRadius: "3px", overflow: "hidden" }}>
+                                      <div
+                                        style={{
+                                          height: "100%",
+                                          width: `${barPercent}%`,
+                                          background: isIncrease
+                                            ? "linear-gradient(90deg, #f59e0b, #ef4444)"
+                                            : "linear-gradient(90deg, #06b6d4, #10b981)",
+                                          borderRadius: "3px",
+                                          transition: "width 0.5s ease-in-out",
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: "9px", color: "var(--muted)" }}>
+                              No individual feature attributions recorded.
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Clinical Clarification Needed (for ambiguous cases) */}
+                  {(prediction.clarification_prompt || prediction.explanation?.clarification_prompt) && (() => {
+                    const cp = prediction.clarification_prompt || prediction.explanation?.clarification_prompt;
+                    return (
+                      <div
+                        style={{
+                          marginTop: "12px",
+                          padding: "12px",
+                          borderRadius: "12px",
+                          background: isDark ? "rgba(59, 130, 246, 0.12)" : "rgba(239, 246, 255, 0.95)",
+                          border: "1px solid rgba(59, 130, 246, 0.35)",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "8px",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#3b82f6" }}>
+                          <HelpCircle size={16} />
+                          <span style={{ fontSize: "10px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                            Clinical Clarification Needed
+                          </span>
+                        </div>
+                        <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--text)" }}>
+                          {cp.question}
+                        </div>
+                        {cp.message && (
+                          <div style={{ fontSize: "9px", color: "var(--text-secondary)", lineHeight: 1.4 }}>
+                            {cp.message}
+                          </div>
+                        )}
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "4px" }}>
+                          {cp.options?.map((opt, i) => (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => {
+                                if (!selectedSymptoms.includes(opt.label)) {
+                                  setSelectedSymptoms([...selectedSymptoms, opt.label]);
+                                }
+                              }}
+                              style={{
+                                padding: "4px 8px",
+                                borderRadius: "6px",
+                                border: "1px solid rgba(59, 130, 246, 0.4)",
+                                background: selectedSymptoms.includes(opt.label) ? "rgba(59, 130, 246, 0.25)" : "var(--card-soft)",
+                                color: "var(--text)",
+                                fontSize: "9px",
+                                cursor: "pointer",
+                                textAlign: "left",
+                                transition: "all 0.15s ease",
+                              }}
+                            >
+                              + {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* Differential Diagnoses (Ranked candidates) */}
                   {prediction.ranked_diagnoses && prediction.ranked_diagnoses.length > 1 && (
@@ -592,7 +868,7 @@ export default function SymptomAnalysis() {
                               fontSize: "9px",
                             }}
                           >
-                            <span style={{ color: "var(--text)" }}>{d.disease}</span>
+                            <span style={{ color: "var(--text)" }}>{cleanConditionName(d.disease || d.condition)}</span>
                             <span style={{ fontWeight: 700, color: "var(--muted)" }}>
                               {Math.round(d.probability * 100)}%
                             </span>
@@ -731,7 +1007,7 @@ export default function SymptomAnalysis() {
                           </td>
 
                           <td style={styles.assessmentName}>
-                            {item.predicted_condition}
+                            {cleanConditionName(item.predicted_condition)}
                           </td>
 
                           <td>
@@ -745,11 +1021,16 @@ export default function SymptomAnalysis() {
                               type="button"
                               onClick={() => {
                                 setPrediction({
-                                  predicted_condition: item.predicted_condition,
+                                  predicted_condition: cleanConditionName(item.predicted_condition),
                                   confidence: item.confidence,
                                   severity: item.explanation?.severity || "moderate",
                                   recommendation: item.explanation?.recommendation || "",
-                                  shap_explanations: item.explanation?.shap_attributions || {},
+                                  shap_explanations: item.explanation?.shap_analysis || {
+                                    base_value: item.explanation?.base_value || 0.1,
+                                    features: item.explanation?.shap_attributions || item.explanation?.features || [],
+                                  },
+                                  shap_analysis: item.explanation?.shap_analysis,
+                                  explanation: item.explanation,
                                   ranked_diagnoses: item.explanation?.ranked_diagnoses || [],
                                   disclaimer: item.disclaimer || "",
                                 });

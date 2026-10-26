@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/patient/medical_records.jsx
+// PURPOSE: Patient electronic health record (EHR) viewer and diagnostic document repository.
+// VIVA EXPLANATION: Implements the patient medical record repository. Fetches clinical notes, consultation records, and diagnostic summaries from /patient/medical-records/, provides search and categorization filters, document preview modals, and secure upload handlers.
+// ==============================================================================
+
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Sidebar from "../patient/sidebar";
@@ -628,6 +634,11 @@ function RecordPreview({
   );
 }
 
+// --- MedicalRecords ---
+// What it does: Primary EHR browser component managing record filtering, search, pagination, and modal triggers.
+// Why it's structured this way: Normalizes database records with fallback defaults to ensure consistent tabular presentation.
+// Parameters & Returns: Props (none) -> Rendered medical records view JSX.
+// ------------------------------------------------------------------------------
 export default function MedicalRecords() {
   const { isDark: darkMode, toggleTheme } = useTheme();
 

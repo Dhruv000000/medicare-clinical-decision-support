@@ -1,3 +1,9 @@
+# ==============================================================================
+# FILE: backend/config/settings.py
+# PURPOSE: Global project settings, database drivers, JWT authentication, and middleware definitions.
+# VIVA EXPLANATION: Configures Django for the MediCare CDSS platform. Sets up PostgreSQL 16 connection pooling, JWT token lifetimes via SimpleJWT, CORS policies, modular application registrations, and unified exception handling.
+# ==============================================================================
+
 import os
 import sys
 from pathlib import Path
@@ -11,6 +17,7 @@ load_dotenv(BASE_DIR / ".env")
 SECRET_KEY = os.getenv("SECRET_KEY", os.getenv("DJANGO_SECRET_KEY", "django-insecure-medicare-cdss-key-change-in-prod"))
 DEBUG = os.getenv("DEBUG", os.getenv("DJANGO_DEBUG", "True")).lower() == "true"
 ALLOWED_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS", os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,testserver")).split(",") if h.strip()]
+
 
 INSTALLED_APPS = [
     "django.contrib.admin",

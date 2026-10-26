@@ -1,7 +1,18 @@
+# ==============================================================================
+# FILE: backend/apps/predictions/services/shap_explainer.py
+# PURPOSE: Counterfactual feature attribution engine computing additive symptom risk contributions.
+# VIVA EXPLANATION: This module implements an analytical marginal contribution explainer. It measures how much the predicted disease probability shifts when each symptom is counterfactually toggled off, providing local interpretability consistent with Shapley attribution principles.
+# ==============================================================================
+
 from typing import List, Dict, Any
 from .disease_engine import DISEASE_PROFILES, predict_diseases
 
 
+# --- explain_prediction ---
+# What it does: Computes normalized marginal contributions and risk directions (increases/decreases risk) for present symptoms.
+# Why it's structured this way: Uses counterfactual ablation of each symptom against the baseline prior to reveal feature importance.
+# Parameters & Returns: feature_vector (Dict[str, int]), top_disease (str) -> List of feature attribution dictionaries.
+# ------------------------------------------------------------------------------
 def explain_prediction(feature_vector: Dict[str, int], top_disease: str) -> List[Dict[str, Any]]:
     """
     Generates feature contribution (SHAP-style) values for the top predicted disease.
@@ -55,8 +66,13 @@ def explain_prediction(feature_vector: Dict[str, int], top_disease: str) -> List
         contrib_val = round(normalized_contrib, 4)
         direction = "increases_risk" if contrib_val >= 0 else "decreases_risk"
 
+        importance_str = f"{'+' if contrib_val >= 0 else ''}{contrib_val:.2f}"
+        val_str = "Present" if feature_vector.get(sym, 0) > 0 else "Absent"
+
         explanations.append({
             "feature": sym,
+            "importance": importance_str,
+            "value": val_str,
             "contribution": abs(contrib_val),
             "direction": direction,
             "baseline": round(baseline_prior, 4),

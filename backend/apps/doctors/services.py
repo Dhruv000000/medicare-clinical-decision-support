@@ -1,14 +1,21 @@
+# ==============================================================================
+# FILE: backend/apps/doctors/services.py
+# PURPOSE: Business logic and access control querying for clinician patient authorization and dashboard metrics.
+# VIVA EXPLANATION: Implements the clinical authorization resolver (aggregating patient relationships across appointments, notes, and prescriptions) and aggregates real-time practice KPI metrics from the PostgreSQL database.
+# ==============================================================================
+
 from django.utils import timezone
 from apps.accounts.models import User
 from apps.appointments.models import Appointment
 from .models import ClinicalNote
 
 
+# --- get_authorized_patients_for_doctor ---
+# What it does: Computes the mathematical union of patient IDs linked to this doctor via appointments, clinical notes, or prescriptions.
+# Why it's structured this way: Enforces HIPAA/GDPR clinical relationship boundaries: a physician cannot view a patient chart without a verifiable clinical event.
+# Parameters & Returns: doctor_user (User instance) -> Django QuerySet of Patient User objects with preloaded profiles.
+# ------------------------------------------------------------------------------
 def get_authorized_patients_for_doctor(doctor_user):
-    """
-    Returns queryset of Patients authorized to be accessed by this Doctor.
-    Based on appointments, clinical notes, or medication prescriptions.
-    """
     appointment_patient_ids = Appointment.objects.filter(
         doctor=doctor_user
     ).values_list("patient_id", flat=True)
@@ -30,10 +37,12 @@ def get_authorized_patients_for_doctor(doctor_user):
     ).select_related("patient_profile").order_by("first_name", "last_name")
 
 
+# --- get_doctor_insights ---
+# What it does: Computes quantitative practice KPIs including today's visits, completed consultations, notes taken, and unique patient volume.
+# Why it's structured this way: Replaces hardcoded mock dashboard figures with live aggregated database queries.
+# Parameters & Returns: doctor_user (User instance) -> Dict containing KPI metrics.
+# ------------------------------------------------------------------------------
 def get_doctor_insights(doctor_user):
-    """
-    Calculates real database metrics for doctor insights (Correction 9).
-    """
     now = timezone.now()
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     today_end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
@@ -57,3 +66,4 @@ def get_doctor_insights(doctor_user):
         "total_appointments_count": doctor_appointments.count(),
         "clinical_notes_recorded": notes_count,
     }
+

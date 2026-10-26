@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/doctor/medknowledge.jsx
+// PURPOSE: Clinical knowledge base and live PubMed/RAG biomedical literature exploration engine.
+// VIVA EXPLANATION: This portal combines curated internal clinical practice guidelines with live biomedical literature retrieval. Practitioners can search peer-reviewed journals via PubMed API and RAG semantic lookups directly at point-of-care.
+// ==============================================================================
+
 import React, { useMemo, useState } from "react";
 import {
   Search,
@@ -94,6 +100,11 @@ const categories = [
   "Infectious Disease",
 ];
 
+// --- MedicalKnowledge ---
+// What it does: Clinical literature console rendering curated specialty guides and executing live PubMed biomedical queries.
+// Why it's structured this way: Couples client-side guideline caching with asynchronous aiService.searchPubMed calls for seamless literature review.
+// Parameters & Returns: None. Returns clinical medical knowledge portal JSX.
+// ------------------------------------------------------------------------------
 export default function MedicalKnowledge() {
   const { isDark, toggleTheme } = useTheme();
   const { user } = useAuth();

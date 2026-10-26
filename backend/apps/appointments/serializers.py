@@ -1,9 +1,20 @@
+# ==============================================================================
+# FILE: backend/apps/appointments/serializers.py
+# PURPOSE: DRF serializers for appointment creation, booking validation, and status updates.
+# VIVA EXPLANATION: Validates doctor availability, ensures appointment times are strictly in the future, and decorates serialized output with patient and physician display names.
+# ==============================================================================
+
 from django.utils import timezone
 from rest_framework import serializers
 from apps.accounts.models import User
 from .models import Appointment
 
 
+# --- AppointmentSerializer ---
+# What it does: Serializes Appointment instances for patient and doctor dashboards with display names and emails.
+# Why it's structured this way: Provides a unified representation for calendar displays across both patient and doctor interfaces.
+# Parameters & Returns: Returns complete serialized Appointment dictionary.
+# ------------------------------------------------------------------------------
 class AppointmentSerializer(serializers.ModelSerializer):
     patient_email = serializers.EmailField(source="patient.email", read_only=True)
     patient_name = serializers.SerializerMethodField()
@@ -38,6 +49,11 @@ class AppointmentSerializer(serializers.ModelSerializer):
         return name if name != "Dr." else f"Dr. {obj.doctor.email}"
 
 
+# --- AppointmentCreateSerializer ---
+# What it does: Validates patient booking requests, ensuring the target doctor exists and appointment is scheduled in the future.
+# Why it's structured this way: Enforces temporal scheduling sanity (starts_at >= timezone.now()) and doctor existence.
+# Parameters & Returns: Validates doctor_id, starts_at, reason, notes.
+# ------------------------------------------------------------------------------
 class AppointmentCreateSerializer(serializers.ModelSerializer):
     doctor_id = serializers.IntegerField(write_only=True)
 
@@ -58,6 +74,11 @@ class AppointmentCreateSerializer(serializers.ModelSerializer):
         return value
 
 
+# --- AppointmentUpdateSerializer ---
+# What it does: Serializes partial modifications to appointment status, time, or clinical notes.
+# Why it's structured this way: Allows doctors to transition status (e.g. Scheduled -> Confirmed -> Completed).
+# Parameters & Returns: Validates status, starts_at, reason, and notes.
+# ------------------------------------------------------------------------------
 class AppointmentUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Appointment

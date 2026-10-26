@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/doctor/sidebar.jsx
+// PURPOSE: Persistent side-navigation shell for the doctor clinical workspace.
+// VIVA EXPLANATION: This component acts as the unified navigation bar for healthcare providers. It structures clinical routes (Patients, Reports, AI Insights, Appointments, Notes, Knowledge Base) with active route highlight tracking and role-tailored links.
+// ==============================================================================
+
 import React from "react";
 
 import {
@@ -19,6 +25,7 @@ import {
 } from "lucide-react";
 
 import { useTheme } from "../ThemeContext";
+import { useAuth } from "../../../_core/hooks/useAuth";
 
 
 // =========================================================
@@ -99,10 +106,11 @@ const navSections = [
 ];
 
 
-// =========================================================
-// ACTIVE PATH
-// =========================================================
-
+// --- isActivePath ---
+// What it does: Utility evaluator determining if a route matches current URL pathname and query parameters.
+// Why it's structured this way: Normalizes trailing slashes and handles query-parameter views like settings tabs.
+// Parameters & Returns: Props: pathname (string), route (string), search (string). Returns boolean.
+// ------------------------------------------------------------------------------
 function isActivePath(pathname, route, search = "") {
   const cleanPath = pathname.replace(/\/$/, "");
   const cleanRoute = route.replace(/\/$/, "").split("?")[0];
@@ -114,14 +122,24 @@ function isActivePath(pathname, route, search = "") {
   return cleanPath === cleanRoute;
 }
 
-
-// =========================================================
-// SIDEBAR
-// =========================================================
-
+// --- Sidebar ---
+// What it does: Fixed vertical navigation drawer rendering clinical workflow links and branding.
+// Why it's structured this way: Synchronizes with react-router useLocation to provide real-time route indicators and seamless SPA transitions.
+// Parameters & Returns: None. Returns doctor navigation sidebar JSX.
+// ------------------------------------------------------------------------------
 export default function Sidebar() {
   const location = useLocation();
   const { isDark } = useTheme();
+  const { user } = useAuth();
+
+  const doctorName = user?.last_name
+    ? `Dr. ${user.last_name}`
+    : user?.first_name
+    ? `Dr. ${user.first_name}`
+    : user?.full_name
+    ? `Dr. ${user.full_name}`
+    : "Dr. Physician";
+  const userRole = user?.role === "doctor" ? "Physician" : user?.role ? String(user.role).charAt(0).toUpperCase() + String(user.role).slice(1) : "Physician";
 
   return (
     <aside
@@ -519,7 +537,7 @@ export default function Sidebar() {
                   }
               `}
               >
-                Dr. Olivia
+                {doctorName}
               </div>
 
 
@@ -532,7 +550,7 @@ export default function Sidebar() {
                   }
               `}
               >
-                Physician
+                {userRole}
               </div>
 
             </div>

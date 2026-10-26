@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/doctor/appointmentss.jsx
+// PURPOSE: Doctor consultation schedule console managing patient appointments, status transitions, and encounter calendars.
+// VIVA EXPLANATION: This screen allows practitioners to view real-time booked consultations, filter by status (scheduled, confirmed, completed, cancelled), and execute state transitions directly updating the underlying appointments microservice.
+// ==============================================================================
+
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Search,
@@ -20,6 +26,11 @@ import { useTheme } from "../ThemeContext";
 import { useAuth } from "../../../_core/hooks/useAuth";
 import doctorService from "../../../services/doctorService";
 
+// --- StatusBadge ---
+// What it does: Renders normalized status labels and iconography for appointment scheduling states.
+// Why it's structured this way: Normalizes case sensitivity and provides distinct badge coloring for triage clarity.
+// Parameters & Returns: Props: status (string). Returns styled JSX badge.
+// ------------------------------------------------------------------------------
 function StatusBadge({ status }) {
   const norm = (status || "scheduled").toLowerCase();
 
@@ -64,6 +75,11 @@ function StatusBadge({ status }) {
   );
 }
 
+// --- DoctorAppointments ---
+// What it does: Primary schedule management component displaying appointment queues with dynamic status transitions.
+// Why it's structured this way: Consumes doctorService to query and mutate clinical consultation slots with optimistic status updates.
+// Parameters & Returns: None. Returns consultation schedule management JSX view.
+// ------------------------------------------------------------------------------
 export default function DoctorAppointments() {
   const { isDark, toggleTheme } = useTheme();
   const { user } = useAuth();

@@ -1,8 +1,19 @@
+# ==============================================================================
+# FILE: backend/apps/medicines/serializers.py
+# PURPOSE: Serializer for Medication records with clinical authorization validation.
+# VIVA EXPLANATION: Validates incoming prescription payloads and serializes medication details including prescribing physician names and active statuses.
+# ==============================================================================
+
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 from .models import Medication
 
 
+# --- MedicationSerializer ---
+# What it does: Serializes Medication objects and enforces doctor_can_access_patient authorization during creation.
+# Why it's structured this way: Read-only patient and timestamps prevent tampering; dynamic SerializerMethodField provides doctor name.
+# Parameters & Returns: ModelSerializer subclass.
+# ------------------------------------------------------------------------------
 class MedicationSerializer(serializers.ModelSerializer):
     prescribed_by_name = serializers.SerializerMethodField()
     patient_email = serializers.EmailField(source="patient.email", read_only=True)

@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/login.jsx
+// PURPOSE: Primary user authentication interface supporting patient and clinician sign-in.
+// VIVA EXPLANATION: Implements the login experience for patients and physicians. Captures credentials, communicates with the JWT authentication backend, handles role-based redirection, and stores remember-me preferences.
+// ==============================================================================
+
 import React, { useState, useEffect } from "react";
 import {
   HeartPulse,
@@ -13,7 +19,14 @@ import {
   Check,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../../_core/hooks/useAuth";
 
+
+// --- Logo ---
+// What it does: Renders interactive branding mark navigating to homepage.
+// Why it's structured this way: Reusable header element maintaining brand consistency.
+// Parameters & Returns: Props (none) -> Brand button JSX element.
+// ------------------------------------------------------------------------------
 function Logo() {
   const navigate = useNavigate();
 
@@ -34,10 +47,15 @@ function Logo() {
   );
 }
 
-import { useAuth } from "../../_core/hooks/useAuth";
 
+// --- Login ---
+// What it does: Primary sign-in component managing email/password inputs, validation, and JWT login dispatch.
+// Why it's structured this way: Features role toggle tabs (Patient vs Doctor) to guide users to their relevant workspaces after authentication.
+// Parameters & Returns: Props (none) -> Rendered login form page.
+// ------------------------------------------------------------------------------
 function Login() {
   const navigate = useNavigate();
+
   const location = useLocation();
   const { login } = useAuth();
 
@@ -117,6 +135,7 @@ function Login() {
       const res = await login({
         email: formData.email,
         password: formData.password,
+        role: role.toLowerCase(),
       });
 
       if (!res.success) {
@@ -128,11 +147,11 @@ function Login() {
 
       setSuccessMessage("Sign-in successful. Opening your workspace…");
 
-      const targetRole = res.user?.role || role;
+      const resolvedRole = (res.user?.role || role || "patient").toLowerCase();
       setTimeout(() => {
-        if (targetRole === "doctor") {
+        if (resolvedRole === "doctor") {
           navigate("/doctor/dashboard");
-        } else if (targetRole === "admin") {
+        } else if (resolvedRole === "admin") {
           navigate("/admin/dashboard");
         } else {
           navigate("/patient/dashboard");

@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/doctor/insights.jsx
+// PURPOSE: AI-driven clinical analytics and proactive cohort risk intelligence dashboard for doctors.
+// VIVA EXPLANATION: This screen aggregates machine learning predictive outputs across patient populations. It correlates ML risk tiers, highlights anomalies (such as high-risk cardiac or metabolic flags), and computes clinical workload metrics to assist physicians in preventive triage.
+// ==============================================================================
+
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Search,
@@ -23,6 +29,11 @@ import { useAuth } from "../../../_core/hooks/useAuth";
 import doctorService from "../../../services/doctorService";
 import api from "../../../services/api";
 
+// --- SeverityBadge ---
+// What it does: Displays color-differentiated clinical severity tags (High, Medium, Low).
+// Why it's structured this way: Provides rapid visual alerting for urgent or critical diagnostic flags.
+// Parameters & Returns: Props: severity (string). Returns styled JSX span tag.
+// ------------------------------------------------------------------------------
 function SeverityBadge({ severity }) {
   const styles = {
     High: "bg-red-500/10 text-red-500",
@@ -41,6 +52,11 @@ function SeverityBadge({ severity }) {
   );
 }
 
+// --- TypeIcon ---
+// What it does: Maps insight classification categories (Risk Alert, Trend, Prediction) to distinct icons.
+// Why it's structured this way: Enhances scannability across heterogeneous AI recommendations.
+// Parameters & Returns: Props: type (string). Returns corresponding Lucide icon component.
+// ------------------------------------------------------------------------------
 function TypeIcon({ type }) {
   if (type === "Risk Alert") {
     return <AlertTriangle size={16} />;
@@ -57,6 +73,11 @@ function TypeIcon({ type }) {
   return <Sparkles size={16} />;
 }
 
+// --- AIInsights ---
+// What it does: Primary clinical intelligence console orchestrating cohort metrics, ML prediction aggregation, and risk filtering.
+// Why it's structured this way: Combines doctorService dashboard metrics with batch prediction endpoints to display synthesized decision-support insights.
+// Parameters & Returns: None. Returns AI clinical intelligence dashboard JSX.
+// ------------------------------------------------------------------------------
 export default function AIInsights() {
   const { isDark, toggleTheme } = useTheme();
   const { user } = useAuth();

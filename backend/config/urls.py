@@ -1,3 +1,9 @@
+# ==============================================================================
+# FILE: backend/config/urls.py
+# PURPOSE: Root URL dispatcher configuring top-level API routes and health check probes.
+# VIVA EXPLANATION: The master routing table of the Django REST application. Mounts the canonical /api/v1/ prefix for all domain micro-apps (auth, patient, doctor, admin, appointments, medical records, predictions, medicines, and AI assistant) and serves health check telemetry.
+# ==============================================================================
+
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -9,11 +15,12 @@ from rest_framework import status
 from core.utilities import check_database_connection
 
 
+# --- HealthCheckView ---
+# What it does: GET /api/v1/health/ - Liveness and readiness probe for container orchestration and uptime monitoring.
+# Why it's structured this way: Safely tests database connectivity via check_database_connection and returns 200 OK or 503 Service Unavailable.
+# Parameters & Returns: GET request -> Health status JSON payload.
+# ------------------------------------------------------------------------------
 class HealthCheckView(APIView):
-    """
-    GET /api/v1/health/
-    Health & readiness check reporting service and database status safely.
-    """
     permission_classes = [AllowAny]
 
     def get(self, request):
@@ -57,3 +64,4 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+

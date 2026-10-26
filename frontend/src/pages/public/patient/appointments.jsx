@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/patient/appointments.jsx
+// PURPOSE: Patient appointment scheduling portal and consultation calendar.
+// VIVA EXPLANATION: Implements the appointment management portal for patients. Allows booking consultations with verified physicians from /doctor/list/, browsing upcoming vs past visits, viewing appointment status updates (SCHEDULED, CONFIRMED, COMPLETED), and reviewing booking reasons.
+// ==============================================================================
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 import Sidebar from "./sidebar";
 import { Link, useLocation } from "react-router-dom";
@@ -380,6 +386,11 @@ function AppointmentPerson({ appointment, darkMode }) {
   );
 }
 
+// --- AppointmentsContent ---
+// What it does: Primary appointments component managing booking state, appointment lists, doctor selections, and modals.
+// Why it's structured this way: Separates upcoming from past visits based on current timestamp comparison.
+// Parameters & Returns: Props (none) -> Rendered appointments content JSX.
+// ------------------------------------------------------------------------------
 function AppointmentsContent() {
   const { isDark: darkMode } = useTheme();
   const [showModal, setShowModal] = useState(false);
@@ -1039,6 +1050,11 @@ function AppointmentsContent() {
   );
 }
 
+// --- Appointments ---
+// What it does: Top-level wrapper component ensuring theme context availability for the appointments view.
+// Why it's structured this way: Encapsulates ThemeProvider boundary for independent route rendering.
+// Parameters & Returns: Props (none) -> Theme-wrapped Appointments JSX.
+// ------------------------------------------------------------------------------
 function Appointments() {
   return (
     <ThemeProvider>

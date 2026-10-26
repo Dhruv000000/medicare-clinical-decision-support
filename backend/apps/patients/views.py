@@ -1,3 +1,9 @@
+# ==============================================================================
+# FILE: backend/apps/patients/views.py
+# PURPOSE: REST API views for patient self-service profile and aggregated dashboard telemetry.
+# VIVA EXPLANATION: Implements the patient portal backend. Restricts access to IsPatient users. ProfileView allows viewing and updating demographic records; DashboardView aggregates active prescriptions, appointments, records, and lab tests into a single low-latency call.
+# ==============================================================================
+
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -7,11 +13,12 @@ from .serializers import PatientProfileSerializer
 from .services import get_patient_dashboard_data
 
 
+# --- ProfileView ---
+# What it does: GET retrieves patient personal details; PATCH performs partial updates on demographics.
+# Why it's structured this way: Uses get_or_create to automatically initialize a profile if none exists for a new user.
+# Parameters & Returns: GET/PATCH request -> Serialized PatientProfile data.
+# ------------------------------------------------------------------------------
 class ProfileView(APIView):
-    """
-    GET  /api/v1/patient/profile/ - Retrieve authenticated patient's profile
-    PATCH /api/v1/patient/profile/ - Update authenticated patient's profile
-    """
     permission_classes = [IsPatient]
 
     def get(self, request):
@@ -27,12 +34,15 @@ class ProfileView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+# --- DashboardView ---
+# What it does: GET /api/v1/patient/dashboard/ - Assembles a complete clinical overview for the authenticated patient.
+# Why it's structured this way: Consolidates cross-domain counts (appointments, medications, reports) to reduce frontend network roundtrips.
+# Parameters & Returns: Authenticated request -> JSON dictionary with upcoming appointments, active meds, and recent logs.
+# ------------------------------------------------------------------------------
 class DashboardView(APIView):
-    """
-    GET /api/v1/patient/dashboard/ - Database-backed aggregated patient dashboard
-    """
     permission_classes = [IsPatient]
 
     def get(self, request):
         data = get_patient_dashboard_data(request.user)
         return Response(data, status=status.HTTP_200_OK)
+

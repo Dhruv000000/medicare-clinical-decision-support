@@ -1,3 +1,9 @@
+# ==============================================================================
+# FILE: backend/apps/doctors/urls.py
+# PURPOSE: URL routing configuration for the clinician portal and decision support endpoints.
+# VIVA EXPLANATION: Maps HTTP endpoints to clinician profile, patient management, lab reports, clinical notes, and analytical insights views under /api/v1/doctor/.
+# ==============================================================================
+
 from django.urls import path
 from apps.appointments.views import AppointmentDetailView
 from .views import (

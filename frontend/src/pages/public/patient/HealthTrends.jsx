@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/patient/HealthTrends.jsx
+// PURPOSE: Longitudinal health analytics and vital signs trend tracking.
+// VIVA EXPLANATION: Visualizes patient biomarker timelines over consecutive clinical visits. Renders blood glucose and blood pressure trend graphs using Recharts, computes normal vs abnormal status badges, and highlights AI clinical observations.
+// ==============================================================================
+
 import React from "react";
 import { Link } from "react-router-dom";
 import Sidebar from "./sidebar";
@@ -696,10 +702,11 @@ function AIInsight({ darkMode, latestReport }) {
   );
 }
 
-/* ---------------------------------------------------------
-   MAIN HEALTH TRENDS PAGE
---------------------------------------------------------- */
-
+// --- HealthTrends ---
+// What it does: Primary longitudinal trend viewer plotting chronological biomarker measurements and clinical records.
+// Why it's structured this way: Uses Promise.allSettled to gracefully render available charts even if one data source fails.
+// Parameters & Returns: Props (none) -> Rendered health trends dashboard JSX.
+// ------------------------------------------------------------------------------
 export default function HealthTrends() {
   const { isDark: darkMode, toggleTheme } = useTheme();
   const [dashboardData, setDashboardData] = React.useState(null);

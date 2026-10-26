@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/context/ThemeContext.jsx
+// PURPOSE: Global CSS custom property design system and light/dark theme manager.
+// VIVA EXPLANATION: Implements the clinical UI theme engine. Injects CSS root custom properties (--bg, --surface, --accent, --border) dynamically according to user preference or OS dark-mode, persisting the selection in localStorage and toggling the .dark DOM class.
+// ==============================================================================
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 export const ThemeContext = createContext(null);
@@ -43,6 +49,12 @@ export const THEME_VARIABLES = {
   },
 };
 
+
+// --- ThemeProvider ---
+// What it does: React provider maintaining current theme ('dark' | 'light') and injecting CSS custom properties into document.documentElement.
+// Why it's structured this way: Provides instant theme switching without re-rendering the entire DOM by mutating CSS root tokens.
+// Parameters & Returns: { children } -> ThemeContext.Provider JSX element.
+// ------------------------------------------------------------------------------
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     if (typeof window === "undefined") return "light";
@@ -92,6 +104,12 @@ export function ThemeProvider({ children }) {
   );
 }
 
+
+// --- useTheme ---
+// What it does: Custom React hook consuming ThemeContext.
+// Why it's structured this way: Grants UI components direct access to toggleTheme and isDark state flags.
+// Parameters & Returns: None -> ThemeContext state object ({ theme, toggleTheme, isDark }).
+// ------------------------------------------------------------------------------
 export function useTheme() {
   const context = useContext(ThemeContext);
   if (!context) {

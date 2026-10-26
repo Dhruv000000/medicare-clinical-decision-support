@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/patient/sidebar.jsx
+// PURPOSE: Primary fixed navigation drawer component for patient portal views.
+// VIVA EXPLANATION: Provides the persistent left-hand navigation sidebar for all patient screens. Highlights the currently active route based on window location, groups links into functional categories (Health, Medical, AI Health, Medicines), and handles logout triggering.
+// ==============================================================================
+
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useTheme } from "../ThemeContext";
@@ -124,7 +130,14 @@ function isActivePath(pathname, route) {
   );
 }
 
+
+// --- Sidebar ---
+// What it does: Fixed vertical navigation bar rendering categorized links and route indicator active bars.
+// Why it's structured this way: Reusable layout component providing consistent navigation across all patient pages.
+// Parameters & Returns: { darkMode, onLogout } -> Navigation sidebar JSX element.
+// ------------------------------------------------------------------------------
 export default function Sidebar({ darkMode: propDarkMode, onLogout }) {
+
   const location = useLocation();
   const themeContext = useTheme();
   const darkMode = propDarkMode !== undefined ? propDarkMode : (themeContext?.isDark ?? true);

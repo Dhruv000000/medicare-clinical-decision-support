@@ -1,23 +1,51 @@
+# ==============================================================================
+# FILE: backend/apps/medical_records/views.py
+# PURPOSE: HTTP REST API controllers for EHR medical records, lab report uploads, and biomarker analytics.
+# VIVA EXPLANATION: This module handles medical document workflows. It enforces clinical authorization barriers so clinicians can only review authorized patient charts, accepts diagnostic document uploads, and triggers automated biomarker NLP parsing that extracts laboratory values into structured clinical records.
+# ==============================================================================
+
+import logging
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.exceptions import PermissionDenied, NotFound, ValidationError
+
 from core.permissions import IsAuthenticatedUser, IsPatient, doctor_can_access_patient
 from core.pagination import StandardResultsSetPagination
 from apps.accounts.models import User
 from apps.audit_logs.services import log_audit_event
 from apps.audit_logs.models import AuditLog
 
-from .models import MedicalRecord, LabReport, LabResult
+from .models import MedicalRecord, LabReport
 from .serializers import MedicalRecordSerializer, LabReportSerializer
-from .services import save_lab_report, parse_report_content
+from .services import (
+    save_lab_report,
+    analyze_and_sync_record_or_report,
+)
+
+logger = logging.getLogger(__name__)
 
 
+# --- MedicalRecordListCreateView ---
+# What it does: GET lists medical records with role-based filtering; POST creates a new medical record.
+# Why it's structured this way: Enforces strict data access rules: patients see only their own records, doctors only authorized patients.
+# Parameters & Returns: GET/POST request -> Paginated list or created MedicalRecord.
+# ------------------------------------------------------------------------------
 class MedicalRecordListCreateView(APIView):
+    """
+    GET /api/v1/records/  — Retrieves patient medical records with role-based filtering.
+    POST /api/v1/records/ — Creates a new medical record for authorized patients or doctors.
+    """
     permission_classes = [IsAuthenticatedUser]
 
     def get(self, request):
+        """
+        Lists medical records for the authenticated user:
+        - Patients only see their own records.
+        - Doctors must supply 'patient_id' and have active authorization.
+        - Admins can query all records.
+        """
         user = request.user
         queryset = MedicalRecord.objects.select_related("patient")
 
@@ -45,6 +73,7 @@ class MedicalRecordListCreateView(APIView):
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request):
+        """Creates a new clinical medical record with audit event logging."""
         user = request.user
         data = request.data.copy()
 
@@ -86,7 +115,16 @@ class MedicalRecordListCreateView(APIView):
         return Response(MedicalRecordSerializer(record).data, status=status.HTTP_201_CREATED)
 
 
+# --- MedicalRecordDetailView ---
+# What it does: Retrieves a single clinical record after verifying patient ownership or doctor relationship.
+# Why it's structured this way: Granular object-level permission check prevents ID enumeration vulnerabilities.
+# Parameters & Returns: GET request with record_id -> MedicalRecord details.
+# ------------------------------------------------------------------------------
 class MedicalRecordDetailView(APIView):
+    """
+    GET /api/v1/records/<record_id>/
+    Retrieves a single medical record with strict authorization checks.
+    """
     permission_classes = [IsAuthenticatedUser]
 
     def get(self, request, record_id):
@@ -104,10 +142,15 @@ class MedicalRecordDetailView(APIView):
         return Response(MedicalRecordSerializer(record).data, status=status.HTTP_200_OK)
 
 
+# --- LabReportListView ---
+# What it does: Returns paginated list of uploaded diagnostic reports with pre-fetched biomarker results.
+# Why it's structured this way: Uses prefetch_related('results') to avoid N+1 query performance degradation.
+# Parameters & Returns: GET request -> Paginated list of LabReport objects.
+# ------------------------------------------------------------------------------
 class LabReportListView(APIView):
     """
     GET /api/v1/records/reports/
-    Lists lab reports for the authenticated patient.
+    Lists diagnostic laboratory reports and pre-fetched LabResults.
     """
     permission_classes = [IsAuthenticatedUser]
 
@@ -134,10 +177,15 @@ class LabReportListView(APIView):
         return paginator.get_paginated_response(serializer.data)
 
 
+# --- LabReportUploadView ---
+# What it does: Securely ingests PDF and medical image uploads, validating MIME types, extensions, and file sizes.
+# Why it's structured this way: Enforces strict file security validation to prevent malicious payload uploads to clinical servers.
+# Parameters & Returns: POST multipart request -> HTTP 201 Created with LabReport payload.
+# ------------------------------------------------------------------------------
 class LabReportUploadView(APIView):
     """
     POST /api/v1/records/reports/upload/
-    Accepts multipart/form-data with file validation (size, MIME, magic bytes).
+    Accepts multipart/form-data with file validation (size, MIME, magic bytes signature).
     """
     permission_classes = [IsPatient]
     parser_classes = [MultiPartParser, FormParser]
@@ -162,7 +210,16 @@ class LabReportUploadView(APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
+# --- LabReportDetailView ---
+# What it does: Returns single lab report details and extracted biomarker metrics with ownership authorization.
+# Why it's structured this way: Enforces doctor-patient relationship checks before revealing sensitive laboratory data.
+# Parameters & Returns: GET request with report_id -> LabReport details.
+# ------------------------------------------------------------------------------
 class LabReportDetailView(APIView):
+    """
+    GET /api/v1/records/reports/<report_id>/
+    Retrieves full details of a specific lab report and its structured biomarkers.
+    """
     permission_classes = [IsAuthenticatedUser]
 
     def get(self, request, report_id):
@@ -181,12 +238,24 @@ class LabReportDetailView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+# --- MedicalRecordAnalyzeView ---
+# What it does: Triggers NLP biomarker extraction on clinical narratives or lab reports, persisting discrete LabResult rows.
+# Why it's structured this way: Decouples analysis from uploads, enabling on-demand reprocessing and retrospective analysis.
+# Parameters & Returns: POST request with record_id -> Extracted biomarkers, critical flags, and clinical summary.
+# ------------------------------------------------------------------------------
 class MedicalRecordAnalyzeView(APIView):
     """
     POST /api/v1/medical-records/<id>/analyze/
     POST /api/v1/records/<id>/analyze/
-    Extracts key quantitative clinical metrics, abnormal flags, and saves structured
-    LabResult records with doctor-patient authorization enforcement.
+
+    Purpose:
+        Extracts key quantitative clinical biomarkers (glucose, HbA1c, BP, WBC, etc.),
+        computes abnormal and critical flags, and synchronizes granular LabResult records.
+
+    Architecture Walkthrough (Viva / Review Presentation Topic):
+        - STEP 1: Resolves target LabReport or MedicalRecord and verifies authorization.
+        - STEP 2: Delegates analysis and LabResult synchronization to service layer.
+        - STEP 3: Returns standardized quantitative biomarker extraction payload.
     """
     permission_classes = [IsAuthenticatedUser]
 
@@ -196,7 +265,9 @@ class MedicalRecordAnalyzeView(APIView):
         lab_report = None
         med_record = None
 
-        # Check if record_id corresponds to a LabReport
+        # ----------------------------------------------------------------------
+        # STEP 1: RESOLVE RECORD & ENFORCE AUTHORIZATION
+        # ----------------------------------------------------------------------
         lab_report = LabReport.objects.filter(id=record_id).select_related("patient").first()
         if lab_report:
             target_patient = lab_report.patient
@@ -207,88 +278,23 @@ class MedicalRecordAnalyzeView(APIView):
             else:
                 raise NotFound(f"Medical record or lab report with ID {record_id} not found.")
 
-        # Enforce authorization
         if user.role == User.Roles.PATIENT and target_patient != user:
             raise PermissionDenied("You cannot access medical records belonging to another patient.")
         elif user.role == User.Roles.DOCTOR and not doctor_can_access_patient(user, target_patient):
             raise PermissionDenied("Doctor does not have active clinical authorization for this patient.")
 
-        # Extract content
+        # ----------------------------------------------------------------------
+        # STEP 2: DELEGATE ANALYSIS WORKFLOW TO SERVICES LAYER
+        # ----------------------------------------------------------------------
         text_override = request.data.get("text", "")
-        if text_override:
-            content = text_override
-        elif lab_report:
-            if lab_report.file:
-                try:
-                    lab_report.file.seek(0)
-                    content = lab_report.file.read()
-                except Exception:
-                    content = lab_report.extracted_text or lab_report.title
-            else:
-                content = lab_report.extracted_text or lab_report.title
-        elif med_record:
-            content = f"{med_record.title}. {med_record.description}"
-        else:
-            content = ""
-
-        title = lab_report.title if lab_report else (med_record.title if med_record else "")
-        file_type = lab_report.file_type if lab_report else ""
-        analysis = parse_report_content(content, title=title, file_type=file_type)
-
-        # Sanitize strings to ensure PostgreSQL compatibility (cannot contain 0x00 bytes)
-        clean_extracted_text = (analysis.get("extracted_text") or "").replace("\x00", "")
-        clean_summary = (analysis.get("summary") or "").replace("\x00", "")
-
-        # Update lab report fields and create LabResults if it's a LabReport
-        if lab_report:
-            lab_report.extracted_text = clean_extracted_text
-            lab_report.analysis_summary = clean_summary
-            lab_report.save(update_fields=["extracted_text", "analysis_summary"])
-
-            # Sync extracted metrics to LabResult models
-            for metric in analysis.get("metrics", []):
-                test_name = str(metric.get("test_name", "")).replace("\x00", "")
-                if not test_name:
-                    continue
-                LabResult.objects.update_or_create(
-                    report=lab_report,
-                    test_name=test_name,
-                    defaults={
-                        "value": str(metric.get("value", "")).replace("\x00", ""),
-                        "unit": str(metric.get("unit", "")).replace("\x00", ""),
-                        "reference_range": str(metric.get("reference_range", "")).replace("\x00", ""),
-                        "flag": str(metric.get("flag", "normal")).replace("\x00", ""),
-                    },
-                )
-
-        log_audit_event(
+        analysis_payload = analyze_and_sync_record_or_report(
             user=user,
-            action=AuditLog.Actions.RECORD_UPDATE,
-            resource_type="LabReport" if lab_report else "MedicalRecord",
-            resource_id=record_id,
+            target_patient=target_patient,
+            record_id=record_id,
+            lab_report=lab_report,
+            med_record=med_record,
+            text_override=text_override,
             request=request,
-            metadata={
-                "patient_id": target_patient.id,
-                "metrics_count": analysis["total_metrics_extracted"],
-                "abnormal_count": analysis["abnormal_flags_count"],
-            },
         )
 
-        return Response(
-            {
-                "record_id": record_id,
-                "patient_id": target_patient.id,
-                "type": "LabReport" if lab_report else "MedicalRecord",
-                "extracted_text": analysis["extracted_text"],
-                "metrics": analysis["metrics"],
-                "total_metrics_extracted": analysis["total_metrics_extracted"],
-                "abnormal_flags_count": analysis["abnormal_flags_count"],
-                "critical_flags_count": analysis["critical_flags_count"],
-                "summary": analysis["summary"],
-                "ocr_status": analysis.get("ocr_status", "not_applicable"),
-                "confidence": analysis.get("confidence", "high"),
-            },
-            status=status.HTTP_200_OK,
-        )
-
-
+        return Response(analysis_payload, status=status.HTTP_200_OK)

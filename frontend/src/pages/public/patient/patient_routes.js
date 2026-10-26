@@ -1,4 +1,9 @@
-// Route metadata only; render these page components inside the existing common dashboard/layout.
+// ==============================================================================
+// FILE: frontend/src/pages/public/patient/patient_routes.js
+// PURPOSE: Manifest and metadata registry mapping patient URLs to components and sidebar sections.
+// VIVA EXPLANATION: Defines the programmatic route configuration for the patient portal, organizing paths into logical clinical domains (Main, Health, Medical, AI Health, Medicines) for dynamic navigation rendering.
+// ==============================================================================
+
 import PatientDashboard from "./patient_dashboard";
 import HealthTrends from "./HealthTrends";
 import Appointments from "./appointments";

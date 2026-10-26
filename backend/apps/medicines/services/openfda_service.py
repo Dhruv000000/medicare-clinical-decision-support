@@ -1,3 +1,9 @@
+# ==============================================================================
+# FILE: backend/apps/medicines/services/openfda_service.py
+# PURPOSE: Pharmacovigilance service integrating FDA openFDA APIs for adverse events and drug warnings.
+# VIVA EXPLANATION: This service connects to the US FDA openFDA database to retrieve real-world Adverse Event Reporting System (FAERS) reaction frequencies, black-box warnings, and drug-drug interactions, with 24-hour caching and resilient offline fallback behavior.
+# ==============================================================================
+
 import logging
 import requests
 from typing import List, Dict, Any, Optional
@@ -6,6 +12,11 @@ from django.core.cache import cache
 logger = logging.getLogger(__name__)
 
 
+# --- OpenFDAService ---
+# What it does: Client querying FDA Structured Product Labels (SPL) and Adverse Event Reporting System (FAERS).
+# Why it's structured this way: Enforces 24-hour cache TTL and non-blocking timeout fallbacks to ensure zero latency impact on clinical users.
+# Parameters & Returns: Service class with adverse reactions, boxed warnings, and interaction querying methods.
+# ------------------------------------------------------------------------------
 class OpenFDAService:
     """
     Pharmacological Intelligence Service connecting to OpenFDA REST API.
@@ -25,6 +36,12 @@ class OpenFDAService:
         """
         Retrieves top reported adverse reactions from OpenFDA.
         Caches results for 24 hours. Gracefully falls back to empty structure on failure.
+
+        Step-by-Step Logic (Viva Walkthrough):
+            - STEP 1: Query normalization and cache lookup.
+            - STEP 2: Query FDA FAERS event endpoint for MedDRA reaction frequencies.
+            - STEP 3: Map reaction terms and reported incident case counts.
+            - STEP 4: Store results in cache with 24-hour TTL.
         """
         clean_name = drug_name.strip()
         if not clean_name:

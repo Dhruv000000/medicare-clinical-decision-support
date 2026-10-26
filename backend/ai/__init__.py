@@ -1,7 +1,8 @@
-"""
-MediCare AI Layer Package
-Contains clinical preprocessor, disease risk inference, SHAP explanations, and Tier 2 Knowledge Matcher.
-"""
+# ==============================================================================
+# FILE: backend/ai/__init__.py
+# PURPOSE: Package initializer exposing public clinical AI components, engines, and knowledge matchers.
+# VIVA EXPLANATION: Exports core clinical AI abstractions (ClinicalPreprocessor, DiseaseRiskEngine, ClinicalKnowledgeMatcher) to provide a unified facade for application layers.
+# ==============================================================================
 
 from .preprocessing import (
     ClinicalPreprocessor,

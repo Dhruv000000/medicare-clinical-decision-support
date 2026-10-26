@@ -305,13 +305,14 @@
     },
     {
       "id": "acute_gouty_arthritis",
-      "name": "Acute Gouty Arthritis",
+      "name": "Acute Gout",
       "category": "Rheumatology/Immunology",
       "icd10": "M10.0",
       "pathognomonic_symptoms": [
         "joint_pain",
         "joint_swelling",
-        "erythema"
+        "erythema",
+        "podagra"
       ],
       "secondary_symptoms": [
         "fever_low_grade",
@@ -332,7 +333,9 @@
       "pathognomonic_symptoms": [
         "abdominal_pain",
         "fever",
-        "vomiting"
+        "vomiting",
+        "rebound_tenderness",
+        "acute_appendicitis"
       ],
       "secondary_symptoms": [
         "anorexia",
@@ -970,20 +973,24 @@
     },
     {
       "id": "malaria_falciparum",
-      "name": "Plasmodium falciparum Malaria",
+      "name": "Malaria",
       "category": "Infectious Disease",
       "icd10": "B50.9",
       "pathognomonic_symptoms": [
         "rigors",
         "fever",
-        "jaundice"
+        "chills"
       ],
       "secondary_symptoms": [
-        "chills",
         "headache",
         "sweating",
+        "excessive_sweating",
+        "nausea",
         "vomiting",
         "myalgia",
+        "body_aches",
+        "muscle_pain",
+        "jaundice",
         "pallor",
         "splenomegaly"
       ],
@@ -1069,7 +1076,8 @@
       "pathognomonic_symptoms": [
         "skin_rash",
         "skin_peeling",
-        "joint_pain"
+        "joint_pain",
+        "scaly_rash"
       ],
       "secondary_symptoms": [
         "itching",
@@ -2082,12 +2090,14 @@
     },
     {
       "id": "bells_palsy",
-      "name": "Acute Idiopathic Bell's Palsy",
+      "name": "Bell's Palsy",
       "category": "Neurology",
       "icd10": "G51.0",
       "pathognomonic_symptoms": [
         "facial_droop",
-        "epiphora"
+        "epiphora",
+        "facial_palsy",
+        "cranial_nerve_deficit"
       ],
       "secondary_symptoms": [
         "ear_pain",
@@ -3236,7 +3246,7 @@
     },
     {
       "id": "acute_gastritis_gastroen",
-      "name": "Acute Gastritis of Gastroenterology",
+      "name": "Acute Gastritis",
       "category": "Gastroenterology",
       "icd10": "K30.1",
       "pathognomonic_symptoms": [
@@ -3257,7 +3267,7 @@
     },
     {
       "id": "chronic_gastritis_gastroen",
-      "name": "Chronic Gastritis of Gastroenterology",
+      "name": "Chronic Gastritis",
       "category": "Gastroenterology",
       "icd10": "K31.2",
       "pathognomonic_symptoms": [
@@ -3278,7 +3288,7 @@
     },
     {
       "id": "subacute_gastritis_gastroen",
-      "name": "Subacute Gastritis of Gastroenterology",
+      "name": "Subacute Gastritis",
       "category": "Gastroenterology",
       "icd10": "K32.3",
       "pathognomonic_symptoms": [
@@ -3302,7 +3312,7 @@
     },
     {
       "id": "recurrent_gastritis_gastroen",
-      "name": "Recurrent Gastritis of Gastroenterology",
+      "name": "Recurrent Gastritis",
       "category": "Gastroenterology",
       "icd10": "K33.4",
       "pathognomonic_symptoms": [
@@ -3325,7 +3335,7 @@
     },
     {
       "id": "acute_duodenitis_gastroen",
-      "name": "Acute Duodenitis of Gastroenterology",
+      "name": "Acute Duodenitis",
       "category": "Gastroenterology",
       "icd10": "K34.5",
       "pathognomonic_symptoms": [
@@ -3346,7 +3356,7 @@
     },
     {
       "id": "chronic_duodenitis_gastroen",
-      "name": "Chronic Duodenitis of Gastroenterology",
+      "name": "Chronic Duodenitis",
       "category": "Gastroenterology",
       "icd10": "K35.6",
       "pathognomonic_symptoms": [
@@ -3367,7 +3377,7 @@
     },
     {
       "id": "subacute_duodenitis_gastroen",
-      "name": "Subacute Duodenitis of Gastroenterology",
+      "name": "Subacute Duodenitis",
       "category": "Gastroenterology",
       "icd10": "K36.7",
       "pathognomonic_symptoms": [
@@ -3388,7 +3398,7 @@
     },
     {
       "id": "recurrent_duodenitis_gastroen",
-      "name": "Recurrent Duodenitis of Gastroenterology",
+      "name": "Recurrent Duodenitis",
       "category": "Gastroenterology",
       "icd10": "K37.8",
       "pathognomonic_symptoms": [
@@ -3409,7 +3419,7 @@
     },
     {
       "id": "acute_esophagitis_gastroen",
-      "name": "Acute Esophagitis of Gastroenterology",
+      "name": "Acute Esophagitis",
       "category": "Gastroenterology",
       "icd10": "K38.0",
       "pathognomonic_symptoms": [
@@ -3430,7 +3440,7 @@
     },
     {
       "id": "chronic_esophagitis_gastroen",
-      "name": "Chronic Esophagitis of Gastroenterology",
+      "name": "Chronic Esophagitis",
       "category": "Gastroenterology",
       "icd10": "K39.1",
       "pathognomonic_symptoms": [
@@ -3453,7 +3463,7 @@
     },
     {
       "id": "subacute_esophagitis_gastroen",
-      "name": "Subacute Esophagitis of Gastroenterology",
+      "name": "Subacute Esophagitis",
       "category": "Gastroenterology",
       "icd10": "K40.2",
       "pathognomonic_symptoms": [
@@ -3474,7 +3484,7 @@
     },
     {
       "id": "recurrent_esophagitis_gastroen",
-      "name": "Recurrent Esophagitis of Gastroenterology",
+      "name": "Recurrent Esophagitis",
       "category": "Gastroenterology",
       "icd10": "K41.3",
       "pathognomonic_symptoms": [
@@ -3496,7 +3506,7 @@
     },
     {
       "id": "acute_enteritis_gastroen",
-      "name": "Acute Enteritis of Gastroenterology",
+      "name": "Acute Enteritis",
       "category": "Gastroenterology",
       "icd10": "K42.4",
       "pathognomonic_symptoms": [
@@ -3517,7 +3527,7 @@
     },
     {
       "id": "chronic_enteritis_gastroen",
-      "name": "Chronic Enteritis of Gastroenterology",
+      "name": "Chronic Enteritis",
       "category": "Gastroenterology",
       "icd10": "K43.5",
       "pathognomonic_symptoms": [
@@ -3539,7 +3549,7 @@
     },
     {
       "id": "subacute_enteritis_gastroen",
-      "name": "Subacute Enteritis of Gastroenterology",
+      "name": "Subacute Enteritis",
       "category": "Gastroenterology",
       "icd10": "K44.6",
       "pathognomonic_symptoms": [
@@ -3560,7 +3570,7 @@
     },
     {
       "id": "recurrent_enteritis_gastroen",
-      "name": "Recurrent Enteritis of Gastroenterology",
+      "name": "Recurrent Enteritis",
       "category": "Gastroenterology",
       "icd10": "K45.7",
       "pathognomonic_symptoms": [
@@ -3583,7 +3593,7 @@
     },
     {
       "id": "acute_ileitis_gastroen",
-      "name": "Acute Ileitis of Gastroenterology",
+      "name": "Acute Ileitis",
       "category": "Gastroenterology",
       "icd10": "K46.8",
       "pathognomonic_symptoms": [
@@ -3605,7 +3615,7 @@
     },
     {
       "id": "chronic_ileitis_gastroen",
-      "name": "Chronic Ileitis of Gastroenterology",
+      "name": "Chronic Ileitis",
       "category": "Gastroenterology",
       "icd10": "K47.0",
       "pathognomonic_symptoms": [
@@ -3626,7 +3636,7 @@
     },
     {
       "id": "subacute_ileitis_gastroen",
-      "name": "Subacute Ileitis of Gastroenterology",
+      "name": "Subacute Ileitis",
       "category": "Gastroenterology",
       "icd10": "K48.1",
       "pathognomonic_symptoms": [
@@ -3647,7 +3657,7 @@
     },
     {
       "id": "recurrent_ileitis_gastroen",
-      "name": "Recurrent Ileitis of Gastroenterology",
+      "name": "Recurrent Ileitis",
       "category": "Gastroenterology",
       "icd10": "K49.2",
       "pathognomonic_symptoms": [
@@ -3669,7 +3679,7 @@
     },
     {
       "id": "acute_proctitis_gastroen",
-      "name": "Acute Proctitis of Gastroenterology",
+      "name": "Acute Proctitis",
       "category": "Gastroenterology",
       "icd10": "K50.3",
       "pathognomonic_symptoms": [
@@ -3693,7 +3703,7 @@
     },
     {
       "id": "chronic_proctitis_gastroen",
-      "name": "Chronic Proctitis of Gastroenterology",
+      "name": "Chronic Proctitis",
       "category": "Gastroenterology",
       "icd10": "K51.4",
       "pathognomonic_symptoms": [
@@ -3716,7 +3726,7 @@
     },
     {
       "id": "subacute_proctitis_gastroen",
-      "name": "Subacute Proctitis of Gastroenterology",
+      "name": "Subacute Proctitis",
       "category": "Gastroenterology",
       "icd10": "K52.5",
       "pathognomonic_symptoms": [
@@ -3738,7 +3748,7 @@
     },
     {
       "id": "recurrent_proctitis_gastroen",
-      "name": "Recurrent Proctitis of Gastroenterology",
+      "name": "Recurrent Proctitis",
       "category": "Gastroenterology",
       "icd10": "K53.6",
       "pathognomonic_symptoms": [
@@ -3760,7 +3770,7 @@
     },
     {
       "id": "acute_colitis_gastroen",
-      "name": "Acute Colitis of Gastroenterology",
+      "name": "Acute Colitis",
       "category": "Gastroenterology",
       "icd10": "K54.7",
       "pathognomonic_symptoms": [
@@ -3782,7 +3792,7 @@
     },
     {
       "id": "chronic_colitis_gastroen",
-      "name": "Chronic Colitis of Gastroenterology",
+      "name": "Chronic Colitis",
       "category": "Gastroenterology",
       "icd10": "K55.8",
       "pathognomonic_symptoms": [
@@ -3803,7 +3813,7 @@
     },
     {
       "id": "subacute_colitis_gastroen",
-      "name": "Subacute Colitis of Gastroenterology",
+      "name": "Subacute Colitis",
       "category": "Gastroenterology",
       "icd10": "K56.0",
       "pathognomonic_symptoms": [
@@ -3826,7 +3836,7 @@
     },
     {
       "id": "recurrent_colitis_gastroen",
-      "name": "Recurrent Colitis of Gastroenterology",
+      "name": "Recurrent Colitis",
       "category": "Gastroenterology",
       "icd10": "K57.1",
       "pathognomonic_symptoms": [
@@ -3847,7 +3857,7 @@
     },
     {
       "id": "acute_hepatitis_gastroen",
-      "name": "Acute Hepatitis of Gastroenterology",
+      "name": "Acute Hepatitis",
       "category": "Gastroenterology",
       "icd10": "K58.2",
       "pathognomonic_symptoms": [
@@ -3869,7 +3879,7 @@
     },
     {
       "id": "chronic_hepatitis_gastroen",
-      "name": "Chronic Hepatitis of Gastroenterology",
+      "name": "Chronic Hepatitis",
       "category": "Gastroenterology",
       "icd10": "K59.3",
       "pathognomonic_symptoms": [
@@ -3891,7 +3901,7 @@
     },
     {
       "id": "subacute_hepatitis_gastroen",
-      "name": "Subacute Hepatitis of Gastroenterology",
+      "name": "Subacute Hepatitis",
       "category": "Gastroenterology",
       "icd10": "K60.4",
       "pathognomonic_symptoms": [
@@ -3913,7 +3923,7 @@
     },
     {
       "id": "recurrent_hepatitis_gastroen",
-      "name": "Recurrent Hepatitis of Gastroenterology",
+      "name": "Recurrent Hepatitis",
       "category": "Gastroenterology",
       "icd10": "K61.5",
       "pathognomonic_symptoms": [
@@ -3935,7 +3945,7 @@
     },
     {
       "id": "acute_cholelithiasis_gastroen",
-      "name": "Acute Cholelithiasis of Gastroenterology",
+      "name": "Acute Cholelithiasis",
       "category": "Gastroenterology",
       "icd10": "K62.6",
       "pathognomonic_symptoms": [
@@ -3957,7 +3967,7 @@
     },
     {
       "id": "chronic_cholelithiasis_gastroen",
-      "name": "Chronic Cholelithiasis of Gastroenterology",
+      "name": "Chronic Cholelithiasis",
       "category": "Gastroenterology",
       "icd10": "K63.7",
       "pathognomonic_symptoms": [
@@ -3979,7 +3989,7 @@
     },
     {
       "id": "subacute_cholelithiasis_gastroen",
-      "name": "Subacute Cholelithiasis of Gastroenterology",
+      "name": "Subacute Cholelithiasis",
       "category": "Gastroenterology",
       "icd10": "K64.8",
       "pathognomonic_symptoms": [
@@ -4002,7 +4012,7 @@
     },
     {
       "id": "recurrent_cholelithiasis_gastroen",
-      "name": "Recurrent Cholelithiasis of Gastroenterology",
+      "name": "Recurrent Cholelithiasis",
       "category": "Gastroenterology",
       "icd10": "K65.0",
       "pathognomonic_symptoms": [
@@ -4025,7 +4035,7 @@
     },
     {
       "id": "acute_stricture_gastroen",
-      "name": "Acute Stricture of Gastroenterology",
+      "name": "Acute Stricture",
       "category": "Gastroenterology",
       "icd10": "K66.1",
       "pathognomonic_symptoms": [
@@ -4048,7 +4058,7 @@
     },
     {
       "id": "chronic_stricture_gastroen",
-      "name": "Chronic Stricture of Gastroenterology",
+      "name": "Chronic Stricture",
       "category": "Gastroenterology",
       "icd10": "K67.2",
       "pathognomonic_symptoms": [
@@ -4069,7 +4079,7 @@
     },
     {
       "id": "subacute_stricture_gastroen",
-      "name": "Subacute Stricture of Gastroenterology",
+      "name": "Subacute Stricture",
       "category": "Gastroenterology",
       "icd10": "K68.3",
       "pathognomonic_symptoms": [
@@ -4090,7 +4100,7 @@
     },
     {
       "id": "recurrent_stricture_gastroen",
-      "name": "Recurrent Stricture of Gastroenterology",
+      "name": "Recurrent Stricture",
       "category": "Gastroenterology",
       "icd10": "K69.4",
       "pathognomonic_symptoms": [
@@ -4114,7 +4124,7 @@
     },
     {
       "id": "acute_polyp_gastroen",
-      "name": "Acute Polyp of Gastroenterology",
+      "name": "Acute Polyp",
       "category": "Gastroenterology",
       "icd10": "K70.5",
       "pathognomonic_symptoms": [
@@ -4137,7 +4147,7 @@
     },
     {
       "id": "chronic_polyp_gastroen",
-      "name": "Chronic Polyp of Gastroenterology",
+      "name": "Chronic Polyp",
       "category": "Gastroenterology",
       "icd10": "K71.6",
       "pathognomonic_symptoms": [
@@ -4160,7 +4170,7 @@
     },
     {
       "id": "subacute_polyp_gastroen",
-      "name": "Subacute Polyp of Gastroenterology",
+      "name": "Subacute Polyp",
       "category": "Gastroenterology",
       "icd10": "K72.7",
       "pathognomonic_symptoms": [
@@ -4184,7 +4194,7 @@
     },
     {
       "id": "recurrent_polyp_gastroen",
-      "name": "Recurrent Polyp of Gastroenterology",
+      "name": "Recurrent Polyp",
       "category": "Gastroenterology",
       "icd10": "K73.8",
       "pathognomonic_symptoms": [
@@ -4206,7 +4216,7 @@
     },
     {
       "id": "acute_fistula_gastroen",
-      "name": "Acute Fistula of Gastroenterology",
+      "name": "Acute Fistula",
       "category": "Gastroenterology",
       "icd10": "K74.0",
       "pathognomonic_symptoms": [
@@ -4227,7 +4237,7 @@
     },
     {
       "id": "chronic_fistula_gastroen",
-      "name": "Chronic Fistula of Gastroenterology",
+      "name": "Chronic Fistula",
       "category": "Gastroenterology",
       "icd10": "K75.1",
       "pathognomonic_symptoms": [
@@ -4248,7 +4258,7 @@
     },
     {
       "id": "subacute_fistula_gastroen",
-      "name": "Subacute Fistula of Gastroenterology",
+      "name": "Subacute Fistula",
       "category": "Gastroenterology",
       "icd10": "K76.2",
       "pathognomonic_symptoms": [
@@ -4270,7 +4280,7 @@
     },
     {
       "id": "recurrent_fistula_gastroen",
-      "name": "Recurrent Fistula of Gastroenterology",
+      "name": "Recurrent Fistula",
       "category": "Gastroenterology",
       "icd10": "K77.3",
       "pathognomonic_symptoms": [
@@ -4291,7 +4301,7 @@
     },
     {
       "id": "acute_adenoma_gastroen",
-      "name": "Acute Adenoma of Gastroenterology",
+      "name": "Acute Adenoma",
       "category": "Gastroenterology",
       "icd10": "K78.4",
       "pathognomonic_symptoms": [
@@ -4313,7 +4323,7 @@
     },
     {
       "id": "chronic_adenoma_gastroen",
-      "name": "Chronic Adenoma of Gastroenterology",
+      "name": "Chronic Adenoma",
       "category": "Gastroenterology",
       "icd10": "K79.5",
       "pathognomonic_symptoms": [
@@ -4334,7 +4344,7 @@
     },
     {
       "id": "subacute_adenoma_gastroen",
-      "name": "Subacute Adenoma of Gastroenterology",
+      "name": "Subacute Adenoma",
       "category": "Gastroenterology",
       "icd10": "K80.6",
       "pathognomonic_symptoms": [
@@ -4357,7 +4367,7 @@
     },
     {
       "id": "recurrent_adenoma_gastroen",
-      "name": "Recurrent Adenoma of Gastroenterology",
+      "name": "Recurrent Adenoma",
       "category": "Gastroenterology",
       "icd10": "K81.7",
       "pathognomonic_symptoms": [
@@ -4378,7 +4388,7 @@
     },
     {
       "id": "acute_angiodysplasia_gastroen",
-      "name": "Acute Angiodysplasia of Gastroenterology",
+      "name": "Acute Angiodysplasia",
       "category": "Gastroenterology",
       "icd10": "K82.8",
       "pathognomonic_symptoms": [
@@ -4402,7 +4412,7 @@
     },
     {
       "id": "chronic_angiodysplasia_gastroen",
-      "name": "Chronic Angiodysplasia of Gastroenterology",
+      "name": "Chronic Angiodysplasia",
       "category": "Gastroenterology",
       "icd10": "K83.0",
       "pathognomonic_symptoms": [
@@ -4424,7 +4434,7 @@
     },
     {
       "id": "subacute_angiodysplasia_gastroen",
-      "name": "Subacute Angiodysplasia of Gastroenterology",
+      "name": "Subacute Angiodysplasia",
       "category": "Gastroenterology",
       "icd10": "K84.1",
       "pathognomonic_symptoms": [
@@ -4445,7 +4455,7 @@
     },
     {
       "id": "recurrent_angiodysplasia_gastroen",
-      "name": "Recurrent Angiodysplasia of Gastroenterology",
+      "name": "Recurrent Angiodysplasia",
       "category": "Gastroenterology",
       "icd10": "K85.2",
       "pathognomonic_symptoms": [
@@ -4466,7 +4476,7 @@
     },
     {
       "id": "acute_ischemia_gastroen",
-      "name": "Acute Ischemia of Gastroenterology",
+      "name": "Acute Ischemia",
       "category": "Gastroenterology",
       "icd10": "K86.3",
       "pathognomonic_symptoms": [
@@ -4488,7 +4498,7 @@
     },
     {
       "id": "chronic_ischemia_gastroen",
-      "name": "Chronic Ischemia of Gastroenterology",
+      "name": "Chronic Ischemia",
       "category": "Gastroenterology",
       "icd10": "K87.4",
       "pathognomonic_symptoms": [
@@ -4512,7 +4522,7 @@
     },
     {
       "id": "subacute_ischemia_gastroen",
-      "name": "Subacute Ischemia of Gastroenterology",
+      "name": "Subacute Ischemia",
       "category": "Gastroenterology",
       "icd10": "K88.5",
       "pathognomonic_symptoms": [
@@ -4534,7 +4544,7 @@
     },
     {
       "id": "recurrent_ischemia_gastroen",
-      "name": "Recurrent Ischemia of Gastroenterology",
+      "name": "Recurrent Ischemia",
       "category": "Gastroenterology",
       "icd10": "K89.6",
       "pathognomonic_symptoms": [
@@ -4557,7 +4567,7 @@
     },
     {
       "id": "acute_valvulopathy_cardiolo",
-      "name": "Acute Valvulopathy of Cardiology",
+      "name": "Acute Valvulopathy",
       "category": "Cardiology",
       "icd10": "I10.7",
       "pathognomonic_symptoms": [
@@ -4579,7 +4589,7 @@
     },
     {
       "id": "chronic_valvulopathy_cardiolo",
-      "name": "Chronic Valvulopathy of Cardiology",
+      "name": "Chronic Valvulopathy",
       "category": "Cardiology",
       "icd10": "I11.8",
       "pathognomonic_symptoms": [
@@ -4603,7 +4613,7 @@
     },
     {
       "id": "subacute_valvulopathy_cardiolo",
-      "name": "Subacute Valvulopathy of Cardiology",
+      "name": "Subacute Valvulopathy",
       "category": "Cardiology",
       "icd10": "I12.0",
       "pathognomonic_symptoms": [
@@ -4624,7 +4634,7 @@
     },
     {
       "id": "recurrent_valvulopathy_cardiolo",
-      "name": "Recurrent Valvulopathy of Cardiology",
+      "name": "Recurrent Valvulopathy",
       "category": "Cardiology",
       "icd10": "I13.1",
       "pathognomonic_symptoms": [
@@ -4645,7 +4655,7 @@
     },
     {
       "id": "acute_arrhythmia_cardiolo",
-      "name": "Acute Arrhythmia of Cardiology",
+      "name": "Acute Arrhythmia",
       "category": "Cardiology",
       "icd10": "I14.2",
       "pathognomonic_symptoms": [
@@ -4668,7 +4678,7 @@
     },
     {
       "id": "chronic_arrhythmia_cardiolo",
-      "name": "Chronic Arrhythmia of Cardiology",
+      "name": "Chronic Arrhythmia",
       "category": "Cardiology",
       "icd10": "I15.3",
       "pathognomonic_symptoms": [
@@ -4690,7 +4700,7 @@
     },
     {
       "id": "subacute_arrhythmia_cardiolo",
-      "name": "Subacute Arrhythmia of Cardiology",
+      "name": "Subacute Arrhythmia",
       "category": "Cardiology",
       "icd10": "I16.4",
       "pathognomonic_symptoms": [
@@ -4711,7 +4721,7 @@
     },
     {
       "id": "recurrent_arrhythmia_cardiolo",
-      "name": "Recurrent Arrhythmia of Cardiology",
+      "name": "Recurrent Arrhythmia",
       "category": "Cardiology",
       "icd10": "I17.5",
       "pathognomonic_symptoms": [
@@ -4734,7 +4744,7 @@
     },
     {
       "id": "acute_ischemia_cardiolo",
-      "name": "Acute Ischemia of Cardiology",
+      "name": "Acute Ischemia",
       "category": "Cardiology",
       "icd10": "I18.6",
       "pathognomonic_symptoms": [
@@ -4757,7 +4767,7 @@
     },
     {
       "id": "chronic_ischemia_cardiolo",
-      "name": "Chronic Ischemia of Cardiology",
+      "name": "Chronic Ischemia",
       "category": "Cardiology",
       "icd10": "I19.7",
       "pathognomonic_symptoms": [
@@ -4778,7 +4788,7 @@
     },
     {
       "id": "subacute_ischemia_cardiolo",
-      "name": "Subacute Ischemia of Cardiology",
+      "name": "Subacute Ischemia",
       "category": "Cardiology",
       "icd10": "I20.8",
       "pathognomonic_symptoms": [
@@ -4799,7 +4809,7 @@
     },
     {
       "id": "recurrent_ischemia_cardiolo",
-      "name": "Recurrent Ischemia of Cardiology",
+      "name": "Recurrent Ischemia",
       "category": "Cardiology",
       "icd10": "I21.0",
       "pathognomonic_symptoms": [
@@ -4820,7 +4830,7 @@
     },
     {
       "id": "acute_infarction_cardiolo",
-      "name": "Acute Infarction of Cardiology",
+      "name": "Acute Infarction",
       "category": "Cardiology",
       "icd10": "I22.1",
       "pathognomonic_symptoms": [
@@ -4841,7 +4851,7 @@
     },
     {
       "id": "chronic_infarction_cardiolo",
-      "name": "Chronic Infarction of Cardiology",
+      "name": "Chronic Infarction",
       "category": "Cardiology",
       "icd10": "I23.2",
       "pathognomonic_symptoms": [
@@ -4864,7 +4874,7 @@
     },
     {
       "id": "subacute_infarction_cardiolo",
-      "name": "Subacute Infarction of Cardiology",
+      "name": "Subacute Infarction",
       "category": "Cardiology",
       "icd10": "I24.3",
       "pathognomonic_symptoms": [
@@ -4885,7 +4895,7 @@
     },
     {
       "id": "recurrent_infarction_cardiolo",
-      "name": "Recurrent Infarction of Cardiology",
+      "name": "Recurrent Infarction",
       "category": "Cardiology",
       "icd10": "I25.4",
       "pathognomonic_symptoms": [
@@ -4906,7 +4916,7 @@
     },
     {
       "id": "acute_cardiomyopathy_cardiolo",
-      "name": "Acute Cardiomyopathy of Cardiology",
+      "name": "Acute Cardiomyopathy",
       "category": "Cardiology",
       "icd10": "I26.5",
       "pathognomonic_symptoms": [
@@ -4928,7 +4938,7 @@
     },
     {
       "id": "chronic_cardiomyopathy_cardiolo",
-      "name": "Chronic Cardiomyopathy of Cardiology",
+      "name": "Chronic Cardiomyopathy",
       "category": "Cardiology",
       "icd10": "I27.6",
       "pathognomonic_symptoms": [
@@ -4950,7 +4960,7 @@
     },
     {
       "id": "subacute_cardiomyopathy_cardiolo",
-      "name": "Subacute Cardiomyopathy of Cardiology",
+      "name": "Subacute Cardiomyopathy",
       "category": "Cardiology",
       "icd10": "I28.7",
       "pathognomonic_symptoms": [
@@ -4972,7 +4982,7 @@
     },
     {
       "id": "recurrent_cardiomyopathy_cardiolo",
-      "name": "Recurrent Cardiomyopathy of Cardiology",
+      "name": "Recurrent Cardiomyopathy",
       "category": "Cardiology",
       "icd10": "I29.8",
       "pathognomonic_symptoms": [
@@ -4993,7 +5003,7 @@
     },
     {
       "id": "acute_endocarditis_cardiolo",
-      "name": "Acute Endocarditis of Cardiology",
+      "name": "Acute Endocarditis",
       "category": "Cardiology",
       "icd10": "I30.0",
       "pathognomonic_symptoms": [
@@ -5014,7 +5024,7 @@
     },
     {
       "id": "chronic_endocarditis_cardiolo",
-      "name": "Chronic Endocarditis of Cardiology",
+      "name": "Chronic Endocarditis",
       "category": "Cardiology",
       "icd10": "I31.1",
       "pathognomonic_symptoms": [
@@ -5035,7 +5045,7 @@
     },
     {
       "id": "subacute_endocarditis_cardiolo",
-      "name": "Subacute Endocarditis of Cardiology",
+      "name": "Subacute Endocarditis",
       "category": "Cardiology",
       "icd10": "I32.2",
       "pathognomonic_symptoms": [
@@ -5056,7 +5066,7 @@
     },
     {
       "id": "recurrent_endocarditis_cardiolo",
-      "name": "Recurrent Endocarditis of Cardiology",
+      "name": "Recurrent Endocarditis",
       "category": "Cardiology",
       "icd10": "I33.3",
       "pathognomonic_symptoms": [
@@ -5078,7 +5088,7 @@
     },
     {
       "id": "acute_pericarditis_cardiolo",
-      "name": "Acute Pericarditis of Cardiology",
+      "name": "Acute Pericarditis",
       "category": "Cardiology",
       "icd10": "I34.4",
       "pathognomonic_symptoms": [
@@ -5099,7 +5109,7 @@
     },
     {
       "id": "chronic_pericarditis_cardiolo",
-      "name": "Chronic Pericarditis of Cardiology",
+      "name": "Chronic Pericarditis",
       "category": "Cardiology",
       "icd10": "I35.5",
       "pathognomonic_symptoms": [
@@ -5121,7 +5131,7 @@
     },
     {
       "id": "subacute_pericarditis_cardiolo",
-      "name": "Subacute Pericarditis of Cardiology",
+      "name": "Subacute Pericarditis",
       "category": "Cardiology",
       "icd10": "I36.6",
       "pathognomonic_symptoms": [
@@ -5142,7 +5152,7 @@
     },
     {
       "id": "recurrent_pericarditis_cardiolo",
-      "name": "Recurrent Pericarditis of Cardiology",
+      "name": "Recurrent Pericarditis",
       "category": "Cardiology",
       "icd10": "I37.7",
       "pathognomonic_symptoms": [
@@ -5164,7 +5174,7 @@
     },
     {
       "id": "acute_arteritis_cardiolo",
-      "name": "Acute Arteritis of Cardiology",
+      "name": "Acute Arteritis",
       "category": "Cardiology",
       "icd10": "I38.8",
       "pathognomonic_symptoms": [
@@ -5188,7 +5198,7 @@
     },
     {
       "id": "chronic_arteritis_cardiolo",
-      "name": "Chronic Arteritis of Cardiology",
+      "name": "Chronic Arteritis",
       "category": "Cardiology",
       "icd10": "I39.0",
       "pathognomonic_symptoms": [
@@ -5211,7 +5221,7 @@
     },
     {
       "id": "subacute_arteritis_cardiolo",
-      "name": "Subacute Arteritis of Cardiology",
+      "name": "Subacute Arteritis",
       "category": "Cardiology",
       "icd10": "I40.1",
       "pathognomonic_symptoms": [
@@ -5234,7 +5244,7 @@
     },
     {
       "id": "recurrent_arteritis_cardiolo",
-      "name": "Recurrent Arteritis of Cardiology",
+      "name": "Recurrent Arteritis",
       "category": "Cardiology",
       "icd10": "I41.2",
       "pathognomonic_symptoms": [
@@ -5256,7 +5266,7 @@
     },
     {
       "id": "acute_thrombosis_cardiolo",
-      "name": "Acute Thrombosis of Cardiology",
+      "name": "Acute Thrombosis",
       "category": "Cardiology",
       "icd10": "I42.3",
       "pathognomonic_symptoms": [
@@ -5277,7 +5287,7 @@
     },
     {
       "id": "chronic_thrombosis_cardiolo",
-      "name": "Chronic Thrombosis of Cardiology",
+      "name": "Chronic Thrombosis",
       "category": "Cardiology",
       "icd10": "I43.4",
       "pathognomonic_symptoms": [
@@ -5299,7 +5309,7 @@
     },
     {
       "id": "subacute_thrombosis_cardiolo",
-      "name": "Subacute Thrombosis of Cardiology",
+      "name": "Subacute Thrombosis",
       "category": "Cardiology",
       "icd10": "I44.5",
       "pathognomonic_symptoms": [
@@ -5322,7 +5332,7 @@
     },
     {
       "id": "recurrent_thrombosis_cardiolo",
-      "name": "Recurrent Thrombosis of Cardiology",
+      "name": "Recurrent Thrombosis",
       "category": "Cardiology",
       "icd10": "I45.6",
       "pathognomonic_symptoms": [
@@ -5343,7 +5353,7 @@
     },
     {
       "id": "acute_embolism_cardiolo",
-      "name": "Acute Embolism of Cardiology",
+      "name": "Acute Embolism",
       "category": "Cardiology",
       "icd10": "I46.7",
       "pathognomonic_symptoms": [
@@ -5365,7 +5375,7 @@
     },
     {
       "id": "chronic_embolism_cardiolo",
-      "name": "Chronic Embolism of Cardiology",
+      "name": "Chronic Embolism",
       "category": "Cardiology",
       "icd10": "I47.8",
       "pathognomonic_symptoms": [
@@ -5388,7 +5398,7 @@
     },
     {
       "id": "subacute_embolism_cardiolo",
-      "name": "Subacute Embolism of Cardiology",
+      "name": "Subacute Embolism",
       "category": "Cardiology",
       "icd10": "I48.0",
       "pathognomonic_symptoms": [
@@ -5409,7 +5419,7 @@
     },
     {
       "id": "recurrent_embolism_cardiolo",
-      "name": "Recurrent Embolism of Cardiology",
+      "name": "Recurrent Embolism",
       "category": "Cardiology",
       "icd10": "I49.1",
       "pathognomonic_symptoms": [
@@ -5430,7 +5440,7 @@
     },
     {
       "id": "acute_stenosis_cardiolo",
-      "name": "Acute Stenosis of Cardiology",
+      "name": "Acute Stenosis",
       "category": "Cardiology",
       "icd10": "I50.2",
       "pathognomonic_symptoms": [
@@ -5452,7 +5462,7 @@
     },
     {
       "id": "chronic_stenosis_cardiolo",
-      "name": "Chronic Stenosis of Cardiology",
+      "name": "Chronic Stenosis",
       "category": "Cardiology",
       "icd10": "I51.3",
       "pathognomonic_symptoms": [
@@ -5474,7 +5484,7 @@
     },
     {
       "id": "subacute_stenosis_cardiolo",
-      "name": "Subacute Stenosis of Cardiology",
+      "name": "Subacute Stenosis",
       "category": "Cardiology",
       "icd10": "I52.4",
       "pathognomonic_symptoms": [
@@ -5496,7 +5506,7 @@
     },
     {
       "id": "recurrent_stenosis_cardiolo",
-      "name": "Recurrent Stenosis of Cardiology",
+      "name": "Recurrent Stenosis",
       "category": "Cardiology",
       "icd10": "I53.5",
       "pathognomonic_symptoms": [
@@ -5519,7 +5529,7 @@
     },
     {
       "id": "acute_insufficiency_cardiolo",
-      "name": "Acute Insufficiency of Cardiology",
+      "name": "Acute Insufficiency",
       "category": "Cardiology",
       "icd10": "I54.6",
       "pathognomonic_symptoms": [
@@ -5541,7 +5551,7 @@
     },
     {
       "id": "chronic_insufficiency_cardiolo",
-      "name": "Chronic Insufficiency of Cardiology",
+      "name": "Chronic Insufficiency",
       "category": "Cardiology",
       "icd10": "I55.7",
       "pathognomonic_symptoms": [
@@ -5563,7 +5573,7 @@
     },
     {
       "id": "subacute_insufficiency_cardiolo",
-      "name": "Subacute Insufficiency of Cardiology",
+      "name": "Subacute Insufficiency",
       "category": "Cardiology",
       "icd10": "I56.8",
       "pathognomonic_symptoms": [
@@ -5586,7 +5596,7 @@
     },
     {
       "id": "recurrent_insufficiency_cardiolo",
-      "name": "Recurrent Insufficiency of Cardiology",
+      "name": "Recurrent Insufficiency",
       "category": "Cardiology",
       "icd10": "I57.0",
       "pathognomonic_symptoms": [
@@ -5607,7 +5617,7 @@
     },
     {
       "id": "acute_ectasia_cardiolo",
-      "name": "Acute Ectasia of Cardiology",
+      "name": "Acute Ectasia",
       "category": "Cardiology",
       "icd10": "I58.1",
       "pathognomonic_symptoms": [
@@ -5630,7 +5640,7 @@
     },
     {
       "id": "chronic_ectasia_cardiolo",
-      "name": "Chronic Ectasia of Cardiology",
+      "name": "Chronic Ectasia",
       "category": "Cardiology",
       "icd10": "I59.2",
       "pathognomonic_symptoms": [
@@ -5651,7 +5661,7 @@
     },
     {
       "id": "subacute_ectasia_cardiolo",
-      "name": "Subacute Ectasia of Cardiology",
+      "name": "Subacute Ectasia",
       "category": "Cardiology",
       "icd10": "I60.3",
       "pathognomonic_symptoms": [
@@ -5674,7 +5684,7 @@
     },
     {
       "id": "recurrent_ectasia_cardiolo",
-      "name": "Recurrent Ectasia of Cardiology",
+      "name": "Recurrent Ectasia",
       "category": "Cardiology",
       "icd10": "I61.4",
       "pathognomonic_symptoms": [
@@ -5696,7 +5706,7 @@
     },
     {
       "id": "acute_aneurysm_cardiolo",
-      "name": "Acute Aneurysm of Cardiology",
+      "name": "Acute Aneurysm",
       "category": "Cardiology",
       "icd10": "I62.5",
       "pathognomonic_symptoms": [
@@ -5718,7 +5728,7 @@
     },
     {
       "id": "chronic_aneurysm_cardiolo",
-      "name": "Chronic Aneurysm of Cardiology",
+      "name": "Chronic Aneurysm",
       "category": "Cardiology",
       "icd10": "I63.6",
       "pathognomonic_symptoms": [
@@ -5739,7 +5749,7 @@
     },
     {
       "id": "subacute_aneurysm_cardiolo",
-      "name": "Subacute Aneurysm of Cardiology",
+      "name": "Subacute Aneurysm",
       "category": "Cardiology",
       "icd10": "I64.7",
       "pathognomonic_symptoms": [
@@ -5763,7 +5773,7 @@
     },
     {
       "id": "recurrent_aneurysm_cardiolo",
-      "name": "Recurrent Aneurysm of Cardiology",
+      "name": "Recurrent Aneurysm",
       "category": "Cardiology",
       "icd10": "I65.8",
       "pathognomonic_symptoms": [
@@ -5785,7 +5795,7 @@
     },
     {
       "id": "acute_dysfunction_cardiolo",
-      "name": "Acute Dysfunction of Cardiology",
+      "name": "Acute Dysfunction",
       "category": "Cardiology",
       "icd10": "I66.0",
       "pathognomonic_symptoms": [
@@ -5806,7 +5816,7 @@
     },
     {
       "id": "chronic_dysfunction_cardiolo",
-      "name": "Chronic Dysfunction of Cardiology",
+      "name": "Chronic Dysfunction",
       "category": "Cardiology",
       "icd10": "I67.1",
       "pathognomonic_symptoms": [
@@ -5828,7 +5838,7 @@
     },
     {
       "id": "subacute_dysfunction_cardiolo",
-      "name": "Subacute Dysfunction of Cardiology",
+      "name": "Subacute Dysfunction",
       "category": "Cardiology",
       "icd10": "I68.2",
       "pathognomonic_symptoms": [
@@ -5849,7 +5859,7 @@
     },
     {
       "id": "recurrent_dysfunction_cardiolo",
-      "name": "Recurrent Dysfunction of Cardiology",
+      "name": "Recurrent Dysfunction",
       "category": "Cardiology",
       "icd10": "I69.3",
       "pathognomonic_symptoms": [
@@ -5872,7 +5882,7 @@
     },
     {
       "id": "acute_pneumonitis_pulmonol",
-      "name": "Acute Pneumonitis of Pulmonology",
+      "name": "Acute Pneumonitis",
       "category": "Pulmonology",
       "icd10": "J70.4",
       "pathognomonic_symptoms": [
@@ -5896,7 +5906,7 @@
     },
     {
       "id": "chronic_pneumonitis_pulmonol",
-      "name": "Chronic Pneumonitis of Pulmonology",
+      "name": "Chronic Pneumonitis",
       "category": "Pulmonology",
       "icd10": "J71.5",
       "pathognomonic_symptoms": [
@@ -5918,7 +5928,7 @@
     },
     {
       "id": "subacute_pneumonitis_pulmonol",
-      "name": "Subacute Pneumonitis of Pulmonology",
+      "name": "Subacute Pneumonitis",
       "category": "Pulmonology",
       "icd10": "J72.6",
       "pathognomonic_symptoms": [
@@ -5941,7 +5951,7 @@
     },
     {
       "id": "recurrent_pneumonitis_pulmonol",
-      "name": "Recurrent Pneumonitis of Pulmonology",
+      "name": "Recurrent Pneumonitis",
       "category": "Pulmonology",
       "icd10": "J73.7",
       "pathognomonic_symptoms": [
@@ -5964,7 +5974,7 @@
     },
     {
       "id": "acute_bronchitis_pulmonol",
-      "name": "Acute Bronchitis of Pulmonology",
+      "name": "Acute Bronchitis",
       "category": "Pulmonology",
       "icd10": "J74.8",
       "pathognomonic_symptoms": [
@@ -5985,7 +5995,7 @@
     },
     {
       "id": "chronic_bronchitis_pulmonol",
-      "name": "Chronic Bronchitis of Pulmonology",
+      "name": "Chronic Bronchitis",
       "category": "Pulmonology",
       "icd10": "J75.0",
       "pathognomonic_symptoms": [
@@ -6006,7 +6016,7 @@
     },
     {
       "id": "subacute_bronchitis_pulmonol",
-      "name": "Subacute Bronchitis of Pulmonology",
+      "name": "Subacute Bronchitis",
       "category": "Pulmonology",
       "icd10": "J76.1",
       "pathognomonic_symptoms": [
@@ -6029,7 +6039,7 @@
     },
     {
       "id": "recurrent_bronchitis_pulmonol",
-      "name": "Recurrent Bronchitis of Pulmonology",
+      "name": "Recurrent Bronchitis",
       "category": "Pulmonology",
       "icd10": "J77.2",
       "pathognomonic_symptoms": [
@@ -6051,7 +6061,7 @@
     },
     {
       "id": "acute_alveolitis_pulmonol",
-      "name": "Acute Alveolitis of Pulmonology",
+      "name": "Acute Alveolitis",
       "category": "Pulmonology",
       "icd10": "J78.3",
       "pathognomonic_symptoms": [
@@ -6072,7 +6082,7 @@
     },
     {
       "id": "chronic_alveolitis_pulmonol",
-      "name": "Chronic Alveolitis of Pulmonology",
+      "name": "Chronic Alveolitis",
       "category": "Pulmonology",
       "icd10": "J79.4",
       "pathognomonic_symptoms": [
@@ -6093,7 +6103,7 @@
     },
     {
       "id": "subacute_alveolitis_pulmonol",
-      "name": "Subacute Alveolitis of Pulmonology",
+      "name": "Subacute Alveolitis",
       "category": "Pulmonology",
       "icd10": "J80.5",
       "pathognomonic_symptoms": [
@@ -6114,7 +6124,7 @@
     },
     {
       "id": "recurrent_alveolitis_pulmonol",
-      "name": "Recurrent Alveolitis of Pulmonology",
+      "name": "Recurrent Alveolitis",
       "category": "Pulmonology",
       "icd10": "J81.6",
       "pathognomonic_symptoms": [
@@ -6136,7 +6146,7 @@
     },
     {
       "id": "acute_effusion_pulmonol",
-      "name": "Acute Effusion of Pulmonology",
+      "name": "Acute Effusion",
       "category": "Pulmonology",
       "icd10": "J82.7",
       "pathognomonic_symptoms": [
@@ -6157,7 +6167,7 @@
     },
     {
       "id": "chronic_effusion_pulmonol",
-      "name": "Chronic Effusion of Pulmonology",
+      "name": "Chronic Effusion",
       "category": "Pulmonology",
       "icd10": "J83.8",
       "pathognomonic_symptoms": [
@@ -6179,7 +6189,7 @@
     },
     {
       "id": "subacute_effusion_pulmonol",
-      "name": "Subacute Effusion of Pulmonology",
+      "name": "Subacute Effusion",
       "category": "Pulmonology",
       "icd10": "J84.0",
       "pathognomonic_symptoms": [
@@ -6202,7 +6212,7 @@
     },
     {
       "id": "recurrent_effusion_pulmonol",
-      "name": "Recurrent Effusion of Pulmonology",
+      "name": "Recurrent Effusion",
       "category": "Pulmonology",
       "icd10": "J85.1",
       "pathognomonic_symptoms": [
@@ -6224,7 +6234,7 @@
     },
     {
       "id": "acute_pleuritis_pulmonol",
-      "name": "Acute Pleuritis of Pulmonology",
+      "name": "Acute Pleuritis",
       "category": "Pulmonology",
       "icd10": "J86.2",
       "pathognomonic_symptoms": [
@@ -6248,7 +6258,7 @@
     },
     {
       "id": "chronic_pleuritis_pulmonol",
-      "name": "Chronic Pleuritis of Pulmonology",
+      "name": "Chronic Pleuritis",
       "category": "Pulmonology",
       "icd10": "J87.3",
       "pathognomonic_symptoms": [
@@ -6269,7 +6279,7 @@
     },
     {
       "id": "subacute_pleuritis_pulmonol",
-      "name": "Subacute Pleuritis of Pulmonology",
+      "name": "Subacute Pleuritis",
       "category": "Pulmonology",
       "icd10": "J88.4",
       "pathognomonic_symptoms": [
@@ -6291,7 +6301,7 @@
     },
     {
       "id": "recurrent_pleuritis_pulmonol",
-      "name": "Recurrent Pleuritis of Pulmonology",
+      "name": "Recurrent Pleuritis",
       "category": "Pulmonology",
       "icd10": "J89.5",
       "pathognomonic_symptoms": [
@@ -6313,7 +6323,7 @@
     },
     {
       "id": "acute_tracheitis_pulmonol",
-      "name": "Acute Tracheitis of Pulmonology",
+      "name": "Acute Tracheitis",
       "category": "Pulmonology",
       "icd10": "J10.6",
       "pathognomonic_symptoms": [
@@ -6336,7 +6346,7 @@
     },
     {
       "id": "chronic_tracheitis_pulmonol",
-      "name": "Chronic Tracheitis of Pulmonology",
+      "name": "Chronic Tracheitis",
       "category": "Pulmonology",
       "icd10": "J11.7",
       "pathognomonic_symptoms": [
@@ -6358,7 +6368,7 @@
     },
     {
       "id": "subacute_tracheitis_pulmonol",
-      "name": "Subacute Tracheitis of Pulmonology",
+      "name": "Subacute Tracheitis",
       "category": "Pulmonology",
       "icd10": "J12.8",
       "pathognomonic_symptoms": [
@@ -6380,7 +6390,7 @@
     },
     {
       "id": "recurrent_tracheitis_pulmonol",
-      "name": "Recurrent Tracheitis of Pulmonology",
+      "name": "Recurrent Tracheitis",
       "category": "Pulmonology",
       "icd10": "J13.0",
       "pathognomonic_symptoms": [
@@ -6402,7 +6412,7 @@
     },
     {
       "id": "acute_atelectasis_pulmonol",
-      "name": "Acute Atelectasis of Pulmonology",
+      "name": "Acute Atelectasis",
       "category": "Pulmonology",
       "icd10": "J14.1",
       "pathognomonic_symptoms": [
@@ -6423,7 +6433,7 @@
     },
     {
       "id": "chronic_atelectasis_pulmonol",
-      "name": "Chronic Atelectasis of Pulmonology",
+      "name": "Chronic Atelectasis",
       "category": "Pulmonology",
       "icd10": "J15.2",
       "pathognomonic_symptoms": [
@@ -6444,7 +6454,7 @@
     },
     {
       "id": "subacute_atelectasis_pulmonol",
-      "name": "Subacute Atelectasis of Pulmonology",
+      "name": "Subacute Atelectasis",
       "category": "Pulmonology",
       "icd10": "J16.3",
       "pathognomonic_symptoms": [
@@ -6467,7 +6477,7 @@
     },
     {
       "id": "recurrent_atelectasis_pulmonol",
-      "name": "Recurrent Atelectasis of Pulmonology",
+      "name": "Recurrent Atelectasis",
       "category": "Pulmonology",
       "icd10": "J17.4",
       "pathognomonic_symptoms": [
@@ -6488,7 +6498,7 @@
     },
     {
       "id": "acute_granuloma_pulmonol",
-      "name": "Acute Granuloma of Pulmonology",
+      "name": "Acute Granuloma",
       "category": "Pulmonology",
       "icd10": "J18.5",
       "pathognomonic_symptoms": [
@@ -6509,7 +6519,7 @@
     },
     {
       "id": "chronic_granuloma_pulmonol",
-      "name": "Chronic Granuloma of Pulmonology",
+      "name": "Chronic Granuloma",
       "category": "Pulmonology",
       "icd10": "J19.6",
       "pathognomonic_symptoms": [
@@ -6531,7 +6541,7 @@
     },
     {
       "id": "subacute_granuloma_pulmonol",
-      "name": "Subacute Granuloma of Pulmonology",
+      "name": "Subacute Granuloma",
       "category": "Pulmonology",
       "icd10": "J20.7",
       "pathognomonic_symptoms": [
@@ -6553,7 +6563,7 @@
     },
     {
       "id": "recurrent_granuloma_pulmonol",
-      "name": "Recurrent Granuloma of Pulmonology",
+      "name": "Recurrent Granuloma",
       "category": "Pulmonology",
       "icd10": "J21.8",
       "pathognomonic_symptoms": [
@@ -6576,7 +6586,7 @@
     },
     {
       "id": "acute_abscess_pulmonol",
-      "name": "Acute Abscess of Pulmonology",
+      "name": "Acute Abscess",
       "category": "Pulmonology",
       "icd10": "J22.0",
       "pathognomonic_symptoms": [
@@ -6597,7 +6607,7 @@
     },
     {
       "id": "chronic_abscess_pulmonol",
-      "name": "Chronic Abscess of Pulmonology",
+      "name": "Chronic Abscess",
       "category": "Pulmonology",
       "icd10": "J23.1",
       "pathognomonic_symptoms": [
@@ -6619,7 +6629,7 @@
     },
     {
       "id": "subacute_abscess_pulmonol",
-      "name": "Subacute Abscess of Pulmonology",
+      "name": "Subacute Abscess",
       "category": "Pulmonology",
       "icd10": "J24.2",
       "pathognomonic_symptoms": [
@@ -6641,7 +6651,7 @@
     },
     {
       "id": "recurrent_abscess_pulmonol",
-      "name": "Recurrent Abscess of Pulmonology",
+      "name": "Recurrent Abscess",
       "category": "Pulmonology",
       "icd10": "J25.3",
       "pathognomonic_symptoms": [
@@ -6663,7 +6673,7 @@
     },
     {
       "id": "acute_empyema_pulmonol",
-      "name": "Acute Empyema of Pulmonology",
+      "name": "Acute Empyema",
       "category": "Pulmonology",
       "icd10": "J26.4",
       "pathognomonic_symptoms": [
@@ -6684,7 +6694,7 @@
     },
     {
       "id": "chronic_empyema_pulmonol",
-      "name": "Chronic Empyema of Pulmonology",
+      "name": "Chronic Empyema",
       "category": "Pulmonology",
       "icd10": "J27.5",
       "pathognomonic_symptoms": [
@@ -6705,7 +6715,7 @@
     },
     {
       "id": "subacute_empyema_pulmonol",
-      "name": "Subacute Empyema of Pulmonology",
+      "name": "Subacute Empyema",
       "category": "Pulmonology",
       "icd10": "J28.6",
       "pathognomonic_symptoms": [
@@ -6726,7 +6736,7 @@
     },
     {
       "id": "recurrent_empyema_pulmonol",
-      "name": "Recurrent Empyema of Pulmonology",
+      "name": "Recurrent Empyema",
       "category": "Pulmonology",
       "icd10": "J29.7",
       "pathognomonic_symptoms": [
@@ -6747,7 +6757,7 @@
     },
     {
       "id": "acute_hypoventilation_pulmonol",
-      "name": "Acute Hypoventilation of Pulmonology",
+      "name": "Acute Hypoventilation",
       "category": "Pulmonology",
       "icd10": "J30.8",
       "pathognomonic_symptoms": [
@@ -6768,7 +6778,7 @@
     },
     {
       "id": "chronic_hypoventilation_pulmonol",
-      "name": "Chronic Hypoventilation of Pulmonology",
+      "name": "Chronic Hypoventilation",
       "category": "Pulmonology",
       "icd10": "J31.0",
       "pathognomonic_symptoms": [
@@ -6790,7 +6800,7 @@
     },
     {
       "id": "subacute_hypoventilation_pulmonol",
-      "name": "Subacute Hypoventilation of Pulmonology",
+      "name": "Subacute Hypoventilation",
       "category": "Pulmonology",
       "icd10": "J32.1",
       "pathognomonic_symptoms": [
@@ -6813,7 +6823,7 @@
     },
     {
       "id": "recurrent_hypoventilation_pulmonol",
-      "name": "Recurrent Hypoventilation of Pulmonology",
+      "name": "Recurrent Hypoventilation",
       "category": "Pulmonology",
       "icd10": "J33.2",
       "pathognomonic_symptoms": [
@@ -6836,7 +6846,7 @@
     },
     {
       "id": "acute_bronchiectasis_pulmonol",
-      "name": "Acute Bronchiectasis of Pulmonology",
+      "name": "Acute Bronchiectasis",
       "category": "Pulmonology",
       "icd10": "J34.3",
       "pathognomonic_symptoms": [
@@ -6859,7 +6869,7 @@
     },
     {
       "id": "chronic_bronchiectasis_pulmonol",
-      "name": "Chronic Bronchiectasis of Pulmonology",
+      "name": "Chronic Bronchiectasis",
       "category": "Pulmonology",
       "icd10": "J35.4",
       "pathognomonic_symptoms": [
@@ -6880,7 +6890,7 @@
     },
     {
       "id": "subacute_bronchiectasis_pulmonol",
-      "name": "Subacute Bronchiectasis of Pulmonology",
+      "name": "Subacute Bronchiectasis",
       "category": "Pulmonology",
       "icd10": "J36.5",
       "pathognomonic_symptoms": [
@@ -6902,7 +6912,7 @@
     },
     {
       "id": "recurrent_bronchiectasis_pulmonol",
-      "name": "Recurrent Bronchiectasis of Pulmonology",
+      "name": "Recurrent Bronchiectasis",
       "category": "Pulmonology",
       "icd10": "J37.6",
       "pathognomonic_symptoms": [
@@ -6924,7 +6934,7 @@
     },
     {
       "id": "acute_pneumoconiosis_pulmonol",
-      "name": "Acute Pneumoconiosis of Pulmonology",
+      "name": "Acute Pneumoconiosis",
       "category": "Pulmonology",
       "icd10": "J38.7",
       "pathognomonic_symptoms": [
@@ -6945,7 +6955,7 @@
     },
     {
       "id": "chronic_pneumoconiosis_pulmonol",
-      "name": "Chronic Pneumoconiosis of Pulmonology",
+      "name": "Chronic Pneumoconiosis",
       "category": "Pulmonology",
       "icd10": "J39.8",
       "pathognomonic_symptoms": [
@@ -6967,7 +6977,7 @@
     },
     {
       "id": "subacute_pneumoconiosis_pulmonol",
-      "name": "Subacute Pneumoconiosis of Pulmonology",
+      "name": "Subacute Pneumoconiosis",
       "category": "Pulmonology",
       "icd10": "J40.0",
       "pathognomonic_symptoms": [
@@ -6990,7 +7000,7 @@
     },
     {
       "id": "recurrent_pneumoconiosis_pulmonol",
-      "name": "Recurrent Pneumoconiosis of Pulmonology",
+      "name": "Recurrent Pneumoconiosis",
       "category": "Pulmonology",
       "icd10": "J41.1",
       "pathognomonic_symptoms": [
@@ -7013,7 +7023,7 @@
     },
     {
       "id": "acute_fibrosis_pulmonol",
-      "name": "Acute Fibrosis of Pulmonology",
+      "name": "Acute Fibrosis",
       "category": "Pulmonology",
       "icd10": "J42.2",
       "pathognomonic_symptoms": [
@@ -7035,7 +7045,7 @@
     },
     {
       "id": "chronic_fibrosis_pulmonol",
-      "name": "Chronic Fibrosis of Pulmonology",
+      "name": "Chronic Fibrosis",
       "category": "Pulmonology",
       "icd10": "J43.3",
       "pathognomonic_symptoms": [
@@ -7056,7 +7066,7 @@
     },
     {
       "id": "subacute_fibrosis_pulmonol",
-      "name": "Subacute Fibrosis of Pulmonology",
+      "name": "Subacute Fibrosis",
       "category": "Pulmonology",
       "icd10": "J44.4",
       "pathognomonic_symptoms": [
@@ -7079,7 +7089,7 @@
     },
     {
       "id": "recurrent_fibrosis_pulmonol",
-      "name": "Recurrent Fibrosis of Pulmonology",
+      "name": "Recurrent Fibrosis",
       "category": "Pulmonology",
       "icd10": "J45.5",
       "pathognomonic_symptoms": [
@@ -7100,7 +7110,7 @@
     },
     {
       "id": "acute_consolidation_pulmonol",
-      "name": "Acute Consolidation of Pulmonology",
+      "name": "Acute Consolidation",
       "category": "Pulmonology",
       "icd10": "J46.6",
       "pathognomonic_symptoms": [
@@ -7122,7 +7132,7 @@
     },
     {
       "id": "chronic_consolidation_pulmonol",
-      "name": "Chronic Consolidation of Pulmonology",
+      "name": "Chronic Consolidation",
       "category": "Pulmonology",
       "icd10": "J47.7",
       "pathognomonic_symptoms": [
@@ -7143,7 +7153,7 @@
     },
     {
       "id": "subacute_consolidation_pulmonol",
-      "name": "Subacute Consolidation of Pulmonology",
+      "name": "Subacute Consolidation",
       "category": "Pulmonology",
       "icd10": "J48.8",
       "pathognomonic_symptoms": [
@@ -7164,7 +7174,7 @@
     },
     {
       "id": "recurrent_consolidation_pulmonol",
-      "name": "Recurrent Consolidation of Pulmonology",
+      "name": "Recurrent Consolidation",
       "category": "Pulmonology",
       "icd10": "J49.0",
       "pathognomonic_symptoms": [
@@ -7186,7 +7196,7 @@
     },
     {
       "id": "acute_nephritis_nephrolo",
-      "name": "Acute Nephritis of Nephrology",
+      "name": "Acute Nephritis",
       "category": "Nephrology/Urology",
       "icd10": "N50.1",
       "pathognomonic_symptoms": [
@@ -7207,7 +7217,7 @@
     },
     {
       "id": "chronic_nephritis_nephrolo",
-      "name": "Chronic Nephritis of Nephrology",
+      "name": "Chronic Nephritis",
       "category": "Nephrology/Urology",
       "icd10": "N51.2",
       "pathognomonic_symptoms": [
@@ -7230,7 +7240,7 @@
     },
     {
       "id": "subacute_nephritis_nephrolo",
-      "name": "Subacute Nephritis of Nephrology",
+      "name": "Subacute Nephritis",
       "category": "Nephrology/Urology",
       "icd10": "N52.3",
       "pathognomonic_symptoms": [
@@ -7253,7 +7263,7 @@
     },
     {
       "id": "recurrent_nephritis_nephrolo",
-      "name": "Recurrent Nephritis of Nephrology",
+      "name": "Recurrent Nephritis",
       "category": "Nephrology/Urology",
       "icd10": "N53.4",
       "pathognomonic_symptoms": [
@@ -7275,7 +7285,7 @@
     },
     {
       "id": "acute_nephropathy_nephrolo",
-      "name": "Acute Nephropathy of Nephrology",
+      "name": "Acute Nephropathy",
       "category": "Nephrology/Urology",
       "icd10": "N54.5",
       "pathognomonic_symptoms": [
@@ -7297,7 +7307,7 @@
     },
     {
       "id": "chronic_nephropathy_nephrolo",
-      "name": "Chronic Nephropathy of Nephrology",
+      "name": "Chronic Nephropathy",
       "category": "Nephrology/Urology",
       "icd10": "N55.6",
       "pathognomonic_symptoms": [
@@ -7318,7 +7328,7 @@
     },
     {
       "id": "subacute_nephropathy_nephrolo",
-      "name": "Subacute Nephropathy of Nephrology",
+      "name": "Subacute Nephropathy",
       "category": "Nephrology/Urology",
       "icd10": "N56.7",
       "pathognomonic_symptoms": [
@@ -7340,7 +7350,7 @@
     },
     {
       "id": "recurrent_nephropathy_nephrolo",
-      "name": "Recurrent Nephropathy of Nephrology",
+      "name": "Recurrent Nephropathy",
       "category": "Nephrology/Urology",
       "icd10": "N57.8",
       "pathognomonic_symptoms": [
@@ -7363,7 +7373,7 @@
     },
     {
       "id": "acute_ureteritis_nephrolo",
-      "name": "Acute Ureteritis of Nephrology",
+      "name": "Acute Ureteritis",
       "category": "Nephrology/Urology",
       "icd10": "N58.0",
       "pathognomonic_symptoms": [
@@ -7384,7 +7394,7 @@
     },
     {
       "id": "chronic_ureteritis_nephrolo",
-      "name": "Chronic Ureteritis of Nephrology",
+      "name": "Chronic Ureteritis",
       "category": "Nephrology/Urology",
       "icd10": "N59.1",
       "pathognomonic_symptoms": [
@@ -7405,7 +7415,7 @@
     },
     {
       "id": "subacute_ureteritis_nephrolo",
-      "name": "Subacute Ureteritis of Nephrology",
+      "name": "Subacute Ureteritis",
       "category": "Nephrology/Urology",
       "icd10": "N60.2",
       "pathognomonic_symptoms": [
@@ -7426,7 +7436,7 @@
     },
     {
       "id": "recurrent_ureteritis_nephrolo",
-      "name": "Recurrent Ureteritis of Nephrology",
+      "name": "Recurrent Ureteritis",
       "category": "Nephrology/Urology",
       "icd10": "N61.3",
       "pathognomonic_symptoms": [
@@ -7447,7 +7457,7 @@
     },
     {
       "id": "acute_cystitis_nephrolo",
-      "name": "Acute Cystitis of Nephrology",
+      "name": "Acute Cystitis",
       "category": "Nephrology/Urology",
       "icd10": "N62.4",
       "pathognomonic_symptoms": [
@@ -7470,7 +7480,7 @@
     },
     {
       "id": "chronic_cystitis_nephrolo",
-      "name": "Chronic Cystitis of Nephrology",
+      "name": "Chronic Cystitis",
       "category": "Nephrology/Urology",
       "icd10": "N63.5",
       "pathognomonic_symptoms": [
@@ -7493,7 +7503,7 @@
     },
     {
       "id": "subacute_cystitis_nephrolo",
-      "name": "Subacute Cystitis of Nephrology",
+      "name": "Subacute Cystitis",
       "category": "Nephrology/Urology",
       "icd10": "N64.6",
       "pathognomonic_symptoms": [
@@ -7515,7 +7525,7 @@
     },
     {
       "id": "recurrent_cystitis_nephrolo",
-      "name": "Recurrent Cystitis of Nephrology",
+      "name": "Recurrent Cystitis",
       "category": "Nephrology/Urology",
       "icd10": "N65.7",
       "pathognomonic_symptoms": [
@@ -7538,7 +7548,7 @@
     },
     {
       "id": "acute_urethritis_nephrolo",
-      "name": "Acute Urethritis of Nephrology",
+      "name": "Acute Urethritis",
       "category": "Nephrology/Urology",
       "icd10": "N66.8",
       "pathognomonic_symptoms": [
@@ -7559,7 +7569,7 @@
     },
     {
       "id": "chronic_urethritis_nephrolo",
-      "name": "Chronic Urethritis of Nephrology",
+      "name": "Chronic Urethritis",
       "category": "Nephrology/Urology",
       "icd10": "N67.0",
       "pathognomonic_symptoms": [
@@ -7580,7 +7590,7 @@
     },
     {
       "id": "subacute_urethritis_nephrolo",
-      "name": "Subacute Urethritis of Nephrology",
+      "name": "Subacute Urethritis",
       "category": "Nephrology/Urology",
       "icd10": "N68.1",
       "pathognomonic_symptoms": [
@@ -7601,7 +7611,7 @@
     },
     {
       "id": "recurrent_urethritis_nephrolo",
-      "name": "Recurrent Urethritis of Nephrology",
+      "name": "Recurrent Urethritis",
       "category": "Nephrology/Urology",
       "icd10": "N69.2",
       "pathognomonic_symptoms": [
@@ -7624,7 +7634,7 @@
     },
     {
       "id": "acute_hydronephrosis_nephrolo",
-      "name": "Acute Hydronephrosis of Nephrology",
+      "name": "Acute Hydronephrosis",
       "category": "Nephrology/Urology",
       "icd10": "N70.3",
       "pathognomonic_symptoms": [
@@ -7648,7 +7658,7 @@
     },
     {
       "id": "chronic_hydronephrosis_nephrolo",
-      "name": "Chronic Hydronephrosis of Nephrology",
+      "name": "Chronic Hydronephrosis",
       "category": "Nephrology/Urology",
       "icd10": "N71.4",
       "pathognomonic_symptoms": [
@@ -7671,7 +7681,7 @@
     },
     {
       "id": "subacute_hydronephrosis_nephrolo",
-      "name": "Subacute Hydronephrosis of Nephrology",
+      "name": "Subacute Hydronephrosis",
       "category": "Nephrology/Urology",
       "icd10": "N72.5",
       "pathognomonic_symptoms": [
@@ -7694,7 +7704,7 @@
     },
     {
       "id": "recurrent_hydronephrosis_nephrolo",
-      "name": "Recurrent Hydronephrosis of Nephrology",
+      "name": "Recurrent Hydronephrosis",
       "category": "Nephrology/Urology",
       "icd10": "N73.6",
       "pathognomonic_symptoms": [
@@ -7717,7 +7727,7 @@
     },
     {
       "id": "acute_calculus_nephrolo",
-      "name": "Acute Calculus of Nephrology",
+      "name": "Acute Calculus",
       "category": "Nephrology/Urology",
       "icd10": "N74.7",
       "pathognomonic_symptoms": [
@@ -7738,7 +7748,7 @@
     },
     {
       "id": "chronic_calculus_nephrolo",
-      "name": "Chronic Calculus of Nephrology",
+      "name": "Chronic Calculus",
       "category": "Nephrology/Urology",
       "icd10": "N75.8",
       "pathognomonic_symptoms": [
@@ -7759,7 +7769,7 @@
     },
     {
       "id": "subacute_calculus_nephrolo",
-      "name": "Subacute Calculus of Nephrology",
+      "name": "Subacute Calculus",
       "category": "Nephrology/Urology",
       "icd10": "N76.0",
       "pathognomonic_symptoms": [
@@ -7781,7 +7791,7 @@
     },
     {
       "id": "recurrent_calculus_nephrolo",
-      "name": "Recurrent Calculus of Nephrology",
+      "name": "Recurrent Calculus",
       "category": "Nephrology/Urology",
       "icd10": "N77.1",
       "pathognomonic_symptoms": [
@@ -7802,7 +7812,7 @@
     },
     {
       "id": "acute_glomerulosclerosis_nephrolo",
-      "name": "Acute Glomerulosclerosis of Nephrology",
+      "name": "Acute Glomerulosclerosis",
       "category": "Nephrology/Urology",
       "icd10": "N78.2",
       "pathognomonic_symptoms": [
@@ -7825,7 +7835,7 @@
     },
     {
       "id": "chronic_glomerulosclerosis_nephrolo",
-      "name": "Chronic Glomerulosclerosis of Nephrology",
+      "name": "Chronic Glomerulosclerosis",
       "category": "Nephrology/Urology",
       "icd10": "N79.3",
       "pathognomonic_symptoms": [
@@ -7847,7 +7857,7 @@
     },
     {
       "id": "subacute_glomerulosclerosis_nephrolo",
-      "name": "Subacute Glomerulosclerosis of Nephrology",
+      "name": "Subacute Glomerulosclerosis",
       "category": "Nephrology/Urology",
       "icd10": "N80.4",
       "pathognomonic_symptoms": [
@@ -7870,7 +7880,7 @@
     },
     {
       "id": "recurrent_glomerulosclerosis_nephrolo",
-      "name": "Recurrent Glomerulosclerosis of Nephrology",
+      "name": "Recurrent Glomerulosclerosis",
       "category": "Nephrology/Urology",
       "icd10": "N81.5",
       "pathognomonic_symptoms": [
@@ -7893,7 +7903,7 @@
     },
     {
       "id": "acute_tubulopathy_nephrolo",
-      "name": "Acute Tubulopathy of Nephrology",
+      "name": "Acute Tubulopathy",
       "category": "Nephrology/Urology",
       "icd10": "N82.6",
       "pathognomonic_symptoms": [
@@ -7914,7 +7924,7 @@
     },
     {
       "id": "chronic_tubulopathy_nephrolo",
-      "name": "Chronic Tubulopathy of Nephrology",
+      "name": "Chronic Tubulopathy",
       "category": "Nephrology/Urology",
       "icd10": "N83.7",
       "pathognomonic_symptoms": [
@@ -7937,7 +7947,7 @@
     },
     {
       "id": "subacute_tubulopathy_nephrolo",
-      "name": "Subacute Tubulopathy of Nephrology",
+      "name": "Subacute Tubulopathy",
       "category": "Nephrology/Urology",
       "icd10": "N84.8",
       "pathognomonic_symptoms": [
@@ -7960,7 +7970,7 @@
     },
     {
       "id": "recurrent_tubulopathy_nephrolo",
-      "name": "Recurrent Tubulopathy of Nephrology",
+      "name": "Recurrent Tubulopathy",
       "category": "Nephrology/Urology",
       "icd10": "N85.0",
       "pathognomonic_symptoms": [
@@ -7981,7 +7991,7 @@
     },
     {
       "id": "acute_prostatitis_nephrolo",
-      "name": "Acute Prostatitis of Nephrology",
+      "name": "Acute Prostatitis",
       "category": "Nephrology/Urology",
       "icd10": "N86.1",
       "pathognomonic_symptoms": [
@@ -8003,7 +8013,7 @@
     },
     {
       "id": "chronic_prostatitis_nephrolo",
-      "name": "Chronic Prostatitis of Nephrology",
+      "name": "Chronic Prostatitis",
       "category": "Nephrology/Urology",
       "icd10": "N87.2",
       "pathognomonic_symptoms": [
@@ -8026,7 +8036,7 @@
     },
     {
       "id": "subacute_prostatitis_nephrolo",
-      "name": "Subacute Prostatitis of Nephrology",
+      "name": "Subacute Prostatitis",
       "category": "Nephrology/Urology",
       "icd10": "N88.3",
       "pathognomonic_symptoms": [
@@ -8047,7 +8057,7 @@
     },
     {
       "id": "recurrent_prostatitis_nephrolo",
-      "name": "Recurrent Prostatitis of Nephrology",
+      "name": "Recurrent Prostatitis",
       "category": "Nephrology/Urology",
       "icd10": "N89.4",
       "pathognomonic_symptoms": [
@@ -8068,7 +8078,7 @@
     },
     {
       "id": "acute_epididymitis_nephrolo",
-      "name": "Acute Epididymitis of Nephrology",
+      "name": "Acute Epididymitis",
       "category": "Nephrology/Urology",
       "icd10": "N10.5",
       "pathognomonic_symptoms": [
@@ -8090,7 +8100,7 @@
     },
     {
       "id": "chronic_epididymitis_nephrolo",
-      "name": "Chronic Epididymitis of Nephrology",
+      "name": "Chronic Epididymitis",
       "category": "Nephrology/Urology",
       "icd10": "N11.6",
       "pathognomonic_symptoms": [
@@ -8112,7 +8122,7 @@
     },
     {
       "id": "subacute_epididymitis_nephrolo",
-      "name": "Subacute Epididymitis of Nephrology",
+      "name": "Subacute Epididymitis",
       "category": "Nephrology/Urology",
       "icd10": "N12.7",
       "pathognomonic_symptoms": [
@@ -8134,7 +8144,7 @@
     },
     {
       "id": "recurrent_epididymitis_nephrolo",
-      "name": "Recurrent Epididymitis of Nephrology",
+      "name": "Recurrent Epididymitis",
       "category": "Nephrology/Urology",
       "icd10": "N13.8",
       "pathognomonic_symptoms": [
@@ -8156,7 +8166,7 @@
     },
     {
       "id": "acute_orchitis_nephrolo",
-      "name": "Acute Orchitis of Nephrology",
+      "name": "Acute Orchitis",
       "category": "Nephrology/Urology",
       "icd10": "N14.0",
       "pathognomonic_symptoms": [
@@ -8179,7 +8189,7 @@
     },
     {
       "id": "chronic_orchitis_nephrolo",
-      "name": "Chronic Orchitis of Nephrology",
+      "name": "Chronic Orchitis",
       "category": "Nephrology/Urology",
       "icd10": "N15.1",
       "pathognomonic_symptoms": [
@@ -8200,7 +8210,7 @@
     },
     {
       "id": "subacute_orchitis_nephrolo",
-      "name": "Subacute Orchitis of Nephrology",
+      "name": "Subacute Orchitis",
       "category": "Nephrology/Urology",
       "icd10": "N16.2",
       "pathognomonic_symptoms": [
@@ -8223,7 +8233,7 @@
     },
     {
       "id": "recurrent_orchitis_nephrolo",
-      "name": "Recurrent Orchitis of Nephrology",
+      "name": "Recurrent Orchitis",
       "category": "Nephrology/Urology",
       "icd10": "N17.3",
       "pathognomonic_symptoms": [
@@ -8244,7 +8254,7 @@
     },
     {
       "id": "acute_stenosis_nephrolo",
-      "name": "Acute Stenosis of Nephrology",
+      "name": "Acute Stenosis",
       "category": "Nephrology/Urology",
       "icd10": "N18.4",
       "pathognomonic_symptoms": [
@@ -8265,7 +8275,7 @@
     },
     {
       "id": "chronic_stenosis_nephrolo",
-      "name": "Chronic Stenosis of Nephrology",
+      "name": "Chronic Stenosis",
       "category": "Nephrology/Urology",
       "icd10": "N19.5",
       "pathognomonic_symptoms": [
@@ -8288,7 +8298,7 @@
     },
     {
       "id": "subacute_stenosis_nephrolo",
-      "name": "Subacute Stenosis of Nephrology",
+      "name": "Subacute Stenosis",
       "category": "Nephrology/Urology",
       "icd10": "N20.6",
       "pathognomonic_symptoms": [
@@ -8311,7 +8321,7 @@
     },
     {
       "id": "recurrent_stenosis_nephrolo",
-      "name": "Recurrent Stenosis of Nephrology",
+      "name": "Recurrent Stenosis",
       "category": "Nephrology/Urology",
       "icd10": "N21.7",
       "pathognomonic_symptoms": [
@@ -8333,7 +8343,7 @@
     },
     {
       "id": "acute_obstruction_nephrolo",
-      "name": "Acute Obstruction of Nephrology",
+      "name": "Acute Obstruction",
       "category": "Nephrology/Urology",
       "icd10": "N22.8",
       "pathognomonic_symptoms": [
@@ -8356,7 +8366,7 @@
     },
     {
       "id": "chronic_obstruction_nephrolo",
-      "name": "Chronic Obstruction of Nephrology",
+      "name": "Chronic Obstruction",
       "category": "Nephrology/Urology",
       "icd10": "N23.0",
       "pathognomonic_symptoms": [
@@ -8378,7 +8388,7 @@
     },
     {
       "id": "subacute_obstruction_nephrolo",
-      "name": "Subacute Obstruction of Nephrology",
+      "name": "Subacute Obstruction",
       "category": "Nephrology/Urology",
       "icd10": "N24.1",
       "pathognomonic_symptoms": [
@@ -8400,7 +8410,7 @@
     },
     {
       "id": "recurrent_obstruction_nephrolo",
-      "name": "Recurrent Obstruction of Nephrology",
+      "name": "Recurrent Obstruction",
       "category": "Nephrology/Urology",
       "icd10": "N25.2",
       "pathognomonic_symptoms": [
@@ -8423,7 +8433,7 @@
     },
     {
       "id": "acute_reflux_nephrolo",
-      "name": "Acute Reflux of Nephrology",
+      "name": "Acute Reflux",
       "category": "Nephrology/Urology",
       "icd10": "N26.3",
       "pathognomonic_symptoms": [
@@ -8444,7 +8454,7 @@
     },
     {
       "id": "chronic_reflux_nephrolo",
-      "name": "Chronic Reflux of Nephrology",
+      "name": "Chronic Reflux",
       "category": "Nephrology/Urology",
       "icd10": "N27.4",
       "pathognomonic_symptoms": [
@@ -8465,7 +8475,7 @@
     },
     {
       "id": "subacute_reflux_nephrolo",
-      "name": "Subacute Reflux of Nephrology",
+      "name": "Subacute Reflux",
       "category": "Nephrology/Urology",
       "icd10": "N28.5",
       "pathognomonic_symptoms": [
@@ -8488,7 +8498,7 @@
     },
     {
       "id": "recurrent_reflux_nephrolo",
-      "name": "Recurrent Reflux of Nephrology",
+      "name": "Recurrent Reflux",
       "category": "Nephrology/Urology",
       "icd10": "N29.6",
       "pathognomonic_symptoms": [
@@ -8510,7 +8520,7 @@
     },
     {
       "id": "acute_neuropathy_neurolog",
-      "name": "Acute Neuropathy of Neurology",
+      "name": "Acute Neuropathy",
       "category": "Neurology",
       "icd10": "G30.7",
       "pathognomonic_symptoms": [
@@ -8533,7 +8543,7 @@
     },
     {
       "id": "chronic_neuropathy_neurolog",
-      "name": "Chronic Neuropathy of Neurology",
+      "name": "Chronic Neuropathy",
       "category": "Neurology",
       "icd10": "G31.8",
       "pathognomonic_symptoms": [
@@ -8554,7 +8564,7 @@
     },
     {
       "id": "subacute_neuropathy_neurolog",
-      "name": "Subacute Neuropathy of Neurology",
+      "name": "Subacute Neuropathy",
       "category": "Neurology",
       "icd10": "G32.0",
       "pathognomonic_symptoms": [
@@ -8578,7 +8588,7 @@
     },
     {
       "id": "recurrent_neuropathy_neurolog",
-      "name": "Recurrent Neuropathy of Neurology",
+      "name": "Recurrent Neuropathy",
       "category": "Neurology",
       "icd10": "G33.1",
       "pathognomonic_symptoms": [
@@ -8599,7 +8609,7 @@
     },
     {
       "id": "acute_radiculopathy_neurolog",
-      "name": "Acute Radiculopathy of Neurology",
+      "name": "Acute Radiculopathy",
       "category": "Neurology",
       "icd10": "G34.2",
       "pathognomonic_symptoms": [
@@ -8621,7 +8631,7 @@
     },
     {
       "id": "chronic_radiculopathy_neurolog",
-      "name": "Chronic Radiculopathy of Neurology",
+      "name": "Chronic Radiculopathy",
       "category": "Neurology",
       "icd10": "G35.3",
       "pathognomonic_symptoms": [
@@ -8645,7 +8655,7 @@
     },
     {
       "id": "subacute_radiculopathy_neurolog",
-      "name": "Subacute Radiculopathy of Neurology",
+      "name": "Subacute Radiculopathy",
       "category": "Neurology",
       "icd10": "G36.4",
       "pathognomonic_symptoms": [
@@ -8666,7 +8676,7 @@
     },
     {
       "id": "recurrent_radiculopathy_neurolog",
-      "name": "Recurrent Radiculopathy of Neurology",
+      "name": "Recurrent Radiculopathy",
       "category": "Neurology",
       "icd10": "G37.5",
       "pathognomonic_symptoms": [
@@ -8689,7 +8699,7 @@
     },
     {
       "id": "acute_plexopathy_neurolog",
-      "name": "Acute Plexopathy of Neurology",
+      "name": "Acute Plexopathy",
       "category": "Neurology",
       "icd10": "G38.6",
       "pathognomonic_symptoms": [
@@ -8712,7 +8722,7 @@
     },
     {
       "id": "chronic_plexopathy_neurolog",
-      "name": "Chronic Plexopathy of Neurology",
+      "name": "Chronic Plexopathy",
       "category": "Neurology",
       "icd10": "G39.7",
       "pathognomonic_symptoms": [
@@ -8735,7 +8745,7 @@
     },
     {
       "id": "subacute_plexopathy_neurolog",
-      "name": "Subacute Plexopathy of Neurology",
+      "name": "Subacute Plexopathy",
       "category": "Neurology",
       "icd10": "G40.8",
       "pathognomonic_symptoms": [
@@ -8758,7 +8768,7 @@
     },
     {
       "id": "recurrent_plexopathy_neurolog",
-      "name": "Recurrent Plexopathy of Neurology",
+      "name": "Recurrent Plexopathy",
       "category": "Neurology",
       "icd10": "G41.0",
       "pathognomonic_symptoms": [
@@ -8780,7 +8790,7 @@
     },
     {
       "id": "acute_myelopathy_neurolog",
-      "name": "Acute Myelopathy of Neurology",
+      "name": "Acute Myelopathy",
       "category": "Neurology",
       "icd10": "G42.1",
       "pathognomonic_symptoms": [
@@ -8802,7 +8812,7 @@
     },
     {
       "id": "chronic_myelopathy_neurolog",
-      "name": "Chronic Myelopathy of Neurology",
+      "name": "Chronic Myelopathy",
       "category": "Neurology",
       "icd10": "G43.2",
       "pathognomonic_symptoms": [
@@ -8823,7 +8833,7 @@
     },
     {
       "id": "subacute_myelopathy_neurolog",
-      "name": "Subacute Myelopathy of Neurology",
+      "name": "Subacute Myelopathy",
       "category": "Neurology",
       "icd10": "G44.3",
       "pathognomonic_symptoms": [
@@ -8846,7 +8856,7 @@
     },
     {
       "id": "recurrent_myelopathy_neurolog",
-      "name": "Recurrent Myelopathy of Neurology",
+      "name": "Recurrent Myelopathy",
       "category": "Neurology",
       "icd10": "G45.4",
       "pathognomonic_symptoms": [
@@ -8868,7 +8878,7 @@
     },
     {
       "id": "acute_encephalopathy_neurolog",
-      "name": "Acute Encephalopathy of Neurology",
+      "name": "Acute Encephalopathy",
       "category": "Neurology",
       "icd10": "G46.5",
       "pathognomonic_symptoms": [
@@ -8890,7 +8900,7 @@
     },
     {
       "id": "chronic_encephalopathy_neurolog",
-      "name": "Chronic Encephalopathy of Neurology",
+      "name": "Chronic Encephalopathy",
       "category": "Neurology",
       "icd10": "G47.6",
       "pathognomonic_symptoms": [
@@ -8913,7 +8923,7 @@
     },
     {
       "id": "subacute_encephalopathy_neurolog",
-      "name": "Subacute Encephalopathy of Neurology",
+      "name": "Subacute Encephalopathy",
       "category": "Neurology",
       "icd10": "G48.7",
       "pathognomonic_symptoms": [
@@ -8935,7 +8945,7 @@
     },
     {
       "id": "recurrent_encephalopathy_neurolog",
-      "name": "Recurrent Encephalopathy of Neurology",
+      "name": "Recurrent Encephalopathy",
       "category": "Neurology",
       "icd10": "G49.8",
       "pathognomonic_symptoms": [
@@ -8956,7 +8966,7 @@
     },
     {
       "id": "acute_meningitis_neurolog",
-      "name": "Acute Meningitis of Neurology",
+      "name": "Acute Meningitis",
       "category": "Neurology",
       "icd10": "G50.0",
       "pathognomonic_symptoms": [
@@ -8977,7 +8987,7 @@
     },
     {
       "id": "chronic_meningitis_neurolog",
-      "name": "Chronic Meningitis of Neurology",
+      "name": "Chronic Meningitis",
       "category": "Neurology",
       "icd10": "G51.1",
       "pathognomonic_symptoms": [
@@ -9001,7 +9011,7 @@
     },
     {
       "id": "subacute_meningitis_neurolog",
-      "name": "Subacute Meningitis of Neurology",
+      "name": "Subacute Meningitis",
       "category": "Neurology",
       "icd10": "G52.2",
       "pathognomonic_symptoms": [
@@ -9022,7 +9032,7 @@
     },
     {
       "id": "recurrent_meningitis_neurolog",
-      "name": "Recurrent Meningitis of Neurology",
+      "name": "Recurrent Meningitis",
       "category": "Neurology",
       "icd10": "G53.3",
       "pathognomonic_symptoms": [
@@ -9045,7 +9055,7 @@
     },
     {
       "id": "acute_cerebellitis_neurolog",
-      "name": "Acute Cerebellitis of Neurology",
+      "name": "Acute Cerebellitis",
       "category": "Neurology",
       "icd10": "G54.4",
       "pathognomonic_symptoms": [
@@ -9068,7 +9078,7 @@
     },
     {
       "id": "chronic_cerebellitis_neurolog",
-      "name": "Chronic Cerebellitis of Neurology",
+      "name": "Chronic Cerebellitis",
       "category": "Neurology",
       "icd10": "G55.5",
       "pathognomonic_symptoms": [
@@ -9091,7 +9101,7 @@
     },
     {
       "id": "subacute_cerebellitis_neurolog",
-      "name": "Subacute Cerebellitis of Neurology",
+      "name": "Subacute Cerebellitis",
       "category": "Neurology",
       "icd10": "G56.6",
       "pathognomonic_symptoms": [
@@ -9114,7 +9124,7 @@
     },
     {
       "id": "recurrent_cerebellitis_neurolog",
-      "name": "Recurrent Cerebellitis of Neurology",
+      "name": "Recurrent Cerebellitis",
       "category": "Neurology",
       "icd10": "G57.7",
       "pathognomonic_symptoms": [
@@ -9135,7 +9145,7 @@
     },
     {
       "id": "acute_apraxia_neurolog",
-      "name": "Acute Apraxia of Neurology",
+      "name": "Acute Apraxia",
       "category": "Neurology",
       "icd10": "G58.8",
       "pathognomonic_symptoms": [
@@ -9158,7 +9168,7 @@
     },
     {
       "id": "chronic_apraxia_neurolog",
-      "name": "Chronic Apraxia of Neurology",
+      "name": "Chronic Apraxia",
       "category": "Neurology",
       "icd10": "G59.0",
       "pathognomonic_symptoms": [
@@ -9180,7 +9190,7 @@
     },
     {
       "id": "subacute_apraxia_neurolog",
-      "name": "Subacute Apraxia of Neurology",
+      "name": "Subacute Apraxia",
       "category": "Neurology",
       "icd10": "G60.1",
       "pathognomonic_symptoms": [
@@ -9202,7 +9212,7 @@
     },
     {
       "id": "recurrent_apraxia_neurolog",
-      "name": "Recurrent Apraxia of Neurology",
+      "name": "Recurrent Apraxia",
       "category": "Neurology",
       "icd10": "G61.2",
       "pathognomonic_symptoms": [
@@ -9225,7 +9235,7 @@
     },
     {
       "id": "acute_agnosia_neurolog",
-      "name": "Acute Agnosia of Neurology",
+      "name": "Acute Agnosia",
       "category": "Neurology",
       "icd10": "G62.3",
       "pathognomonic_symptoms": [
@@ -9247,7 +9257,7 @@
     },
     {
       "id": "chronic_agnosia_neurolog",
-      "name": "Chronic Agnosia of Neurology",
+      "name": "Chronic Agnosia",
       "category": "Neurology",
       "icd10": "G63.4",
       "pathognomonic_symptoms": [
@@ -9269,7 +9279,7 @@
     },
     {
       "id": "subacute_agnosia_neurolog",
-      "name": "Subacute Agnosia of Neurology",
+      "name": "Subacute Agnosia",
       "category": "Neurology",
       "icd10": "G64.5",
       "pathognomonic_symptoms": [
@@ -9292,7 +9302,7 @@
     },
     {
       "id": "recurrent_agnosia_neurolog",
-      "name": "Recurrent Agnosia of Neurology",
+      "name": "Recurrent Agnosia",
       "category": "Neurology",
       "icd10": "G65.6",
       "pathognomonic_symptoms": [
@@ -9313,7 +9323,7 @@
     },
     {
       "id": "acute_chorea_neurolog",
-      "name": "Acute Chorea of Neurology",
+      "name": "Acute Chorea",
       "category": "Neurology",
       "icd10": "G66.7",
       "pathognomonic_symptoms": [
@@ -9334,7 +9344,7 @@
     },
     {
       "id": "chronic_chorea_neurolog",
-      "name": "Chronic Chorea of Neurology",
+      "name": "Chronic Chorea",
       "category": "Neurology",
       "icd10": "G67.8",
       "pathognomonic_symptoms": [
@@ -9355,7 +9365,7 @@
     },
     {
       "id": "subacute_chorea_neurolog",
-      "name": "Subacute Chorea of Neurology",
+      "name": "Subacute Chorea",
       "category": "Neurology",
       "icd10": "G68.0",
       "pathognomonic_symptoms": [
@@ -9376,7 +9386,7 @@
     },
     {
       "id": "recurrent_chorea_neurolog",
-      "name": "Recurrent Chorea of Neurology",
+      "name": "Recurrent Chorea",
       "category": "Neurology",
       "icd10": "G69.1",
       "pathognomonic_symptoms": [
@@ -9400,7 +9410,7 @@
     },
     {
       "id": "acute_dystonia_neurolog",
-      "name": "Acute Dystonia of Neurology",
+      "name": "Acute Dystonia",
       "category": "Neurology",
       "icd10": "G70.2",
       "pathognomonic_symptoms": [
@@ -9421,7 +9431,7 @@
     },
     {
       "id": "chronic_dystonia_neurolog",
-      "name": "Chronic Dystonia of Neurology",
+      "name": "Chronic Dystonia",
       "category": "Neurology",
       "icd10": "G71.3",
       "pathognomonic_symptoms": [
@@ -9443,7 +9453,7 @@
     },
     {
       "id": "subacute_dystonia_neurolog",
-      "name": "Subacute Dystonia of Neurology",
+      "name": "Subacute Dystonia",
       "category": "Neurology",
       "icd10": "G72.4",
       "pathognomonic_symptoms": [
@@ -9464,7 +9474,7 @@
     },
     {
       "id": "recurrent_dystonia_neurolog",
-      "name": "Recurrent Dystonia of Neurology",
+      "name": "Recurrent Dystonia",
       "category": "Neurology",
       "icd10": "G73.5",
       "pathognomonic_symptoms": [
@@ -9487,7 +9497,7 @@
     },
     {
       "id": "acute_myoclonus_neurolog",
-      "name": "Acute Myoclonus of Neurology",
+      "name": "Acute Myoclonus",
       "category": "Neurology",
       "icd10": "G74.6",
       "pathognomonic_symptoms": [
@@ -9509,7 +9519,7 @@
     },
     {
       "id": "chronic_myoclonus_neurolog",
-      "name": "Chronic Myoclonus of Neurology",
+      "name": "Chronic Myoclonus",
       "category": "Neurology",
       "icd10": "G75.7",
       "pathognomonic_symptoms": [
@@ -9531,7 +9541,7 @@
     },
     {
       "id": "subacute_myoclonus_neurolog",
-      "name": "Subacute Myoclonus of Neurology",
+      "name": "Subacute Myoclonus",
       "category": "Neurology",
       "icd10": "G76.8",
       "pathognomonic_symptoms": [
@@ -9553,7 +9563,7 @@
     },
     {
       "id": "recurrent_myoclonus_neurolog",
-      "name": "Recurrent Myoclonus of Neurology",
+      "name": "Recurrent Myoclonus",
       "category": "Neurology",
       "icd10": "G77.0",
       "pathognomonic_symptoms": [
@@ -9577,7 +9587,7 @@
     },
     {
       "id": "acute_neuralgia_neurolog",
-      "name": "Acute Neuralgia of Neurology",
+      "name": "Acute Neuralgia",
       "category": "Neurology",
       "icd10": "G78.1",
       "pathognomonic_symptoms": [
@@ -9598,7 +9608,7 @@
     },
     {
       "id": "chronic_neuralgia_neurolog",
-      "name": "Chronic Neuralgia of Neurology",
+      "name": "Chronic Neuralgia",
       "category": "Neurology",
       "icd10": "G79.2",
       "pathognomonic_symptoms": [
@@ -9619,7 +9629,7 @@
     },
     {
       "id": "subacute_neuralgia_neurolog",
-      "name": "Subacute Neuralgia of Neurology",
+      "name": "Subacute Neuralgia",
       "category": "Neurology",
       "icd10": "G80.3",
       "pathognomonic_symptoms": [
@@ -9641,7 +9651,7 @@
     },
     {
       "id": "recurrent_neuralgia_neurolog",
-      "name": "Recurrent Neuralgia of Neurology",
+      "name": "Recurrent Neuralgia",
       "category": "Neurology",
       "icd10": "G81.4",
       "pathognomonic_symptoms": [
@@ -9662,7 +9672,7 @@
     },
     {
       "id": "acute_infarct_neurolog",
-      "name": "Acute Infarct of Neurology",
+      "name": "Acute Infarct",
       "category": "Neurology",
       "icd10": "G82.5",
       "pathognomonic_symptoms": [
@@ -9684,7 +9694,7 @@
     },
     {
       "id": "chronic_infarct_neurolog",
-      "name": "Chronic Infarct of Neurology",
+      "name": "Chronic Infarct",
       "category": "Neurology",
       "icd10": "G83.6",
       "pathognomonic_symptoms": [
@@ -9705,7 +9715,7 @@
     },
     {
       "id": "subacute_infarct_neurolog",
-      "name": "Subacute Infarct of Neurology",
+      "name": "Subacute Infarct",
       "category": "Neurology",
       "icd10": "G84.7",
       "pathognomonic_symptoms": [
@@ -9727,7 +9737,7 @@
     },
     {
       "id": "recurrent_infarct_neurolog",
-      "name": "Recurrent Infarct of Neurology",
+      "name": "Recurrent Infarct",
       "category": "Neurology",
       "icd10": "G85.8",
       "pathognomonic_symptoms": [
@@ -9750,7 +9760,7 @@
     },
     {
       "id": "acute_paresis_neurolog",
-      "name": "Acute Paresis of Neurology",
+      "name": "Acute Paresis",
       "category": "Neurology",
       "icd10": "G86.0",
       "pathognomonic_symptoms": [
@@ -9772,7 +9782,7 @@
     },
     {
       "id": "chronic_paresis_neurolog",
-      "name": "Chronic Paresis of Neurology",
+      "name": "Chronic Paresis",
       "category": "Neurology",
       "icd10": "G87.1",
       "pathognomonic_symptoms": [
@@ -9795,7 +9805,7 @@
     },
     {
       "id": "subacute_paresis_neurolog",
-      "name": "Subacute Paresis of Neurology",
+      "name": "Subacute Paresis",
       "category": "Neurology",
       "icd10": "G88.2",
       "pathognomonic_symptoms": [
@@ -9816,7 +9826,7 @@
     },
     {
       "id": "recurrent_paresis_neurolog",
-      "name": "Recurrent Paresis of Neurology",
+      "name": "Recurrent Paresis",
       "category": "Neurology",
       "icd10": "G89.3",
       "pathognomonic_symptoms": [
@@ -9839,7 +9849,7 @@
     },
     {
       "id": "acute_polyarthritis_rheumato",
-      "name": "Acute Polyarthritis of Rheumatology",
+      "name": "Acute Polyarthritis",
       "category": "Rheumatology/Immunology",
       "icd10": "M10.4",
       "pathognomonic_symptoms": [
@@ -9861,7 +9871,7 @@
     },
     {
       "id": "chronic_polyarthritis_rheumato",
-      "name": "Chronic Polyarthritis of Rheumatology",
+      "name": "Chronic Polyarthritis",
       "category": "Rheumatology/Immunology",
       "icd10": "M11.5",
       "pathognomonic_symptoms": [
@@ -9882,7 +9892,7 @@
     },
     {
       "id": "subacute_polyarthritis_rheumato",
-      "name": "Subacute Polyarthritis of Rheumatology",
+      "name": "Subacute Polyarthritis",
       "category": "Rheumatology/Immunology",
       "icd10": "M12.6",
       "pathognomonic_symptoms": [
@@ -9904,7 +9914,7 @@
     },
     {
       "id": "recurrent_polyarthritis_rheumato",
-      "name": "Recurrent Polyarthritis of Rheumatology",
+      "name": "Recurrent Polyarthritis",
       "category": "Rheumatology/Immunology",
       "icd10": "M13.7",
       "pathognomonic_symptoms": [
@@ -9926,7 +9936,7 @@
     },
     {
       "id": "acute_spondylitis_rheumato",
-      "name": "Acute Spondylitis of Rheumatology",
+      "name": "Acute Spondylitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M14.8",
       "pathognomonic_symptoms": [
@@ -9948,7 +9958,7 @@
     },
     {
       "id": "chronic_spondylitis_rheumato",
-      "name": "Chronic Spondylitis of Rheumatology",
+      "name": "Chronic Spondylitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M15.0",
       "pathognomonic_symptoms": [
@@ -9969,7 +9979,7 @@
     },
     {
       "id": "subacute_spondylitis_rheumato",
-      "name": "Subacute Spondylitis of Rheumatology",
+      "name": "Subacute Spondylitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M16.1",
       "pathognomonic_symptoms": [
@@ -9992,7 +10002,7 @@
     },
     {
       "id": "recurrent_spondylitis_rheumato",
-      "name": "Recurrent Spondylitis of Rheumatology",
+      "name": "Recurrent Spondylitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M17.2",
       "pathognomonic_symptoms": [
@@ -10013,7 +10023,7 @@
     },
     {
       "id": "acute_vasculitis_rheumato",
-      "name": "Acute Vasculitis of Rheumatology",
+      "name": "Acute Vasculitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M18.3",
       "pathognomonic_symptoms": [
@@ -10037,7 +10047,7 @@
     },
     {
       "id": "chronic_vasculitis_rheumato",
-      "name": "Chronic Vasculitis of Rheumatology",
+      "name": "Chronic Vasculitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M19.4",
       "pathognomonic_symptoms": [
@@ -10060,7 +10070,7 @@
     },
     {
       "id": "subacute_vasculitis_rheumato",
-      "name": "Subacute Vasculitis of Rheumatology",
+      "name": "Subacute Vasculitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M20.5",
       "pathognomonic_symptoms": [
@@ -10081,7 +10091,7 @@
     },
     {
       "id": "recurrent_vasculitis_rheumato",
-      "name": "Recurrent Vasculitis of Rheumatology",
+      "name": "Recurrent Vasculitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M21.6",
       "pathognomonic_symptoms": [
@@ -10102,7 +10112,7 @@
     },
     {
       "id": "acute_synovitis_rheumato",
-      "name": "Acute Synovitis of Rheumatology",
+      "name": "Acute Synovitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M22.7",
       "pathognomonic_symptoms": [
@@ -10123,7 +10133,7 @@
     },
     {
       "id": "chronic_synovitis_rheumato",
-      "name": "Chronic Synovitis of Rheumatology",
+      "name": "Chronic Synovitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M23.8",
       "pathognomonic_symptoms": [
@@ -10145,7 +10155,7 @@
     },
     {
       "id": "subacute_synovitis_rheumato",
-      "name": "Subacute Synovitis of Rheumatology",
+      "name": "Subacute Synovitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M24.0",
       "pathognomonic_symptoms": [
@@ -10166,7 +10176,7 @@
     },
     {
       "id": "recurrent_synovitis_rheumato",
-      "name": "Recurrent Synovitis of Rheumatology",
+      "name": "Recurrent Synovitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M25.1",
       "pathognomonic_symptoms": [
@@ -10188,7 +10198,7 @@
     },
     {
       "id": "acute_myositis_rheumato",
-      "name": "Acute Myositis of Rheumatology",
+      "name": "Acute Myositis",
       "category": "Rheumatology/Immunology",
       "icd10": "M26.2",
       "pathognomonic_symptoms": [
@@ -10209,7 +10219,7 @@
     },
     {
       "id": "chronic_myositis_rheumato",
-      "name": "Chronic Myositis of Rheumatology",
+      "name": "Chronic Myositis",
       "category": "Rheumatology/Immunology",
       "icd10": "M27.3",
       "pathognomonic_symptoms": [
@@ -10231,7 +10241,7 @@
     },
     {
       "id": "subacute_myositis_rheumato",
-      "name": "Subacute Myositis of Rheumatology",
+      "name": "Subacute Myositis",
       "category": "Rheumatology/Immunology",
       "icd10": "M28.4",
       "pathognomonic_symptoms": [
@@ -10253,7 +10263,7 @@
     },
     {
       "id": "recurrent_myositis_rheumato",
-      "name": "Recurrent Myositis of Rheumatology",
+      "name": "Recurrent Myositis",
       "category": "Rheumatology/Immunology",
       "icd10": "M29.5",
       "pathognomonic_symptoms": [
@@ -10275,7 +10285,7 @@
     },
     {
       "id": "acute_fasciitis_rheumato",
-      "name": "Acute Fasciitis of Rheumatology",
+      "name": "Acute Fasciitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M30.6",
       "pathognomonic_symptoms": [
@@ -10297,7 +10307,7 @@
     },
     {
       "id": "chronic_fasciitis_rheumato",
-      "name": "Chronic Fasciitis of Rheumatology",
+      "name": "Chronic Fasciitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M31.7",
       "pathognomonic_symptoms": [
@@ -10320,7 +10330,7 @@
     },
     {
       "id": "subacute_fasciitis_rheumato",
-      "name": "Subacute Fasciitis of Rheumatology",
+      "name": "Subacute Fasciitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M32.8",
       "pathognomonic_symptoms": [
@@ -10342,7 +10352,7 @@
     },
     {
       "id": "recurrent_fasciitis_rheumato",
-      "name": "Recurrent Fasciitis of Rheumatology",
+      "name": "Recurrent Fasciitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M33.0",
       "pathognomonic_symptoms": [
@@ -10366,7 +10376,7 @@
     },
     {
       "id": "acute_enthesitis_rheumato",
-      "name": "Acute Enthesitis of Rheumatology",
+      "name": "Acute Enthesitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M34.1",
       "pathognomonic_symptoms": [
@@ -10390,7 +10400,7 @@
     },
     {
       "id": "chronic_enthesitis_rheumato",
-      "name": "Chronic Enthesitis of Rheumatology",
+      "name": "Chronic Enthesitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M35.2",
       "pathognomonic_symptoms": [
@@ -10413,7 +10423,7 @@
     },
     {
       "id": "subacute_enthesitis_rheumato",
-      "name": "Subacute Enthesitis of Rheumatology",
+      "name": "Subacute Enthesitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M36.3",
       "pathognomonic_symptoms": [
@@ -10435,7 +10445,7 @@
     },
     {
       "id": "recurrent_enthesitis_rheumato",
-      "name": "Recurrent Enthesitis of Rheumatology",
+      "name": "Recurrent Enthesitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M37.4",
       "pathognomonic_symptoms": [
@@ -10456,7 +10466,7 @@
     },
     {
       "id": "acute_capsulitis_rheumato",
-      "name": "Acute Capsulitis of Rheumatology",
+      "name": "Acute Capsulitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M38.5",
       "pathognomonic_symptoms": [
@@ -10480,7 +10490,7 @@
     },
     {
       "id": "chronic_capsulitis_rheumato",
-      "name": "Chronic Capsulitis of Rheumatology",
+      "name": "Chronic Capsulitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M39.6",
       "pathognomonic_symptoms": [
@@ -10501,7 +10511,7 @@
     },
     {
       "id": "subacute_capsulitis_rheumato",
-      "name": "Subacute Capsulitis of Rheumatology",
+      "name": "Subacute Capsulitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M40.7",
       "pathognomonic_symptoms": [
@@ -10522,7 +10532,7 @@
     },
     {
       "id": "recurrent_capsulitis_rheumato",
-      "name": "Recurrent Capsulitis of Rheumatology",
+      "name": "Recurrent Capsulitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M41.8",
       "pathognomonic_symptoms": [
@@ -10544,7 +10554,7 @@
     },
     {
       "id": "acute_panniculitis_rheumato",
-      "name": "Acute Panniculitis of Rheumatology",
+      "name": "Acute Panniculitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M42.0",
       "pathognomonic_symptoms": [
@@ -10565,7 +10575,7 @@
     },
     {
       "id": "chronic_panniculitis_rheumato",
-      "name": "Chronic Panniculitis of Rheumatology",
+      "name": "Chronic Panniculitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M43.1",
       "pathognomonic_symptoms": [
@@ -10587,7 +10597,7 @@
     },
     {
       "id": "subacute_panniculitis_rheumato",
-      "name": "Subacute Panniculitis of Rheumatology",
+      "name": "Subacute Panniculitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M44.2",
       "pathognomonic_symptoms": [
@@ -10609,7 +10619,7 @@
     },
     {
       "id": "recurrent_panniculitis_rheumato",
-      "name": "Recurrent Panniculitis of Rheumatology",
+      "name": "Recurrent Panniculitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M45.3",
       "pathognomonic_symptoms": [
@@ -10632,7 +10642,7 @@
     },
     {
       "id": "acute_collagenosis_rheumato",
-      "name": "Acute Collagenosis of Rheumatology",
+      "name": "Acute Collagenosis",
       "category": "Rheumatology/Immunology",
       "icd10": "M46.4",
       "pathognomonic_symptoms": [
@@ -10655,7 +10665,7 @@
     },
     {
       "id": "chronic_collagenosis_rheumato",
-      "name": "Chronic Collagenosis of Rheumatology",
+      "name": "Chronic Collagenosis",
       "category": "Rheumatology/Immunology",
       "icd10": "M47.5",
       "pathognomonic_symptoms": [
@@ -10676,7 +10686,7 @@
     },
     {
       "id": "subacute_collagenosis_rheumato",
-      "name": "Subacute Collagenosis of Rheumatology",
+      "name": "Subacute Collagenosis",
       "category": "Rheumatology/Immunology",
       "icd10": "M48.6",
       "pathognomonic_symptoms": [
@@ -10699,7 +10709,7 @@
     },
     {
       "id": "recurrent_collagenosis_rheumato",
-      "name": "Recurrent Collagenosis of Rheumatology",
+      "name": "Recurrent Collagenosis",
       "category": "Rheumatology/Immunology",
       "icd10": "M49.7",
       "pathognomonic_symptoms": [
@@ -10720,7 +10730,7 @@
     },
     {
       "id": "acute_lupoid_rheumato",
-      "name": "Acute Lupoid of Rheumatology",
+      "name": "Acute Lupoid",
       "category": "Rheumatology/Immunology",
       "icd10": "M50.8",
       "pathognomonic_symptoms": [
@@ -10741,7 +10751,7 @@
     },
     {
       "id": "chronic_lupoid_rheumato",
-      "name": "Chronic Lupoid of Rheumatology",
+      "name": "Chronic Lupoid",
       "category": "Rheumatology/Immunology",
       "icd10": "M51.0",
       "pathognomonic_symptoms": [
@@ -10763,7 +10773,7 @@
     },
     {
       "id": "subacute_lupoid_rheumato",
-      "name": "Subacute Lupoid of Rheumatology",
+      "name": "Subacute Lupoid",
       "category": "Rheumatology/Immunology",
       "icd10": "M52.1",
       "pathognomonic_symptoms": [
@@ -10785,7 +10795,7 @@
     },
     {
       "id": "recurrent_lupoid_rheumato",
-      "name": "Recurrent Lupoid of Rheumatology",
+      "name": "Recurrent Lupoid",
       "category": "Rheumatology/Immunology",
       "icd10": "M53.2",
       "pathognomonic_symptoms": [
@@ -10806,7 +10816,7 @@
     },
     {
       "id": "acute_chondritis_rheumato",
-      "name": "Acute Chondritis of Rheumatology",
+      "name": "Acute Chondritis",
       "category": "Rheumatology/Immunology",
       "icd10": "M54.3",
       "pathognomonic_symptoms": [
@@ -10828,7 +10838,7 @@
     },
     {
       "id": "chronic_chondritis_rheumato",
-      "name": "Chronic Chondritis of Rheumatology",
+      "name": "Chronic Chondritis",
       "category": "Rheumatology/Immunology",
       "icd10": "M55.4",
       "pathognomonic_symptoms": [
@@ -10849,7 +10859,7 @@
     },
     {
       "id": "subacute_chondritis_rheumato",
-      "name": "Subacute Chondritis of Rheumatology",
+      "name": "Subacute Chondritis",
       "category": "Rheumatology/Immunology",
       "icd10": "M56.5",
       "pathognomonic_symptoms": [
@@ -10871,7 +10881,7 @@
     },
     {
       "id": "recurrent_chondritis_rheumato",
-      "name": "Recurrent Chondritis of Rheumatology",
+      "name": "Recurrent Chondritis",
       "category": "Rheumatology/Immunology",
       "icd10": "M57.6",
       "pathognomonic_symptoms": [
@@ -10894,7 +10904,7 @@
     },
     {
       "id": "acute_bursitis_rheumato",
-      "name": "Acute Bursitis of Rheumatology",
+      "name": "Acute Bursitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M58.7",
       "pathognomonic_symptoms": [
@@ -10917,7 +10927,7 @@
     },
     {
       "id": "chronic_bursitis_rheumato",
-      "name": "Chronic Bursitis of Rheumatology",
+      "name": "Chronic Bursitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M59.8",
       "pathognomonic_symptoms": [
@@ -10938,7 +10948,7 @@
     },
     {
       "id": "subacute_bursitis_rheumato",
-      "name": "Subacute Bursitis of Rheumatology",
+      "name": "Subacute Bursitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M60.0",
       "pathognomonic_symptoms": [
@@ -10959,7 +10969,7 @@
     },
     {
       "id": "recurrent_bursitis_rheumato",
-      "name": "Recurrent Bursitis of Rheumatology",
+      "name": "Recurrent Bursitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M61.1",
       "pathognomonic_symptoms": [
@@ -10982,7 +10992,7 @@
     },
     {
       "id": "acute_tendinitis_rheumato",
-      "name": "Acute Tendinitis of Rheumatology",
+      "name": "Acute Tendinitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M62.2",
       "pathognomonic_symptoms": [
@@ -11006,7 +11016,7 @@
     },
     {
       "id": "chronic_tendinitis_rheumato",
-      "name": "Chronic Tendinitis of Rheumatology",
+      "name": "Chronic Tendinitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M63.3",
       "pathognomonic_symptoms": [
@@ -11028,7 +11038,7 @@
     },
     {
       "id": "subacute_tendinitis_rheumato",
-      "name": "Subacute Tendinitis of Rheumatology",
+      "name": "Subacute Tendinitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M64.4",
       "pathognomonic_symptoms": [
@@ -11050,7 +11060,7 @@
     },
     {
       "id": "recurrent_tendinitis_rheumato",
-      "name": "Recurrent Tendinitis of Rheumatology",
+      "name": "Recurrent Tendinitis",
       "category": "Rheumatology/Immunology",
       "icd10": "M65.5",
       "pathognomonic_symptoms": [
@@ -11072,7 +11082,7 @@
     },
     {
       "id": "acute_arthropathy_rheumato",
-      "name": "Acute Arthropathy of Rheumatology",
+      "name": "Acute Arthropathy",
       "category": "Rheumatology/Immunology",
       "icd10": "M66.6",
       "pathognomonic_symptoms": [
@@ -11094,7 +11104,7 @@
     },
     {
       "id": "chronic_arthropathy_rheumato",
-      "name": "Chronic Arthropathy of Rheumatology",
+      "name": "Chronic Arthropathy",
       "category": "Rheumatology/Immunology",
       "icd10": "M67.7",
       "pathognomonic_symptoms": [
@@ -11117,7 +11127,7 @@
     },
     {
       "id": "subacute_arthropathy_rheumato",
-      "name": "Subacute Arthropathy of Rheumatology",
+      "name": "Subacute Arthropathy",
       "category": "Rheumatology/Immunology",
       "icd10": "M68.8",
       "pathognomonic_symptoms": [
@@ -11140,7 +11150,7 @@
     },
     {
       "id": "recurrent_arthropathy_rheumato",
-      "name": "Recurrent Arthropathy of Rheumatology",
+      "name": "Recurrent Arthropathy",
       "category": "Rheumatology/Immunology",
       "icd10": "M69.0",
       "pathognomonic_symptoms": [
@@ -11161,7 +11171,7 @@
     },
     {
       "id": "acute_bacteremia_infectio",
-      "name": "Acute Bacteremia of Infectious Disease",
+      "name": "Acute Bacteremia",
       "category": "Infectious Disease",
       "icd10": "B70.1",
       "pathognomonic_symptoms": [
@@ -11183,7 +11193,7 @@
     },
     {
       "id": "chronic_bacteremia_infectio",
-      "name": "Chronic Bacteremia of Infectious Disease",
+      "name": "Chronic Bacteremia",
       "category": "Infectious Disease",
       "icd10": "B71.2",
       "pathognomonic_symptoms": [
@@ -11206,7 +11216,7 @@
     },
     {
       "id": "subacute_bacteremia_infectio",
-      "name": "Subacute Bacteremia of Infectious Disease",
+      "name": "Subacute Bacteremia",
       "category": "Infectious Disease",
       "icd10": "B72.3",
       "pathognomonic_symptoms": [
@@ -11227,7 +11237,7 @@
     },
     {
       "id": "recurrent_bacteremia_infectio",
-      "name": "Recurrent Bacteremia of Infectious Disease",
+      "name": "Recurrent Bacteremia",
       "category": "Infectious Disease",
       "icd10": "B73.4",
       "pathognomonic_symptoms": [
@@ -11250,7 +11260,7 @@
     },
     {
       "id": "acute_viremia_infectio",
-      "name": "Acute Viremia of Infectious Disease",
+      "name": "Acute Viremia",
       "category": "Infectious Disease",
       "icd10": "B74.5",
       "pathognomonic_symptoms": [
@@ -11271,7 +11281,7 @@
     },
     {
       "id": "chronic_viremia_infectio",
-      "name": "Chronic Viremia of Infectious Disease",
+      "name": "Chronic Viremia",
       "category": "Infectious Disease",
       "icd10": "B75.6",
       "pathognomonic_symptoms": [
@@ -11294,7 +11304,7 @@
     },
     {
       "id": "subacute_viremia_infectio",
-      "name": "Subacute Viremia of Infectious Disease",
+      "name": "Subacute Viremia",
       "category": "Infectious Disease",
       "icd10": "B76.7",
       "pathognomonic_symptoms": [
@@ -11318,7 +11328,7 @@
     },
     {
       "id": "recurrent_viremia_infectio",
-      "name": "Recurrent Viremia of Infectious Disease",
+      "name": "Recurrent Viremia",
       "category": "Infectious Disease",
       "icd10": "B77.8",
       "pathognomonic_symptoms": [
@@ -11341,7 +11351,7 @@
     },
     {
       "id": "acute_fungemia_infectio",
-      "name": "Acute Fungemia of Infectious Disease",
+      "name": "Acute Fungemia",
       "category": "Infectious Disease",
       "icd10": "B78.0",
       "pathognomonic_symptoms": [
@@ -11364,7 +11374,7 @@
     },
     {
       "id": "chronic_fungemia_infectio",
-      "name": "Chronic Fungemia of Infectious Disease",
+      "name": "Chronic Fungemia",
       "category": "Infectious Disease",
       "icd10": "B79.1",
       "pathognomonic_symptoms": [
@@ -11386,7 +11396,7 @@
     },
     {
       "id": "subacute_fungemia_infectio",
-      "name": "Subacute Fungemia of Infectious Disease",
+      "name": "Subacute Fungemia",
       "category": "Infectious Disease",
       "icd10": "B80.2",
       "pathognomonic_symptoms": [
@@ -11409,7 +11419,7 @@
     },
     {
       "id": "recurrent_fungemia_infectio",
-      "name": "Recurrent Fungemia of Infectious Disease",
+      "name": "Recurrent Fungemia",
       "category": "Infectious Disease",
       "icd10": "B81.3",
       "pathognomonic_symptoms": [
@@ -11430,7 +11440,7 @@
     },
     {
       "id": "acute_parasitosis_infectio",
-      "name": "Acute Parasitosis of Infectious Disease",
+      "name": "Acute Parasitosis",
       "category": "Infectious Disease",
       "icd10": "B82.4",
       "pathognomonic_symptoms": [
@@ -11451,7 +11461,7 @@
     },
     {
       "id": "chronic_parasitosis_infectio",
-      "name": "Chronic Parasitosis of Infectious Disease",
+      "name": "Chronic Parasitosis",
       "category": "Infectious Disease",
       "icd10": "B83.5",
       "pathognomonic_symptoms": [
@@ -11472,7 +11482,7 @@
     },
     {
       "id": "subacute_parasitosis_infectio",
-      "name": "Subacute Parasitosis of Infectious Disease",
+      "name": "Subacute Parasitosis",
       "category": "Infectious Disease",
       "icd10": "B84.6",
       "pathognomonic_symptoms": [
@@ -11494,7 +11504,7 @@
     },
     {
       "id": "recurrent_parasitosis_infectio",
-      "name": "Recurrent Parasitosis of Infectious Disease",
+      "name": "Recurrent Parasitosis",
       "category": "Infectious Disease",
       "icd10": "B85.7",
       "pathognomonic_symptoms": [
@@ -11517,7 +11527,7 @@
     },
     {
       "id": "acute_abscess_infectio",
-      "name": "Acute Abscess of Infectious Disease",
+      "name": "Acute Abscess",
       "category": "Infectious Disease",
       "icd10": "B86.8",
       "pathognomonic_symptoms": [
@@ -11540,7 +11550,7 @@
     },
     {
       "id": "chronic_abscess_infectio",
-      "name": "Chronic Abscess of Infectious Disease",
+      "name": "Chronic Abscess",
       "category": "Infectious Disease",
       "icd10": "B87.0",
       "pathognomonic_symptoms": [
@@ -11561,7 +11571,7 @@
     },
     {
       "id": "subacute_abscess_infectio",
-      "name": "Subacute Abscess of Infectious Disease",
+      "name": "Subacute Abscess",
       "category": "Infectious Disease",
       "icd10": "B88.1",
       "pathognomonic_symptoms": [
@@ -11585,7 +11595,7 @@
     },
     {
       "id": "recurrent_abscess_infectio",
-      "name": "Recurrent Abscess of Infectious Disease",
+      "name": "Recurrent Abscess",
       "category": "Infectious Disease",
       "icd10": "B89.2",
       "pathognomonic_symptoms": [
@@ -11607,7 +11617,7 @@
     },
     {
       "id": "acute_cellulitis_infectio",
-      "name": "Acute Cellulitis of Infectious Disease",
+      "name": "Acute Cellulitis",
       "category": "Infectious Disease",
       "icd10": "B10.3",
       "pathognomonic_symptoms": [
@@ -11631,7 +11641,7 @@
     },
     {
       "id": "chronic_cellulitis_infectio",
-      "name": "Chronic Cellulitis of Infectious Disease",
+      "name": "Chronic Cellulitis",
       "category": "Infectious Disease",
       "icd10": "B11.4",
       "pathognomonic_symptoms": [

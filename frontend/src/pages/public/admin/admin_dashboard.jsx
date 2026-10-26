@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/admin/admin_dashboard.jsx
+// PURPOSE: Administrative control center for platform telemetry, role governance, and HIPAA audit trail oversight.
+// VIVA EXPLANATION: This interface provides clinical system administrators with deep observability. It visualizes platform activity analytics, allows administrators to activate or suspend user accounts, and inspects immutable server-side security audit logs (USER_LOGIN, RECORD_VIEW, CLINICAL_NOTE_CREATE).
+// ==============================================================================
+
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -25,6 +31,11 @@ import {
 import { useAuth } from "../../../_core/hooks/useAuth";
 import adminService from "../../../services/adminService";
 
+// --- AdminDashboard ---
+// What it does: Central administrative portal managing system telemetry metrics, user access controls, and security audit log inspection.
+// Why it's structured this way: Utilizes tabbed navigation (overview, users, audit) and concurrently queries administrative endpoints via Promise.all.
+// Parameters & Returns: None. Returns administrative management console JSX.
+// ------------------------------------------------------------------------------
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();

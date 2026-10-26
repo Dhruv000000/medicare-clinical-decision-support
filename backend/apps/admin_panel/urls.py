@@ -1,3 +1,9 @@
+# ==============================================================================
+# FILE: backend/apps/admin_panel/urls.py
+# PURPOSE: URL routing configuration for the system administration back-office.
+# VIVA EXPLANATION: Maps admin routes under /api/v1/admin/ to user directory management, audit trail logs, and system analytics views.
+# ==============================================================================
+
 from django.urls import path
 from .views import (
     AdminUsersView,
@@ -12,3 +18,4 @@ urlpatterns = [
     path("audit-logs/", AdminAuditLogsView.as_view(), name="admin-audit-logs"),
     path("analytics/", AdminAnalyticsView.as_view(), name="admin-analytics"),
 ]
+

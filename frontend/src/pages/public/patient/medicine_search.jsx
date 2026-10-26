@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/patient/medicine_search.jsx
+// PURPOSE: Drug compendium search engine integrating patient prescriptions and OpenFDA public registries.
+// VIVA EXPLANATION: Implements the pharmaceutical search catalog. Allows patients to search through their personal active prescriptions as well as query the US OpenFDA database for drug indications, common dosages, contraindications, and adverse reaction statistics.
+// ==============================================================================
+
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -686,6 +692,11 @@ function DetailsModal({ medicine, darkMode, onClose }) {
   );
 }
 
+// --- MedicineSearch ---
+// What it does: Primary drug lookup component coordinating search queries across patient prescriptions and FDA drug registries.
+// Why it's structured this way: Normalizes disparate prescription and OpenFDA data structures into a unified card interface.
+// Parameters & Returns: Props (none) -> Rendered medicine search view JSX.
+// ------------------------------------------------------------------------------
 export default function MedicineSearch() {
   const [darkMode, setDarkMode] = useDarkMode();
   const [query, setQuery] = useState("");

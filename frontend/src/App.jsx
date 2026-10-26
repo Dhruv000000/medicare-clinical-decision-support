@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/App.jsx
+// PURPOSE: Master React application component configuring router hierarchy and role-based route guards.
+// VIVA EXPLANATION: The root application orchestrator. Wraps the app in BrowserRouter, AuthProvider, and ThemeProvider, and establishes RBAC (Role-Based Access Control) using ProtectedRoute to safeguard patient, clinician, and admin portal views.
+// ==============================================================================
+
 import React from "react";
 
 import {
@@ -59,6 +65,44 @@ import AdminLogin from "./pages/public/admin-login";
 // PROTECTED ROUTE
 // =========================================================
 
+// --- DashboardRedirect ---
+// What it does: Dynamically redirects authenticated users to their role-specific dashboard.
+// Why it's structured this way: Supports unified /dashboard routing across patient, doctor, and admin portals.
+// Parameters & Returns: None -> Navigate element to specific dashboard.
+// ------------------------------------------------------------------------------
+function DashboardRedirect() {
+  const { user, role, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f8faf9] text-emerald-900 font-medium">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+          <span>Loading your secure workspace…</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const currentRole = (role || user.role || "").toLowerCase();
+  if (currentRole === "doctor") {
+    return <Navigate to="/doctor/dashboard" replace />;
+  }
+  if (currentRole === "admin") {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+  return <Navigate to="/patient/dashboard" replace />;
+}
+
+// --- ProtectedRoute ---
+// What it does: High-order route wrapper checking authentication status and verifying allowed user roles.
+// Why it's structured this way: Enforces client-side security by redirecting unauthorized roles to their respective dashboards.
+// Parameters & Returns: { children, allowedRoles } -> Rendered child component or Navigate redirect.
+// ------------------------------------------------------------------------------
 function ProtectedRoute({ children, allowedRoles }) {
   const { user, loading, role } = useAuth();
 
@@ -78,8 +122,9 @@ function ProtectedRoute({ children, allowedRoles }) {
   }
 
   if (allowedRoles && allowedRoles.length > 0) {
-    const currentRole = role || user.role;
-    if (!allowedRoles.includes(currentRole)) {
+    const currentRole = (role || user.role || "").toLowerCase();
+    const normalizedAllowed = allowedRoles.map((r) => String(r).toLowerCase());
+    if (!normalizedAllowed.includes(currentRole)) {
       if (currentRole === "doctor") {
         return <Navigate to="/doctor/dashboard" replace />;
       }
@@ -97,12 +142,18 @@ function ProtectedRoute({ children, allowedRoles }) {
 // APP
 // =========================================================
 
+// --- App ---
+// What it does: Master component configuring BrowserRouter, global Context providers, and Route manifests.
+// Why it's structured this way: Top of the component hierarchy establishing theme and session scope for all pages.
+// Parameters & Returns: Props (none) -> Complete application JSX tree.
+// ------------------------------------------------------------------------------
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <ThemeProvider>
           <Routes>
+
 
           {/* =================================================
               PUBLIC ROUTES
@@ -340,6 +391,40 @@ function App() {
                 <AdminDashboard />
               </ProtectedRoute>
             }
+          />
+
+          {/* =================================================
+              SHARED / ROLE ALIAS ROUTES
+          ================================================= */}
+
+          <Route
+            path="/dashboard"
+            element={<DashboardRedirect />}
+          />
+
+          <Route
+            path="/patient-dashboard"
+            element={<Navigate to="/patient/dashboard" replace />}
+          />
+
+          <Route
+            path="/doctor-dashboard"
+            element={<Navigate to="/doctor/dashboard" replace />}
+          />
+
+          <Route
+            path="/admin-dashboard"
+            element={<Navigate to="/admin/dashboard" replace />}
+          />
+
+          <Route
+            path="/patient"
+            element={<Navigate to="/patient/dashboard" replace />}
+          />
+
+          <Route
+            path="/doctor"
+            element={<Navigate to="/doctor/dashboard" replace />}
           />
 
           {/* =================================================

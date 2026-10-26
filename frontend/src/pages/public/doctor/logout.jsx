@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/doctor/logout.jsx
+// PURPOSE: Doctor session invalidation and cleanup transition page.
+// VIVA EXPLANATION: This component coordinates secure sign-out for medical staff. It invalidates authentication tokens across state and local storage, ensures memory-safe cleanup, and redirects practitioners to the login view.
+// ==============================================================================
+
 import React from "react";
 import { LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -5,6 +11,11 @@ import { useTheme } from "../ThemeContext";
 
 import { useAuth } from "../../../_core/hooks/useAuth";
 
+// --- Logout ---
+// What it does: Executes provider session revocation, clears persisted storage, and redirects to login.
+// Why it's structured this way: Uses useEffect with an active unmount flag to prevent race conditions during asynchronous logout.
+// Parameters & Returns: None. Returns sign-out transition spinner JSX.
+// ------------------------------------------------------------------------------
 export default function Logout() {
   const navigate = useNavigate();
   const { isDark } = useTheme();

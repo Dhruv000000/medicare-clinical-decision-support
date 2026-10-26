@@ -1,23 +1,31 @@
+# ==============================================================================
+# FILE: backend/apps/predictions/views.py
+# PURPOSE: HTTP REST API controllers for disease predictions, symptom NLP analysis, and explainability records.
+# VIVA EXPLANATION: This module exposes the clinical prediction endpoints to the frontend. Following Clean Architecture principles, these views contain zero ML code; they handle authentication, enforce doctor-patient clinical access boundaries, validate JSON schemas, and delegate prediction and SHAP calculation to the service layer.
+# ==============================================================================
+
 import logging
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied, NotFound, ValidationError
+
 from core.permissions import IsAuthenticatedUser, doctor_can_access_patient
 from core.pagination import StandardResultsSetPagination
 from apps.accounts.models import User
-from apps.audit_logs.services import log_audit_event
-from apps.audit_logs.models import AuditLog
 from .models import DiseasePrediction, SymptomAnalysis
 from .serializers import DiseasePredictionSerializer, SymptomAnalysisSerializer
 from .services import (
-    suggest_related_symptoms,
+    execute_clinical_prediction_workflow,
+    execute_symptom_analysis_workflow,
     get_canonical_symptom_catalog,
+    suggest_related_symptoms,
+    DISEASE_PROFILES,
 )
-from .services.disease_engine import DISEASE_PROFILES
+# Re-exported for test mocking compatibility (e.g. test_e2e_model_not_loaded_returns_503)
 from ai.engine import get_engine, ModelNotLoadedError
-from ai.preprocessing import get_preprocessor, get_preprocessor_v2
+from ai.preprocessing import get_preprocessor_v2
 
 logger = logging.getLogger(__name__)
 
@@ -28,10 +36,23 @@ CLINICAL_DISCLAIMER = (
 )
 
 
+# --- PredictionListView ---
+# What it does: Returns paginated historical predictions for authenticated patients or verified attending physicians.
+# Why it's structured this way: Enforces role-based isolation; doctors cannot view records without an active appointment relationship.
+# Parameters & Returns: GET request -> Paginated list of DiseasePrediction records.
+# ------------------------------------------------------------------------------
 class PredictionListView(APIView):
     """
     GET /api/v1/predictions/
-    Retrieves stored predictions for authenticated patient or authorized doctor.
+
+    Purpose:
+        Retrieves paginated historical disease predictions for the authenticated
+        patient or authorized doctor with active clinical relationship.
+
+    Authorization Rules:
+        - PATIENT: Can only view their own historical predictions.
+        - DOCTOR: Must supply 'patient_id' query param; verified via appointment relationship.
+        - ADMIN: Can view system-wide predictions.
     """
     permission_classes = [IsAuthenticatedUser]
 
@@ -39,6 +60,7 @@ class PredictionListView(APIView):
         user = request.user
         queryset = DiseasePrediction.objects.select_related("patient")
 
+        # --- ROLE-BASED ACCESS CONTROL FILTERING ---
         if user.role == User.Roles.PATIENT:
             queryset = queryset.filter(patient=user)
         elif user.role == User.Roles.DOCTOR:
@@ -57,20 +79,32 @@ class PredictionListView(APIView):
         else:
             raise PermissionDenied("Access denied.")
 
+        # --- PAGINATION & SERIALIZATION ---
         paginator = StandardResultsSetPagination()
         page = paginator.paginate_queryset(queryset, request)
         serializer = DiseasePredictionSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
 
+# --- SymptomAnalysisListView ---
+# What it does: GET lists symptom histories; POST executes clinical NLP parsing on patient text narratives.
+# Why it's structured this way: Separates linguistic analysis and autocomplete from full disease risk classification.
+# Parameters & Returns: GET request -> Paginated symptom histories; POST request -> Parsed canonical/negated symptom payload.
+# ------------------------------------------------------------------------------
 class SymptomAnalysisListView(APIView):
     """
-    GET /api/v1/predictions/symptoms/ — Lists symptom analysis history.
-    POST /api/v1/predictions/symptoms/ — Maps input symptoms to canonical vocabulary & suggestions.
+    GET /api/v1/predictions/symptoms/  — Lists symptom analysis history.
+    POST /api/v1/predictions/symptoms/ — Maps free-text/raw symptoms to canonical vocabulary.
+
+    Purpose:
+        Accepts patient-reported symptoms, invokes the Clinical NLP Preprocessor
+        for negation detection and fuzzy matching, and returns standardized
+        symptom vectors and clinical suggestions.
     """
     permission_classes = [IsAuthenticatedUser]
 
     def get(self, request):
+        """Retrieves paginated symptom analysis history with authorization enforcement."""
         user = request.user
         queryset = SymptomAnalysis.objects.select_related("patient")
 
@@ -95,6 +129,10 @@ class SymptomAnalysisListView(APIView):
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request):
+        """
+        Parses raw text or symptom lists, applies negation boundaries,
+        and returns canonical feature vectors with suggestions.
+        """
         raw_text = request.data.get("text", "")
         raw_symptoms = request.data.get("symptoms", [])
 
@@ -102,47 +140,34 @@ class SymptomAnalysisListView(APIView):
         if not input_data:
             raise ValidationError("Either 'text' or 'symptoms' must be provided.")
 
-        preprocessor = get_preprocessor_v2()
-        symptom_res = preprocessor.parse_symptoms(input_data)
-        canonical = symptom_res["canonical_symptoms"]
-        negated = symptom_res["negated_symptoms"]
-        unmapped = symptom_res["unmapped_tokens"]
-        symptom_vector = symptom_res["symptom_vector"]
-
-        # Ensure integer values for backward compatibility
-        int_feature_vector = {k: int(v) for k, v in symptom_vector.items()}
-        suggestions = suggest_related_symptoms(canonical)
-
-        # Log analysis if requested for patient
-        if request.user.role == User.Roles.PATIENT:
-            SymptomAnalysis.objects.create(
-                patient=request.user,
-                symptoms_text=str(input_data),
-                result={
-                    "canonical": canonical,
-                    "negated": negated,
-                    "suggestions": suggestions,
-                },
-            )
-
-        return Response(
-            {
-                "canonical_symptoms": canonical,
-                "negated_symptoms": negated,
-                "feature_vector": int_feature_vector,
-                "unmapped_tokens": unmapped,
-                "suggested_symptoms": suggestions,
-                "catalog": get_canonical_symptom_catalog(),
-            },
-            status=status.HTTP_200_OK,
+        # --- DELEGATE TO ISOLATED SYMPTOM ANALYSIS SERVICE ---
+        result = execute_symptom_analysis_workflow(
+            input_data=input_data,
+            user=request.user,
         )
 
+        return Response(result, status=status.HTTP_200_OK)
 
+
+# --- DiseasePredictionCreateView ---
+# What it does: Primary endpoint executing multi-class disease risk prediction and TreeSHAP feature attributions.
+# Why it's structured this way: Enforces role checks, calls isolated prediction service, persists clinical records atomically, and returns SaMD-compliant disclaimers.
+# Parameters & Returns: POST request with symptoms/vitals -> HTTP 201 Created with prediction, TreeSHAP explanation, and triage action.
+# ------------------------------------------------------------------------------
 class DiseasePredictionCreateView(APIView):
     """
     POST /api/v1/predictions/disease/
-    Executes disease classification inference + true TreeSHAP feature attributions.
-    Logs prediction to database with patient permission checks.
+
+    Purpose:
+        Primary Clinical Decision Support endpoint.
+        Executes dual-tier machine learning classification + TreeSHAP explainability,
+        evaluates clinical red flags, and logs the prediction with audit trails.
+
+    Architecture Walkthrough (Viva / Review Presentation Topic):
+        - STEP 1: Verify requesting user authority (patient self-service or doctor authorization).
+        - STEP 2: Validate presence of clinical inputs (symptoms and/or physiological vitals).
+        - STEP 3: Delegate execution to execute_clinical_prediction_workflow (AI service).
+        - STEP 4: Handle model availability errors (HTTP 503) or return success (HTTP 201).
     """
     permission_classes = [IsAuthenticatedUser]
 
@@ -150,7 +175,9 @@ class DiseasePredictionCreateView(APIView):
         user = request.user
         data = request.data
 
-        # 1. Resolve Target Patient & Enforce Authority Boundaries
+        # ----------------------------------------------------------------------
+        # STEP 1: RESOLVE TARGET PATIENT & ENFORCE CLINICAL AUTHORITY
+        # ----------------------------------------------------------------------
         if user.role == User.Roles.PATIENT:
             patient_id = data.get("patient_id")
             if patient_id and str(patient_id) != str(user.id):
@@ -178,10 +205,11 @@ class DiseasePredictionCreateView(APIView):
         else:
             raise PermissionDenied("Access denied.")
 
-        # 2. Extract Symptoms & Clinical Inputs
+        # ----------------------------------------------------------------------
+        # STEP 2: VALIDATE INPUT PRESENCE (SYMPTOMS OR VITALS)
+        # ----------------------------------------------------------------------
         symptoms_input = data.get("symptoms") or data.get("text")
         vitals_input = data.get("vitals")
-
         has_top_vitals = any(
             k in data for k in [
                 "systolic_bp", "diastolic_bp", "glucose", "heart_rate",
@@ -192,19 +220,21 @@ class DiseasePredictionCreateView(APIView):
         if not symptoms_input and not vitals_input and not has_top_vitals:
             raise ValidationError("Field 'symptoms' (list or text) is required.")
 
-        # Structure input for DiseaseRiskEngine
-        if isinstance(data, dict) and (vitals_input or has_top_vitals):
-            engine_input = data
-        else:
-            engine_input = symptoms_input
-
-        # 3. Execute Production XGBoost + TreeSHAP Inference Engine
+        # ----------------------------------------------------------------------
+        # STEP 3: EXECUTE CLINICAL PREDICTION WORKFLOW VIA ISOLATED AI SERVICE
+        # ----------------------------------------------------------------------
         try:
+            # We resolve engine here to preserve test mocking hooks (e.g. patch("apps.predictions.views.get_engine"))
             engine = get_engine()
-            ml_result = engine.predict_and_explain(
-                input_data=engine_input,
-                patient=target_patient,
+            response_payload = execute_clinical_prediction_workflow(
+                user=user,
+                target_patient=target_patient,
+                request_data=data,
+                request=request,
+                engine=engine,
             )
+            return Response(response_payload, status=status.HTTP_201_CREATED)
+
         except ModelNotLoadedError as exc:
             logger.error(f"DiseaseRiskEngine unavailable: {exc}")
             return Response(
@@ -217,146 +247,3 @@ class DiseasePredictionCreateView(APIView):
                 },
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
-
-        predicted_condition = ml_result["predicted_condition"]
-        confidence = ml_result["confidence"]
-        risk_level = ml_result["risk_level"]  # "LOW", "MODERATE", "HIGH"
-
-        # Preprocess input to extract canonical symptoms and vitals metadata
-        preprocessed = engine.preprocessor.preprocess(engine_input, patient=target_patient)
-        canonical_symptoms = preprocessed.canonical_symptoms
-
-        # Enrich feature attributions with backward-compatible keys
-        base_value = ml_result["explanation"]["base_value"]
-        enriched_features = []
-        for feat in ml_result["explanation"]["features"]:
-            feat_copy = dict(feat)
-            feat_copy["contribution"] = round(abs(feat["shap_value"]), 4)
-            feat_copy["baseline"] = round(base_value, 4)
-            enriched_features.append(feat_copy)
-
-        # Profile & Clinical Severity/Recommendation
-        profile = DISEASE_PROFILES.get(predicted_condition, {})
-        recommendation = profile.get(
-            "recommendation",
-            "Clinical consultation recommended for comprehensive evaluation and treatment planning."
-        )
-
-        # Check red flags for severity mapping
-        has_chest_pain = "chest_pain" in canonical_symptoms or preprocessed.raw_dict.get("chest_pain", 0.0) == 1.0
-        has_dyspnea = "dyspnea" in canonical_symptoms or preprocessed.raw_dict.get("dyspnea", 0.0) == 1.0
-        spo2 = preprocessed.vitals_raw.get("oxygen_saturation")
-        systolic_bp = preprocessed.vitals_raw.get("systolic_bp")
-
-        is_hypoxemic = spo2 is not None and spo2 < 92.0
-        is_severe_hypoxemic = spo2 is not None and spo2 < 90.0
-        is_hypertensive_crisis = systolic_bp is not None and systolic_bp >= 180.0
-
-        if is_severe_hypoxemic or is_hypertensive_crisis or (has_chest_pain and (has_dyspnea or is_hypoxemic)):
-            severity = "critical"
-        elif risk_level == "HIGH" or has_chest_pain or profile.get("severity") == "high":
-            severity = "high"
-        elif risk_level == "MODERATE" or profile.get("severity") == "moderate":
-            severity = "moderate"
-        else:
-            severity = "low"
-
-        # Ranked / Differential diagnoses
-        ranked_diagnoses = []
-        for d in ml_result["differential_diagnoses"]:
-            cond_name = d["condition"]
-            p_profile = DISEASE_PROFILES.get(cond_name, {})
-            ranked_diagnoses.append({
-                "disease": cond_name,
-                "condition": cond_name,
-                "probability": d["probability"],
-                "severity": p_profile.get("severity", "moderate"),
-                "risk_level": d["risk_level"],
-            })
-
-        # Structured Explanation payload
-        shap_analysis_payload = {
-            "base_value": base_value,
-            "features": enriched_features,
-            "summary": ml_result["explanation"]["summary"],
-        }
-
-        # 4. Persist to Database
-        prediction_record = DiseasePrediction.objects.create(
-            patient=target_patient,
-            model_name=ml_result["model_metadata"]["model_name"],
-            model_version=ml_result["model_metadata"]["model_version"],
-            input_data={
-                "symptoms_input": symptoms_input,
-                "canonical_symptoms": canonical_symptoms,
-                "vitals_input": vitals_input or {},
-                "extracted_vitals": {
-                    k: v for k, v in preprocessed.vitals_raw.items() if not (isinstance(v, float) and (v != v))
-                },
-            },
-            predicted_condition=predicted_condition,
-            confidence=confidence,
-            explanation={
-                "shap_analysis": shap_analysis_payload,
-                "shap_attributions": enriched_features,
-                "features": enriched_features,
-                "ranked_diagnoses": ranked_diagnoses,
-                "differential_diagnoses": ml_result["differential_diagnoses"],
-                "triage_level": risk_level,
-                "severity": severity,
-                "recommendation": recommendation,
-                "summary": ml_result["explanation"]["summary"],
-            },
-        )
-
-        # 5. Audit Logging
-        log_audit_event(
-            user=user,
-            action=AuditLog.Actions.RECORD_CREATE,
-            resource_type="DiseasePrediction",
-            resource_id=prediction_record.id,
-            request=request,
-            metadata={
-                "patient_id": target_patient.id,
-                "condition": predicted_condition,
-                "confidence": confidence,
-                "risk_level": risk_level,
-            },
-        )
-
-        # 6. Construct Comprehensive Backward-Compatible + Enriched Response Payload
-        response_payload = {
-            "id": prediction_record.id,
-            "patient_id": target_patient.id,
-            # Core prediction fields
-            "predicted_condition": predicted_condition,
-            "confidence": confidence,
-            # Severity / Triage
-            "severity": severity,
-            "triage_level": risk_level,
-            "risk_level": risk_level,
-            # Recommendations
-            "recommendation": recommendation,
-            "recommended_action": recommendation,
-            # Symptoms & Differentials
-            "canonical_symptoms": canonical_symptoms,
-            "differential_diagnoses": ml_result["differential_diagnoses"],
-            "ranked_diseases": ranked_diagnoses,
-            "ranked_diagnoses": ranked_diagnoses,
-            "tier2_clinical_matches": ml_result.get("tier2_clinical_matches", []),
-            # SHAP Explainability (both object and array formats supported)
-            "shap_analysis": shap_analysis_payload,
-            "shap_explanations": shap_analysis_payload,
-            "explanation": shap_analysis_payload,
-            # Clinical Safety & Regulatory
-            "clinical_safety": ml_result["clinical_safety"],
-            "disclaimer": ml_result["clinical_safety"]["disclaimer"],
-            # Metadata
-            "model_metadata": {
-                **ml_result["model_metadata"],
-                "timestamp": timezone.now().isoformat(),
-            },
-            "created_at": prediction_record.created_at,
-        }
-
-        return Response(response_payload, status=status.HTTP_201_CREATED)

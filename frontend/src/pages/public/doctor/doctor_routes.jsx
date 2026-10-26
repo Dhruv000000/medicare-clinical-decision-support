@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/doctor/doctor_routes.jsx
+// PURPOSE: Sub-router defining physician client-side SPA routing tree and navigation guards.
+// VIVA EXPLANATION: This routing manifest maps URL endpoints under /doctor/* to their corresponding clinical views (Dashboard, Patients, Reports, AI Insights, Appointments, Clinical Notes, Medical Knowledge, Settings, Logout).
+// ==============================================================================
+
 import React from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 
@@ -11,6 +17,11 @@ import Settings from "./settings";
 import Logout from "./logout";
 import Appointments from "./appointmentss";
 
+// --- DoctorRoutes ---
+// What it does: Central React Router configuration declaring all nested doctor paths.
+// Why it's structured this way: Encapsulates doctor domain routes in a dedicated module, decoupling practitioner navigation from patient and admin route trees.
+// Parameters & Returns: None. Returns Route/Routes JSX configuration.
+// ------------------------------------------------------------------------------
 export default function DoctorRoutes() {
   return (
     <Routes>

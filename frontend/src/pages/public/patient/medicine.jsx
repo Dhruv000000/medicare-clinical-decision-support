@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/patient/medicine.jsx
+// PURPOSE: Patient medication schedule manager, dosage tracker, and OpenFDA safety alert viewer.
+// VIVA EXPLANATION: Implements the patient pharmacotherapy management interface. Displays active/inactive medications from /medicines/, allows recording self-administered prescriptions, and integrates on-demand OpenFDA drug label warnings and adverse reaction reports.
+// ==============================================================================
+
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Sidebar from "../patient/sidebar";
@@ -500,9 +506,11 @@ function AddMedicationModal({ darkMode, doctors, onClose, onAdd }) {
   );
 }
 
-/* =============================================================
-   OPENFDA DRUG SAFETY LOOKUP MODAL
-============================================================= */
+// --- OpenFdaModal ---
+// What it does: Modal dialog executing real-time OpenFDA queries to show official drug label warnings and adverse events.
+// Why it's structured this way: Encapsulates network loading and error states to display structured FDA safety reports without navigating away from the page.
+// Parameters & Returns: { drugName, darkMode, onClose } -> Modal dialog JSX element.
+// ------------------------------------------------------------------------------
 function OpenFdaModal({ drugName, darkMode, onClose }) {
   const [loading, setLoading] = useState(true);
   const [safetyData, setSafetyData] = useState(null);
@@ -687,6 +695,11 @@ function OpenFdaModal({ drugName, darkMode, onClose }) {
   );
 }
 
+// --- Medications ---
+// What it does: Main medication overview component fetching patient prescriptions, filtering active drugs, and managing modals.
+// Why it's structured this way: Combines schedule cards with interactive safety lookups to promote medication adherence.
+// Parameters & Returns: Props (none) -> Rendered medications portal view JSX.
+// ------------------------------------------------------------------------------
 export default function Medications() {
   const [darkMode, setDarkMode] = useDarkMode();
   const [medications, setMedications] = useState([]);

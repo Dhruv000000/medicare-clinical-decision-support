@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/register.jsx
+// PURPOSE: User registration interface for patient and healthcare provider accounts.
+// VIVA EXPLANATION: Implements the self-service onboarding flow. Validates password complexity, password confirmation matching, terms of service agreement, and role assignment before submitting to the backend /auth/register/ API.
+// ==============================================================================
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../_core/hooks/useAuth";
@@ -16,9 +22,16 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
+
+// --- Register ---
+// What it does: Renders interactive registration form supporting patient and doctor account creation.
+// Why it's structured this way: Enforces client-side validation rules prior to dispatching user credentials to the auth service.
+// Parameters & Returns: Props (none) -> Rendered registration JSX page.
+// ------------------------------------------------------------------------------
 function Register() {
   const navigate = useNavigate();
   const { register, login } = useAuth();
+
 
   const [role, setRole] = useState("Patient");
   const [showPassword, setShowPassword] = useState(false);
@@ -148,12 +161,16 @@ function Register() {
       const loginRes = await login({
         email: formData.email,
         password: formData.password,
+        role: role.toLowerCase(),
       });
 
       if (loginRes?.success) {
+        const resolvedRole = (loginRes.user?.role || role || "patient").toLowerCase();
         setTimeout(() => {
-          if (role.toLowerCase() === "doctor") {
+          if (resolvedRole === "doctor") {
             navigate("/doctor/dashboard");
+          } else if (resolvedRole === "admin") {
+            navigate("/admin/dashboard");
           } else {
             navigate("/patient/dashboard");
           }

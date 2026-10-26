@@ -1,9 +1,20 @@
+# ==============================================================================
+# FILE: backend/apps/audit_logs/services.py
+# PURPOSE: Centralized security audit event recording service with IP extraction and metadata sanitization.
+# VIVA EXPLANATION: Captures forensic audit trails across all micro-actions (login, prediction, lab upload), automatically redacting passwords, tokens, and sensitive secrets.
+# ==============================================================================
+
 import logging
 from .models import AuditLog
 
 logger = logging.getLogger(__name__)
 
 
+# --- get_client_ip ---
+# What it does: Extracts the client's public IPv4/IPv6 address from reverse proxy headers (X-Forwarded-For) or REMOTE_ADDR.
+# Why it's structured this way: Accurately identifies user origin even behind Cloudflare, NGINX, or Render proxies.
+# Parameters & Returns: Takes Django request; returns IP address string or None.
+# ------------------------------------------------------------------------------
 def get_client_ip(request):
     """Extract client IP address from request headers safely."""
     if not request:
@@ -16,6 +27,11 @@ def get_client_ip(request):
     return ip
 
 
+# --- log_audit_event ---
+# What it does: Sanitizes metadata, captures client IP, and creates an immutable AuditLog record.
+# Why it's structured this way: Centralized single-entry function guaranteeing that passwords, bearer tokens, or API secrets are never persisted in logs.
+# Parameters & Returns: Takes user, action, resource_type, resource_id, request, metadata; returns AuditLog instance or None.
+# ------------------------------------------------------------------------------
 def log_audit_event(user=None, action="", resource_type="", resource_id="", request=None, metadata=None):
     """
     Centralized server-side audit logging function (Correction 12).

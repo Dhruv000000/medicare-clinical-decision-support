@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/patient/patient_dashboard.jsx
+// PURPOSE: Central patient portal overview screen visualizing vitals, appointments, and telemetry.
+// VIVA EXPLANATION: Serves as the primary patient cockpit. Integrates real database metrics from /patient/dashboard/, plots historical blood pressure trends using Recharts, highlights abnormal biomarkers, and surfaces next appointment alerts.
+// ==============================================================================
+
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Activity,
@@ -975,10 +981,11 @@ function HealthSummary({ darkMode, metrics = [] }) {
   );
 }
 
-/* -------------------------------------------------------
-   MAIN DASHBOARD
-------------------------------------------------------- */
-
+// --- PatientDashboard ---
+// What it does: Master patient dashboard component fetching telemetry, extracting blood pressure trends, and rendering clinical metric cards.
+// Why it's structured this way: Concurrently requests dashboard metrics and lab reports to populate health cards and interactive charts.
+// Parameters & Returns: Props (none) -> Rendered patient portal dashboard JSX.
+// ------------------------------------------------------------------------------
 export default function PatientDashboard() {
   const { user, logout } = useAuth();
   const [summary, setSummary] = useState(null);

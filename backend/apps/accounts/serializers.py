@@ -1,3 +1,9 @@
+# ==============================================================================
+# FILE: backend/apps/accounts/serializers.py
+# PURPOSE: DRF serializers for user registration, profile retrieval/updates, and JWT claims.
+# VIVA EXPLANATION: Handles user onboarding validation (password strength, email normalization), prevents privilege escalation on profile edits, and embeds role claims into SimpleJWT tokens.
+# ==============================================================================
+
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
@@ -6,6 +12,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User
 
 
+# --- UserSerializer ---
+# What it does: Serializes public User information and resolves the associated profile_id (patient or doctor).
+# Why it's structured this way: Read-only representation ensuring security fields (passwords, role, is_active) cannot be tampered with.
+# Parameters & Returns: Returns serialized User dictionary.
+# ------------------------------------------------------------------------------
 class UserSerializer(serializers.ModelSerializer):
     profile_id = serializers.SerializerMethodField()
 
@@ -32,6 +43,11 @@ class UserSerializer(serializers.ModelSerializer):
         return None
 
 
+# --- RegisterSerializer ---
+# What it does: Validates patient registration inputs, enforces password policies, and creates new User instances.
+# Why it's structured this way: Ensures email uniqueness, matches password confirmations, and securely hashes credentials.
+# Parameters & Returns: Takes registration dictionary; returns newly created User instance.
+# ------------------------------------------------------------------------------
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, min_length=8)
     confirm_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
@@ -88,6 +104,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 
+# --- UserUpdateSerializer ---
+# What it does: Sanitizes PATCH updates to the authenticated user's own profile.
+# Why it's structured this way: Whitelists only 'first_name' and 'last_name', strictly blocking privilege escalation to 'admin' or role tampering.
+# Parameters & Returns: Updates first_name and last_name of User instance.
+# ------------------------------------------------------------------------------
 class UserUpdateSerializer(serializers.ModelSerializer):
     """
     Used for PATCH /api/v1/auth/me/.
@@ -99,10 +120,17 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         fields = ["first_name", "last_name"]
 
 
+# --- MedicareTokenObtainPairSerializer ---
+# What it does: Custom SimpleJWT serializer embedding email and role enums in the token claims and response body.
+# Why it's structured this way: Allows frontend React clients to immediately inspect user role without making additional round-trip API queries.
+# Parameters & Returns: Returns standard JWT tokens (access, refresh) plus user profile payload.
+# ------------------------------------------------------------------------------
 class MedicareTokenObtainPairSerializer(TokenObtainPairSerializer):
     """
     Custom JWT serializer that embeds user email and application role directly in the token payload.
+    Supports validating role if role is submitted from client login forms.
     """
+    role = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
     @classmethod
     def get_token(cls, user):
@@ -113,16 +141,41 @@ class MedicareTokenObtainPairSerializer(TokenObtainPairSerializer):
 
     def validate(self, attrs):
         data = super().validate(attrs)
+
+        requested_role = self.initial_data.get("role") or attrs.get("role")
+        if requested_role:
+            req_role = str(requested_role).strip().lower()
+            user_role = str(self.user.role).strip().lower()
+            if user_role != req_role:
+                raise serializers.ValidationError(
+                    {
+                        "role": f"Access denied. This account has the role '{self.user.role}', but login was requested for '{req_role}'."
+                    }
+                )
+
+        profile_id = None
+        if self.user.role == User.Roles.PATIENT and hasattr(self.user, "patient_profile"):
+            profile_id = self.user.patient_profile.id
+        elif self.user.role == User.Roles.DOCTOR and hasattr(self.user, "doctor_profile"):
+            profile_id = self.user.doctor_profile.id
+
         data["user"] = {
             "id": self.user.id,
             "email": self.user.email,
             "first_name": self.user.first_name,
             "last_name": self.user.last_name,
             "role": self.user.role,
+            "profile_id": profile_id,
         }
         return data
 
 
+
+# --- LogoutSerializer ---
+# What it does: Validates that a refresh token is structurally well-formed before blacklisting.
+# Why it's structured this way: Enables secure session invalidation and token blacklisting on user logout.
+# Parameters & Returns: Validates 'refresh' string parameter.
+# ------------------------------------------------------------------------------
 class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField(required=True)
 

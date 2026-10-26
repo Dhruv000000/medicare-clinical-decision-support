@@ -1,3 +1,9 @@
+// ==============================================================================
+// FILE: frontend/src/pages/public/patient/settings.jsx
+// PURPOSE: Patient profile management, clinical demographic settings, and notification controls.
+// VIVA EXPLANATION: Implements the patient settings view. Interfaces with /patient/profile/ to view and update demographic details (blood group, date of birth, emergency contact, phone), and persists notification and privacy preferences in browser local storage.
+// ==============================================================================
+
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -400,6 +406,11 @@ function SectionCard({ darkMode, title, description, children }) {
   );
 }
 
+// --- Settings ---
+// What it does: Primary account settings component coordinating demographic form inputs, notification toggles, and saving updates.
+// Why it's structured this way: Normalizes profile field keys between DRF snake_case responses and React camelCase state.
+// Parameters & Returns: Props (none) -> Rendered settings page JSX.
+// ------------------------------------------------------------------------------
 export default function Settings() {
   const [darkMode, setDarkMode] = useDarkMode();
   const { user, refresh } = useAuth();

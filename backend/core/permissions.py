@@ -1,6 +1,17 @@
+# ==============================================================================
+# FILE: backend/core/permissions.py
+# PURPOSE: Role-based access control (RBAC) and clinical relationship authorization boundaries.
+# VIVA EXPLANATION: Implements HIPAA-compliant access control and the critical doctor_can_access_patient boundary, ensuring clinicians can only view records of patients with active appointments, notes, or prescriptions.
+# ==============================================================================
+
 from rest_framework.permissions import BasePermission
 
 
+# --- IsAuthenticatedUser ---
+# What it does: Verifies that the requesting user possesses a valid JWT token and is active.
+# Why it's structured this way: Base security layer for all protected clinical decision support endpoints.
+# Parameters & Returns: Returns True if user is authenticated and active, False otherwise.
+# ------------------------------------------------------------------------------
 class IsAuthenticatedUser(BasePermission):
     """Verifies that the user is authenticated and active."""
 
@@ -8,6 +19,11 @@ class IsAuthenticatedUser(BasePermission):
         return bool(request.user and request.user.is_authenticated and request.user.is_active)
 
 
+# --- IsPatient ---
+# What it does: Restricts endpoint access strictly to authenticated patient accounts.
+# Why it's structured this way: Prevents doctors and administrators from accidental access to patient-only intake forms.
+# Parameters & Returns: Returns True if user possesses role == 'patient'.
+# ------------------------------------------------------------------------------
 class IsPatient(BasePermission):
     """
     Allows access only to authenticated users with the 'patient' application role.
@@ -22,6 +38,11 @@ class IsPatient(BasePermission):
         )
 
 
+# --- IsDoctor ---
+# What it does: Restricts endpoint access strictly to licensed physician accounts.
+# Why it's structured this way: Enforces role isolation so patients cannot access clinician management panels.
+# Parameters & Returns: Returns True if user possesses role == 'doctor'.
+# ------------------------------------------------------------------------------
 class IsDoctor(BasePermission):
     """
     Allows access only to authenticated users with the 'doctor' application role.
@@ -36,6 +57,11 @@ class IsDoctor(BasePermission):
         )
 
 
+# --- IsAdmin ---
+# What it does: Restricts administrative access strictly to role == 'admin' or superusers.
+# Why it's structured this way: Protects system audit logs and global clinical metrics from unauthorized access.
+# Parameters & Returns: Returns True if user possesses admin privileges.
+# ------------------------------------------------------------------------------
 class IsAdmin(BasePermission):
     """
     Allows access only to application administrators (role == 'admin').
@@ -55,6 +81,11 @@ class IsAdmin(BasePermission):
         )
 
 
+# --- IsPatientOwner ---
+# What it does: Object-level permission verifying that a clinical record belongs to the requesting patient.
+# Why it's structured this way: Prevents IDOR (Insecure Direct Object Reference) data leakage across patients.
+# Parameters & Returns: Returns True if the object's patient/user foreign key matches request.user.
+# ------------------------------------------------------------------------------
 class IsPatientOwner(BasePermission):
     """
     Object-level permission ensuring that patient records are strictly accessed
@@ -74,6 +105,11 @@ class IsPatientOwner(BasePermission):
         return target_user == user
 
 
+# --- doctor_can_access_patient ---
+# What it does: Centralized authorization rule verifying active clinical relationship between doctor and patient.
+# Why it's structured this way: Enforces HIPAA minimum necessary standard—doctors can only view a patient's data if they have a scheduled/confirmed appointment, clinical notes, or active prescription.
+# Parameters & Returns: Takes (doctor_user, patient_user); returns True if authorization exists, False otherwise.
+# ------------------------------------------------------------------------------
 def doctor_can_access_patient(doctor_user, patient_user):
     """
     Centralized authorization rule for Doctor-Patient access (Correction 4).

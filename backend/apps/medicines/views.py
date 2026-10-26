@@ -1,7 +1,14 @@
+# ==============================================================================
+# FILE: backend/apps/medicines/views.py
+# PURPOSE: HTTP REST API controllers for prescription tracking, OpenFDA reactions, and drug-drug interactions.
+# VIVA EXPLANATION: Exposes medication management and clinical safety APIs. Doctors can prescribe medications for authorized patients, query OpenFDA for real-world adverse event counts and black-box warnings, and perform multi-drug interaction safety checks across active prescriptions.
+# ==============================================================================
+
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied, NotFound, ValidationError
+
 from core.permissions import IsAuthenticatedUser, doctor_can_access_patient
 from core.pagination import StandardResultsSetPagination
 from apps.accounts.models import User
@@ -9,7 +16,16 @@ from .models import Medication
 from .serializers import MedicationSerializer
 
 
+# --- MedicationListCreateView ---
+# What it does: GET lists medications for patient or authorized clinician; POST creates new prescription.
+# Why it's structured this way: Enforces role boundaries: doctors can prescribe only for patients with active clinical appointments.
+# Parameters & Returns: GET/POST request -> Paginated list or created Medication model.
+# ------------------------------------------------------------------------------
 class MedicationListCreateView(APIView):
+    """
+    GET /api/v1/medicines/  — Lists medications for authenticated patient or doctor.
+    POST /api/v1/medicines/ — Creates a new prescription or self-reported medication.
+    """
     permission_classes = [IsAuthenticatedUser]
 
     def get(self, request):
@@ -82,7 +98,16 @@ class MedicationListCreateView(APIView):
         return Response(MedicationSerializer(medication).data, status=status.HTTP_201_CREATED)
 
 
+# --- MedicationDetailView ---
+# What it does: Retrieves single prescription details or updates active status (discontinued / completed).
+# Why it's structured this way: Enforces patient and prescriber authorization checks on individual medical records.
+# Parameters & Returns: GET/PATCH request with medication_id -> Medication payload.
+# ------------------------------------------------------------------------------
 class MedicationDetailView(APIView):
+    """
+    GET /api/v1/medicines/<id>/   — Retrieves single medication details.
+    PATCH /api/v1/medicines/<id>/ — Updates medication (e.g. mark inactive / completed).
+    """
     permission_classes = [IsAuthenticatedUser]
 
     def get(self, request, medication_id):
@@ -117,10 +142,17 @@ class MedicationDetailView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+# --- OpenFDAReactionsView ---
+# What it does: Queries FDA openFDA API to fetch real reported adverse drug reactions and official boxed warnings.
+# Why it's structured this way: Caches results 24 hours to reduce external API dependency and protect client response times.
+# Parameters & Returns: GET request with drug name -> Adverse reactions, event counts, and boxed warnings.
+# ------------------------------------------------------------------------------
 class OpenFDAReactionsView(APIView):
     """
     GET /api/v1/medicines/openfda/reactions/?drug=<name>
-    Retrieves adverse drug reactions and boxed warnings from OpenFDA.
+
+    Purpose:
+        Retrieves real adverse drug reactions and FDA boxed warnings from OpenFDA.
     """
     permission_classes = [IsAuthenticatedUser]
 
@@ -155,10 +187,15 @@ class OpenFDAReactionsView(APIView):
         )
 
 
+# --- OpenFDAInteractionsView ---
+# What it does: Evaluates pairwise drug-drug interactions directly from manufacturer FDA labels.
+# Why it's structured this way: Allows rapid screening of arbitrary multi-drug arrays without requiring database medication IDs.
+# Parameters & Returns: POST request with list of drug names -> Pairwise interactions report.
+# ------------------------------------------------------------------------------
 class OpenFDAInteractionsView(APIView):
     """
     POST /api/v1/medicines/openfda/interactions/
-    Evaluates pairwise drug-drug interactions for a list of medication names.
+    Evaluates pairwise drug-drug interactions for a supplied list of medications.
     """
     permission_classes = [IsAuthenticatedUser]
 
@@ -173,16 +210,27 @@ class OpenFDAInteractionsView(APIView):
         return Response(interactions_data, status=status.HTTP_200_OK)
 
 
+# --- MedicineInteractionView ---
+# What it does: Primary clinical drug safety evaluation endpoint checking candidate drugs against active patient prescriptions.
+# Why it's structured this way: Combines OpenFDA and DrugBank intelligence with patient medical records to prevent polypharmacy adverse events.
+# Parameters & Returns: POST request -> Interaction risk level, contraindicated pairs, and recommendations.
+# ------------------------------------------------------------------------------
 class MedicineInteractionView(APIView):
     """
     POST /api/v1/medicines/interactions/
-    Unified medicine interaction analysis endpoint supporting:
-    1. Explicit list of medication names: {"drugs": ["warfarin", "aspirin"]}
-    2. Single queried drug evaluated against patient's active prescriptions:
-       {"queried_drug": "aspirin", "patient_id": 123}
-    3. Custom current medications list:
-       {"queried_drug": "aspirin", "current_medications": ["warfarin"]}
-    Enforces doctor-patient authorization boundary.
+
+    Purpose:
+        Unified medicine interaction analysis endpoint supporting:
+        1. Explicit list of medication names: {"drugs": ["warfarin", "aspirin"]}
+        2. Single queried drug evaluated against patient's active prescriptions:
+           {"queried_drug": "aspirin", "patient_id": 123}
+        3. Custom current medications list:
+           {"queried_drug": "aspirin", "current_medications": ["warfarin"]}
+
+    Viva Walkthrough:
+        - Resolves target patient and enforces doctor-patient authorization boundaries.
+        - Invokes interaction_service.evaluate_interactions.
+        - Records regulatory audit log entry.
     """
     permission_classes = [IsAuthenticatedUser]
 
@@ -236,5 +284,3 @@ class MedicineInteractionView(APIView):
             )
 
         return Response(result, status=status.HTTP_200_OK)
-
-

@@ -1,7 +1,18 @@
+# ==============================================================================
+# FILE: backend/apps/audit_logs/models.py
+# PURPOSE: Regulatory immutable audit trail model tracking all clinical data events and authentication activities.
+# VIVA EXPLANATION: Implements HIPAA-compliant access auditing; records user IDs, IP addresses, action types, resource references, and JSON metadata with read-only database indexes.
+# ==============================================================================
+
 from django.conf import settings
 from django.db import models
 
 
+# --- AuditLog ---
+# What it does: Stores an immutable security log entry for clinical actions, user logins, report uploads, and predictions.
+# Why it's structured this way: Enforces traceability—retains SET_NULL on user deletion so historical forensic records are preserved even if an account is removed.
+# Parameters & Returns: Django AuditLog model.
+# ------------------------------------------------------------------------------
 class AuditLog(models.Model):
     class Actions(models.TextChoices):
         USER_REGISTER = "USER_REGISTER", "User Registration"
@@ -23,13 +34,14 @@ class AuditLog(models.Model):
         null=True,
         blank=True,
         related_name="audit_logs",
+        help_text="User who initiated the action (retained as null if user is deleted).",
     )
-    action = models.CharField(max_length=100, db_index=True)
-    resource_type = models.CharField(max_length=100, blank=True, db_index=True)
-    resource_id = models.CharField(max_length=100, blank=True)
-    ip_address = models.GenericIPAddressField(null=True, blank=True)
-    metadata = models.JSONField(default=dict, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    action = models.CharField(max_length=100, db_index=True, help_text="Action category identifier.")
+    resource_type = models.CharField(max_length=100, blank=True, db_index=True, help_text="Target entity type.")
+    resource_id = models.CharField(max_length=100, blank=True, help_text="Target primary key.")
+    ip_address = models.GenericIPAddressField(null=True, blank=True, help_text="Client IP address.")
+    metadata = models.JSONField(default=dict, blank=True, help_text="Detailed contextual state changes.")
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True, help_text="Immutable log timestamp.")
 
     class Meta:
         ordering = ["-created_at"]

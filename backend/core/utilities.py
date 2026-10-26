@@ -1,3 +1,9 @@
+# ==============================================================================
+# FILE: backend/core/utilities.py
+# PURPOSE: Security validation utilities for database health and medical document upload verification.
+# VIVA EXPLANATION: Implements defense-in-depth file security (magic byte verification, MIME matching, UUID sanitization) to prevent malicious executable injection via medical lab report uploads.
+# ==============================================================================
+
 import os
 import uuid
 from pathlib import Path
@@ -23,6 +29,11 @@ FILE_SIGNATURES = {
 }
 
 
+# --- check_database_connection ---
+# What it does: Executes a lightweight 'SELECT 1' ping to verify database liveness without exposing credentials.
+# Why it's structured this way: Used by the '/health/' endpoint for load balancers and deployment probes.
+# Parameters & Returns: Returns status dictionary with connection state and database vendor.
+# ------------------------------------------------------------------------------
 def check_database_connection():
     """
     Safely ping the database and return connectivity status.
@@ -44,6 +55,11 @@ def check_database_connection():
         }
 
 
+# --- validate_uploaded_file ---
+# What it does: Enforces strict 4-layer validation on uploaded medical lab files (size, extension, MIME, magic bytes).
+# Why it's structured this way: Prevents polyglot file attacks and malicious scripts disguised as diagnostic PDFs or images.
+# Parameters & Returns: Takes uploaded_file; raises ValidationError if invalid, returns True if verified.
+# ------------------------------------------------------------------------------
 def validate_uploaded_file(uploaded_file):
     """
     Strong validation for medical report uploads.
@@ -102,6 +118,11 @@ def validate_uploaded_file(uploaded_file):
     return True
 
 
+# --- generate_safe_filename ---
+# What it does: Sanitizes filenames by replacing client-supplied names with randomized UUID4 hex strings.
+# Why it's structured this way: Mitigates directory traversal (path traversal) vulnerabilities and filename collisions.
+# Parameters & Returns: Takes original_filename string; returns sanitized '<uuid>.<ext>' string.
+# ------------------------------------------------------------------------------
 def generate_safe_filename(original_filename):
     """
     Generates an unguessable, safe server-side filename using UUID4,

@@ -1,10 +1,18 @@
+// ==============================================================================
+// FILE: frontend/src/services/aiService.js
+// PURPOSE: Frontend API client service for symptom NLP parsing, ML disease prediction, TreeSHAP explainability, and PubMed RAG chat.
+// VIVA EXPLANATION: This client service bridges the React frontend with backend AI microservices. It invokes symptom NLP canonicalization, calls dual-tier machine learning inference with SHAP feature attributions, and queries PubMed-grounded RAG assistant endpoints.
+// ==============================================================================
+
 import api from "./api";
 
 export const aiService = {
   /**
-   * Maps free-text symptom description or symptom list to canonical clinical vocabulary
-   * and suggests relevant related symptoms.
-   * payload: { text: "..." } or { symptoms: ["fever", "cough"] }
+   * --- 1. SYMPTOM NLP PARSER & VOCABULARY CANONICALIZATION ---
+   * Sends raw user complaint (free text or array of tags) to the backend preprocessor.
+   * 
+   * @param {string | string[]} input - e.g. "I have a high fever and no chest pain"
+   * @returns {Promise<object>} Returns { canonical_symptoms, negated_symptoms, feature_vector, suggested_symptoms, catalog }
    */
   async parseSymptoms(input) {
     const payload =
@@ -16,8 +24,17 @@ export const aiService = {
   },
 
   /**
-   * Executes disease classification inference with SHAP explainability.
-   * payload: { symptoms: [...], patient_id?: number }
+   * --- 2. DUAL-TIER DISEASE CLASSIFICATION & TreeSHAP EXPLAINABILITY ---
+   * Invokes the primary clinical decision support inference pipeline.
+   * 
+   * @param {object} data - { symptoms: string[], vitals?: object, patient_id?: number }
+   * @returns {Promise<object>} Returns full clinical payload:
+   *   - predicted_condition: string
+   *   - confidence: number (0.0 to 1.0)
+   *   - triage_level / severity: string (LOW / MODERATE / HIGH / CRITICAL)
+   *   - shap_analysis: { base_value, features: [{ feature, shap_value, contribution, direction }] }
+   *   - differential_diagnoses / ranked_diagnoses: array of competing disease candidates
+   *   - recommendation: evidence-based clinical guidance
    */
   async predictDisease(data) {
     const response = await api.post("/predictions/disease/", data, {
@@ -27,7 +44,10 @@ export const aiService = {
   },
 
   /**
-   * Retrieves past disease predictions for the authenticated patient or authorized doctor.
+   * --- 3. RETRIEVE HISTORICAL CLINICAL PREDICTIONS ---
+   * Fetches past diagnostic consultations with role-based access filtering.
+   * 
+   * @returns {Promise<Array>} List of past DiseasePrediction records.
    */
   async getPredictionHistory() {
     const response = await api.get("/predictions/");
@@ -35,7 +55,10 @@ export const aiService = {
   },
 
   /**
-   * Retrieves past symptom analysis history for the authenticated patient.
+   * --- 4. RETRIEVE SYMPTOM ANALYSIS SESSIONS ---
+   * Fetches historical symptom NLP checks.
+   * 
+   * @returns {Promise<Array>} List of past SymptomAnalysis records.
    */
   async getSymptomHistory() {
     const response = await api.get("/predictions/symptoms/");
@@ -43,8 +66,11 @@ export const aiService = {
   },
 
   /**
-   * Sends a prompt to the PubMed-grounded Medical RAG Assistant.
-   * payload: { prompt: "...", conversation_id?: number, patient_id?: number }
+   * --- 5. PUBMED-GROUNDED CLINICAL RAG ASSISTANT ---
+   * Sends clinical query to the assistant; receives synthesized answer with PubMed PMIDs.
+   * 
+   * @param {object} data - { prompt: string, conversation_id?: number, patient_id?: number }
+   * @returns {Promise<object>} Returns { response, citations, disclaimer, provider, grounded }
    */
   async sendChatMessage(data) {
     const response = await api.post("/assistant/chat/", data, {
@@ -54,7 +80,11 @@ export const aiService = {
   },
 
   /**
-   * Retrieves historical chat conversations for the authenticated user.
+   * --- 6. RETRIEVE ASSISTANT CONVERSATION THREADS ---
+   * Fetches paginated chat conversation history with literature citations.
+   * 
+   * @param {number} page - Page number (defaults to 1).
+   * @returns {Promise<Array>} List of ChatConversation objects with messages.
    */
   async getChatHistory(page = 1) {
     const response = await api.get("/assistant/history/", {

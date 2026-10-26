@@ -173,3 +173,58 @@ class TestAuthentication:
         assert user.first_name == "Janet"
         # Verify role was NOT escalated (Correction 11)
         assert user.role == "patient"
+
+    def test_login_with_matching_role_succeeds(self):
+        User.objects.create_user(
+            email="role_patient@medicare.local",
+            password="StrongPassword123!",
+            role="patient",
+            first_name="Pat",
+        )
+        client = APIClient()
+        response = client.post(
+            "/api/v1/auth/login/",
+            {"email": "role_patient@medicare.local", "password": "StrongPassword123!", "role": "patient"},
+            format="json",
+        )
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["user"]["role"] == "patient"
+        assert "access" in data
+
+    def test_login_with_mismatched_role_fails(self):
+        User.objects.create_user(
+            email="role_patient2@medicare.local",
+            password="StrongPassword123!",
+            role="patient",
+        )
+        client = APIClient()
+        # Attempt to log in with role='doctor' on a patient account
+        response = client.post(
+            "/api/v1/auth/login/",
+            {"email": "role_patient2@medicare.local", "password": "StrongPassword123!", "role": "doctor"},
+            format="json",
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        data = response.json()
+        assert "error" in data
+        assert "role" in data["error"]["details"]
+
+    def test_doctor_login_with_mismatched_role_fails(self):
+        User.objects.create_user(
+            email="role_doctor@medicare.local",
+            password="StrongPassword123!",
+            role="doctor",
+        )
+        client = APIClient()
+        # Attempt to log in with role='patient' on a doctor account
+        response = client.post(
+            "/api/v1/auth/login/",
+            {"email": "role_doctor@medicare.local", "password": "StrongPassword123!", "role": "patient"},
+            format="json",
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        data = response.json()
+        assert "error" in data
+        assert "role" in data["error"]["details"]
+
